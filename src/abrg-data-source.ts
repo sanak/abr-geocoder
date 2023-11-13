@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
+import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
 // export const AbrgDataSource = new DataSource({
 export default new DataSource({
@@ -10,4 +11,5 @@ export default new DataSource({
   entities: ['src/entity/*.ts'],
   migrations: ['src/migration/*.ts'],
   subscribers: [],
+  namingStrategy: new SnakeNamingStrategy(),
 });
