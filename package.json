@@ -25,7 +25,8 @@
     "test:ci": "jest --runInBand",
     "test:system": "node spec/execution-test.spec.mjs",
     "lint": "eslint . --ext .ts",
-    "lint-and-fix": "eslint . --ext .ts --fix"
+    "lint-and-fix": "eslint . --ext .ts --fix",
+    "typeorm": "typeorm-ts-node-commonjs"
   },
   "devDependencies": {
     "@jest/globals": "29.7.0",

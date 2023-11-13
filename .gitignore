@@ -9,3 +9,8 @@ node_modules*/
 test/result*
 spec/*.sqlite
 *.tgz
+
+*.code-workspace
+.vscode/result.*
+
+*.sqlite
