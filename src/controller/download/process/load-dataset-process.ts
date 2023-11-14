@@ -186,7 +186,6 @@ export const loadDatasetProcess = async ({
                   switch (datasetFile.type) {
                     case 'pref':
                     case 'city':
-                    case 'town':
                     case 'rsdtdsp_blk':
                     case 'rsdtdsp_rsdt':
                       await queryRunner.manager
@@ -194,6 +193,15 @@ export const loadDatasetProcess = async ({
                         .insert()
                         .into(datasetFile.entityClass)
                         .values([processed])
+                        .execute();
+                      break;
+                    case 'town':
+                      await queryRunner.manager
+                        .createQueryBuilder()
+                        .insert()
+                        .into(datasetFile.entityClass)
+                        .values([processed])
+                        .orUpdate(['rsdt_addr_flg'], ['lg_code', 'town_id'])
                         .execute();
                       break;
                     case 'town_pos':
