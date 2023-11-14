@@ -63,7 +63,7 @@ export abstract class DatasetFile implements IDatasetFile {
   parseFields(row: { [key: string]: string }): Record<string, string | number> {
     const result: Record<string, string | number> = {};
     this.fields.forEach(field => {
-      result[field.entity] = row[field.csv] as string;
+      result[field.dbColumn] = row[field.csv] as string;
     });
     return result;
   }
@@ -85,16 +85,16 @@ export abstract class DataForPosFile
     const parsedRow = this.parseFields(row);
 
     // 座標系の変換
-    const lat = parseFloat(parsedRow[DataField.REP_PNT_LAT.entity] as string);
-    const lon = parseFloat(parsedRow[DataField.REP_PNT_LON.entity] as string);
+    const lat = parseFloat(parsedRow[DataField.REP_PNT_LAT.dbColumn] as string);
+    const lon = parseFloat(parsedRow[DataField.REP_PNT_LON.dbColumn] as string);
     const extra = row['代表点_座標参照系'];
     const [longitude, latitude] = proj4(
       extra, // from
       'WGS84' // to
     ).forward([lon, lat]);
 
-    parsedRow[DataField.REP_PNT_LON.entity] = longitude;
-    parsedRow[DataField.REP_PNT_LAT.entity] = latitude;
+    parsedRow[DataField.REP_PNT_LON.dbColumn] = longitude;
+    parsedRow[DataField.REP_PNT_LAT.dbColumn] = latitude;
 
     return parsedRow;
   }

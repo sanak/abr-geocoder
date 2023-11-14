@@ -209,15 +209,15 @@ export const loadDatasetProcess = async ({
                         .createQueryBuilder()
                         .update(datasetFile.entityClass)
                         .set({
-                          repPntLon: processed.repPntLon,
-                          repPntLat: processed.repPntLat,
+                          rep_pnt_lon: processed.rep_pnt_lon,
+                          rep_pnt_lat: processed.rep_pnt_lat,
                         })
                         .where(
-                          `lgCode = :lgCode AND
-                           townId = :townId`,
+                          `lg_code = :lg_code AND
+                           town_id = :town_id`,
                           {
-                            lgCode: processed.lgCode,
-                            townId: processed.townId,
+                            lg_code: processed.lg_code,
+                            town_id: processed.town_id,
                           }
                         )
                         .execute();
@@ -227,17 +227,17 @@ export const loadDatasetProcess = async ({
                         .createQueryBuilder()
                         .update(datasetFile.entityClass)
                         .set({
-                          repPntLon: processed.repPntLon,
-                          repPntLat: processed.repPntLat,
+                          rep_pnt_lon: processed.rep_pnt_lon,
+                          rep_pnt_lat: processed.rep_pnt_lat,
                         })
                         .where(
-                          `lgCode = :lgCode AND
-                           townId = :townId AND
-                           blkId = :blkId`,
+                          `lg_code = :lg_code AND
+                           town_id = :town_id AND
+                           blk_id = :blk_id`,
                           {
-                            lgCode: processed.lgCode,
-                            townId: processed.townId,
-                            blkId: processed.blkId,
+                            lg_code: processed.lg_code,
+                            town_id: processed.town_id,
+                            blk_id: processed.blk_id,
                           }
                         )
                         .execute();
@@ -247,21 +247,21 @@ export const loadDatasetProcess = async ({
                         .createQueryBuilder()
                         .update(datasetFile.entityClass)
                         .set({
-                          repPntLon: processed.repPntLon,
-                          repPntLat: processed.repPntLat,
+                          rep_pnt_lon: processed.rep_pnt_lon,
+                          rep_pnt_lat: processed.rep_pnt_lat,
                         })
                         .where(
-                          `lgCode = :lgCode AND
-                           townId = :townId AND
-                           blkId = :blkId AND
-                           addrId = :addrId AND
-                           addr2Id = :addr2Id`,
+                          `lg_code = :lg_code AND
+                           town_id = :town_id AND
+                           blk_id = :blk_id AND
+                           addr_id = :addr_id AND
+                           addr2_id = :addr2_id`,
                           {
-                            lgCode: processed.lgCode,
-                            townId: processed.townId,
-                            blkId: processed.blkId,
-                            addrId: processed.addrId,
-                            addr2Id: processed.addr2Id,
+                            lg_code: processed.lg_code,
+                            town_id: processed.town_id,
+                            blk_id: processed.blk_id,
+                            addr_id: processed.addr_id,
+                            addr2_id: processed.addr2_id,
                           }
                         )
                         .execute();
@@ -287,9 +287,9 @@ export const loadDatasetProcess = async ({
                 {
                   key: datasetFile.filename,
                   type: datasetFile.type,
-                  contentLength: datasetFile.csvFile.contentLength,
+                  content_length: datasetFile.csvFile.contentLength,
                   crc32: datasetFile.csvFile.crc32,
-                  lastModified: datasetFile.csvFile.lastModified,
+                  last_modified: datasetFile.csvFile.lastModified,
                 },
               ])
               .execute();

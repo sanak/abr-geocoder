@@ -1,123 +1,123 @@
 import { Entity, Index, PrimaryColumn, Column } from 'typeorm';
 
 @Entity()
-@Index('town_code_idx', ['lgCode', 'townId'], { unique: true })
+@Index('town_code_idx', ['lg_code', 'town_id'], { unique: true })
 export class Town {
   @PrimaryColumn('text', { comment: '全国地方公共団体コード' })
-  lgCode!: string;
+  lg_code!: string;
 
   @PrimaryColumn('text', { comment: '町字ID' })
-  townId!: string;
+  town_id!: string;
 
   @Column('integer', { comment: '町字区分コード' })
-  townCode!: number;
+  town_code!: number;
 
   @Column('text', { comment: '都道府県名' })
-  prefName!: string;
+  pref_name!: string;
 
   @Column('text', { comment: '都道府県名_カナ' })
-  prefNameKana!: string;
+  pref_name_kana!: string;
 
   @Column('text', { comment: '都道府県名_英字' })
-  prefNameRoma!: string;
+  pref_name_roma!: string;
 
   @Column('text', { nullable: true, comment: '郡名' })
-  countyName!: string;
+  county_name!: string;
 
   @Column('text', { nullable: true, comment: '郡名_カナ' })
-  countyNameKana!: string;
+  county_name_kana!: string;
 
   @Column('text', { nullable: true, comment: '郡名_英字' })
-  countyNameRoma!: string;
+  county_name_roma!: string;
 
   @Column('text', { comment: '市区町村名' })
-  cityName!: string;
+  city_name!: string;
 
   @Column('text', { comment: '市区町村名_カナ' })
-  cityNameKana!: string;
+  city_name_kana!: string;
 
   @Column('text', { comment: '市区町村名_英字' })
-  cityNameRoma!: string;
+  city_name_roma!: string;
 
   @Column('text', { nullable: true, comment: '政令市区名' })
-  odCityName!: string;
+  od_city_name!: string;
 
   @Column('text', { nullable: true, comment: '政令市区名_カナ' })
-  odCityNameKana!: string;
+  od_city_name_kana!: string;
 
   @Column('text', { nullable: true, comment: '政令市区名_英字' })
-  odCityNameRoma!: string;
+  od_city_name_roma!: string;
 
   @Column('text', { nullable: true, comment: '大字・町名' })
-  oazaTownName!: string;
+  oaza_town_name!: string;
 
   @Column('text', { nullable: true, comment: '大字・町名_カナ' })
-  oazaTownNameKana!: string;
+  oaza_town_name_kana!: string;
 
   @Column('text', { nullable: true, comment: '大字・町名_英字' })
-  oazaTownNameRoma!: string;
+  oaza_town_name_roma!: string;
 
   @Column('text', { nullable: true, comment: '丁目名' })
-  chomeName!: string;
+  chome_name!: string;
 
   @Column('text', { nullable: true, comment: '丁目名_カナ' })
-  chomeNameKana!: string;
+  chome_name_kana!: string;
 
   @Column('text', { nullable: true, comment: '丁目名_数字' })
-  chomeNameNumber!: string;
+  chome_name_number!: string;
 
   @Column('text', { nullable: true, comment: '小字名' })
-  koazaName!: string;
+  koaza_name!: string;
 
   @Column('text', { nullable: true, comment: '小字名_カナ' })
-  koazaNameKana!: string;
+  koaza_name_kana!: string;
 
   @Column('text', { nullable: true, comment: '小字名_英字' })
-  koazaNameRoma!: string;
+  koaza_name_roma!: string;
 
   @Column('integer', { comment: '住居表示フラグ' })
-  rsdtAddrFlg!: number;
+  rsdt_addr_flg!: number;
 
   @Column('integer', { nullable: true, comment: '住居表示方式コード' })
-  rsdtAddrMtdCode!: number;
+  rsdt_addr_mtd_code!: number;
 
   @Column('integer', { nullable: true, comment: '大字・町_通称フラグ' })
-  oazaTownAltNameFlg!: number;
+  oaza_town_alt_name_flg!: number;
 
   @Column('integer', { nullable: true, comment: '小字_通称フラグ' })
-  koazaAltNameFlg!: number;
+  koaza_alt_name_flg!: number;
 
   @Column('text', { nullable: true, comment: '大字・町_外字フラグ' })
-  oazaFrnLtrsFlg!: string;
+  oaza_frn_ltrs_flg!: string;
 
   @Column('text', { nullable: true, comment: '小字_外字フラグ' })
-  koazaFrnLtrsFlg!: string;
+  koaza_frn_ltrs_flg!: string;
 
   @Column('text', { nullable: true, comment: '状態フラグ' })
-  statusFlg!: string;
+  status_flg!: string;
 
   @Column('integer', { nullable: true, comment: '起番フラグ' })
-  wakeNumFlg!: number;
+  wake_num_flg!: number;
 
   @Column('date', { nullable: true, comment: '効力発生日' })
-  efctDate!: string;
+  efct_date!: string;
 
   @Column('date', { nullable: true, comment: '廃止日' })
-  abltDate!: string;
+  ablt_date!: string;
 
   @Column('integer', { nullable: true, comment: '原典資料コード' })
-  srcCode!: number;
+  src_code!: number;
 
   @Column('text', { nullable: true, comment: '郵便番号' })
-  postCode!: string;
+  post_code!: string;
 
   @Column('text', { nullable: true, comment: '備考' })
   remarks!: string;
 
   // 町字位置参照(mt_town_pos_prefXX)から結合
   @Column('float', { nullable: true, comment: '代表点_経度' })
-  repPntLon!: number;
+  rep_pnt_lon!: number;
 
   @Column('float', { nullable: true, comment: '代表点_緯度' })
-  repPntLat!: number;
+  rep_pnt_lat!: number;
 }

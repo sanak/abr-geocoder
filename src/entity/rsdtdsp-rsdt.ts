@@ -3,83 +3,83 @@ import { Entity, Index, PrimaryColumn, Column } from 'typeorm';
 @Entity()
 @Index(
   'rsdtdsp_rsdt_code_idx',
-  ['lgCode', 'townId', 'blkId', 'addrId', 'addr2Id'],
+  ['lg_code', 'town_id', 'blk_id', 'addr_id', 'addr2_id'],
   { unique: true }
 )
 export class RsdtdspRsdt {
   @PrimaryColumn('text', { comment: '全国地方公共団体コード' })
-  lgCode!: string;
+  lg_code!: string;
 
   @PrimaryColumn('text', { comment: '町字ID' })
-  townId!: string;
+  town_id!: string;
 
   @PrimaryColumn('text', { comment: '街区ID' })
-  blkId!: string;
+  blk_id!: string;
 
   @PrimaryColumn('text', { comment: '住居ID' })
-  addrId!: string;
+  addr_id!: string;
 
   @PrimaryColumn('text', {
     // nullable: true, // TODO: インデックスに含まれるため、nullableにできない
     comment: '住居2ID',
   })
-  addr2Id!: string;
+  addr2_id!: string;
 
   @Column('text', { comment: '市区町村名' })
-  cityName!: string;
+  city_name!: string;
 
   @Column('text', { nullable: true, comment: '政令市区名' })
-  odCityName!: string;
+  od_city_name!: string;
 
   @Column('text', { comment: '大字・町名' })
-  oazaTownName!: string;
+  oaza_town_name!: string;
 
   @Column('text', { nullable: true, comment: '丁目名' })
-  chomeName!: string;
+  chome_name!: string;
 
   @Column('text', { nullable: true, comment: '小字名' })
-  koazaName!: string;
+  koaza_name!: string;
 
   @Column('text', { nullable: true, comment: '街区符号' })
-  blkNum!: string;
+  blk_num!: string;
 
   @Column('text', { comment: '住居番号' })
-  rsdtNum!: string;
+  rsdt_num!: string;
 
   @Column('text', { nullable: true, comment: '住居番号2' })
-  rsdtNum2!: string;
+  rsdt_num2!: string;
 
   @Column('integer', { comment: '住居表示フラグ' })
-  rsdtAddrFlg!: number;
+  rsdt_addr_flg!: number;
 
   @Column('integer', { comment: '住居表示方式コード' })
-  rsdtAddrMtdCode!: number;
+  rsdt_addr_mtd_code!: number;
 
   @Column('text', { nullable: true, comment: '大字・町_外字フラグ' })
-  oazaFrnLtrsFlg!: string;
+  oaza_frn_ltrs_flg!: string;
 
   @Column('text', { nullable: true, comment: '小字_外字フラグ' })
-  koazaFrnLtrsFlg!: string;
+  koaza_frn_ltrs_flg!: string;
 
   @Column('text', { nullable: true, comment: '状態フラグ' })
-  statusFlg!: string;
+  status_flg!: string;
 
   @Column('date', { nullable: true, comment: '効力発生日' })
-  efctDate!: string;
+  efct_date!: string;
 
   @Column('date', { nullable: true, comment: '廃止日' })
-  abltDate!: string;
+  ablt_date!: string;
 
   @Column('integer', { nullable: true, comment: '原典資料コード' })
-  srcCode!: number;
+  src_code!: number;
 
   @Column('text', { nullable: true, comment: '備考' })
   remarks!: string;
 
   // 住居表示-住居位置参照(mt_rsdtdsp_rsdt_pos_prefXX)から結合
   @Column('float', { nullable: true, comment: '代表点_経度' })
-  repPntLon!: number;
+  rep_pnt_lon!: number;
 
   @Column('float', { nullable: true, comment: '代表点_緯度' })
-  repPntLat!: number;
+  rep_pnt_lat!: number;
 }

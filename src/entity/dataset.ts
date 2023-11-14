@@ -10,11 +10,11 @@ export class Dataset {
   type!: string;
 
   @Column('integer')
-  contentLength!: number;
+  content_length!: number;
 
   @Column('integer')
   crc32!: number;
 
   @Column('integer')
-  lastModified!: number;
+  last_modified!: number;
 }
