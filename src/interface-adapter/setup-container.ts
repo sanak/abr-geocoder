@@ -43,6 +43,7 @@ import { provideLogger } from './providers/provide-logger';
 import { provideMultiProgressBar } from './providers/provide-multi-progress-bar';
 import { provideProgressBar } from './providers/provide-progress-bar';
 import { upwardFileSearch } from '@domain/upward-file-search';
+import { AbrgDataSource } from '../abrg-data-source';
 
 export interface setupContainerParams {
   dataDir: string;
@@ -86,6 +87,12 @@ export const setupContainer = async ({
   });
   myContainer.register(DI_TOKEN.DATABASE, {
     useValue: db,
+  });
+
+  // アプリケーション全体を通して使用するデータソース
+  const ds = await AbrgDataSource.initialize();
+  myContainer.register(DI_TOKEN.DATASOURCE, {
+    useValue: ds,
   });
 
   // ロガー

@@ -30,7 +30,8 @@
       "@settings/*": ["src/settings/*"],
       "@process/*": ["src/controller/download/process/*"],
       "@abrg-message/*": ["src/domain/abrg-message/*"],
-      "@abrg-error/*": ["src/domain/abrg-error/*"]
+      "@abrg-error/*": ["src/domain/abrg-error/*"],
+      "@entity/*": ["src/entity/*"],
     },
     "removeComments": true,
     "isolatedModules": false,

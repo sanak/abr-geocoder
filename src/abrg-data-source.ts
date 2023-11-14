@@ -2,8 +2,8 @@ import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
-// export const AbrgDataSource = new DataSource({
-export default new DataSource({
+// export default new DataSource({
+export const AbrgDataSource = new DataSource({
   type: 'better-sqlite3',
   database: 'ba000001.sqlite',
   synchronize: false,

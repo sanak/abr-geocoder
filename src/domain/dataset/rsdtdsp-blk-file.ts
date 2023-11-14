@@ -25,6 +25,7 @@ import { DatasetFileParams, IDatasetFileMeta } from '@domain/dataset-file';
 import { IStreamReady } from '@domain/istream-ready';
 import { DataField } from './data-field';
 import { DataWithDateFile } from './dataset-file';
+import { RsdtdspBlk } from '@entity/rsdtdsp-blk';
 
 export class RsdtdspBlkFile
   extends DataWithDateFile
@@ -109,6 +110,7 @@ export class RsdtdspBlkFile
       ...params,
       sql,
       csvFile,
+      entityClass: RsdtdspBlk,
     });
   }
 }

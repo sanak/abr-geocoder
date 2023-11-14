@@ -33,19 +33,21 @@ import { TownDatasetFile } from '@domain/dataset/town-dataset-file';
 import { TownPosDatasetFile } from '@domain/dataset/town-pos-dataset-file';
 import { IStreamReady } from '@domain/istream-ready';
 import { DI_TOKEN } from '@interface-adapter/tokens';
-import { Database } from 'better-sqlite3';
+import { DataSource } from 'typeorm';
 import { MultiBar } from 'cli-progress';
 import csvParser from 'csv-parser';
 import { Stream } from 'node:stream';
 import { DependencyContainer } from 'tsyringe';
 import { Logger } from 'winston';
+import { Dataset } from '@entity/dataset';
+import { DataField } from '@domain/dataset/data-field';
 
 export const loadDatasetProcess = async ({
-  db,
+  ds,
   container,
   csvFiles,
 }: {
-  db: Database;
+  ds: DataSource;
   csvFiles: IStreamReady[];
   container: DependencyContainer;
 }) => {
@@ -139,15 +141,21 @@ export const loadDatasetProcess = async ({
   });
   const loadDataStream = new Stream.Writable({
     objectMode: true,
-    write(datasetFile: DatasetFile, encoding, callback) {
+    async write(datasetFile: DatasetFile, encoding, callback) {
       // 1ファイルごと transform() が呼び出される
 
-      // CSVファイルの読み込み
-      const statement = db.prepare(datasetFile.sql);
+      const queryRunner = ds.createQueryRunner();
+      await queryRunner.connect();
 
-      const errorHandler = (error: unknown) => {
-        if (db.inTransaction) {
-          db.exec('ROLLBACK');
+      // CSVファイルの読み込み
+      // const statement = db.prepare(datasetFile.sql);
+
+      const errorHandler = async (error: unknown) => {
+        // if (db.inTransaction) {
+        //   db.exec('ROLLBACK');
+        // }
+        if (queryRunner.isTransactionActive) {
+          await queryRunner.rollbackTransaction();
         }
 
         if (error instanceof Error) {
@@ -160,7 +168,9 @@ export const loadDatasetProcess = async ({
       };
 
       // DBに登録
-      db.exec('BEGIN');
+      // db.exec('BEGIN');
+      await queryRunner.startTransaction();
+
       datasetFile.csvFile.getStream().then(fileStream => {
         fileStream
           .pipe(
@@ -171,49 +181,118 @@ export const loadDatasetProcess = async ({
           .pipe(
             new Stream.Writable({
               objectMode: true,
-              write(chunk, encoding, next) {
+              async write(chunk, encoding, next) {
                 try {
                   const processed = datasetFile.process(chunk);
-                  statement.run(processed);
+                  switch (datasetFile.type) {
+                    case 'pref':
+                    case 'city':
+                    case 'town':
+                    case 'rsdtdsp_blk':
+                    case 'rsdtdsp_rsdt':
+                      await queryRunner.manager
+                        .createQueryBuilder()
+                        .insert()
+                        .into(datasetFile.entityClass)
+                        .values([processed])
+                        .execute();
+                      break;
+                    case 'town_pos':
+                      await queryRunner.manager
+                        .createQueryBuilder()
+                        .update(datasetFile.entityClass)
+                        .set({
+                          repPntLon: processed.repPntLon,
+                          repPntLat: processed.repPntLat,
+                        })
+                        .where(
+                          `lgCode = :lgCode AND
+                           townId = :townId`,
+                          {
+                            lgCode: processed.lgCode,
+                            townId: processed.townId,
+                          }
+                        )
+                        .execute();
+                      break;
+                    case 'rsdtdsp_blk_pos':
+                      await queryRunner.manager
+                        .createQueryBuilder()
+                        .update(datasetFile.entityClass)
+                        .set({
+                          repPntLon: processed.repPntLon,
+                          repPntLat: processed.repPntLat,
+                        })
+                        .where(
+                          `lgCode = :lgCode AND
+                           townId = :townId AND
+                           blkId = :blkId`,
+                          {
+                            lgCode: processed.lgCode,
+                            townId: processed.townId,
+                            blkId: processed.blkId,
+                          }
+                        )
+                        .execute();
+                      break;
+                    case 'rsdtdsp_rsdt_pos':
+                      await queryRunner.manager
+                        .createQueryBuilder()
+                        .update(datasetFile.entityClass)
+                        .set({
+                          repPntLon: processed.repPntLon,
+                          repPntLat: processed.repPntLat,
+                        })
+                        .where(
+                          `lgCode = :lgCode AND
+                           townId = :townId AND
+                           blkId = :blkId AND
+                           addrId = :addrId AND
+                           addr2Id = :addr2Id`,
+                          {
+                            lgCode: processed.lgCode,
+                            townId: processed.townId,
+                            blkId: processed.blkId,
+                            addrId: processed.addrId,
+                            addr2Id: processed.addr2Id,
+                          }
+                        )
+                        .execute();
+                      break;
+                    default:
+                      throw new Error(`unknown type: ${datasetFile.type}`);
+                  }
                   next(null);
                 } catch (error) {
-                  errorHandler(error);
+                  await errorHandler(error);
                 }
               },
             })
           )
-          .on('finish', () => {
-            db.exec('COMMIT');
-
-            db.prepare(
-              `INSERT OR REPLACE INTO "dataset"
-          (
-            key,
-            type,
-            content_length,
-            crc32,
-            last_modified
-          ) values (
-            @key,
-            @type,
-            @content_length,
-            @crc32,
-            @last_modified
-          )`
-            ).run({
-              key: datasetFile.filename,
-              type: datasetFile.type,
-              content_length: datasetFile.csvFile.contentLength,
-              crc32: datasetFile.csvFile.crc32,
-              last_modified: datasetFile.csvFile.lastModified,
-            });
+          .on('finish', async () => {
+            // db.exec('COMMIT');
+            await queryRunner.commitTransaction();
+            await ds
+              .createQueryBuilder()
+              .insert()
+              .into(Dataset)
+              .values([
+                {
+                  key: datasetFile.filename,
+                  type: datasetFile.type,
+                  contentLength: datasetFile.csvFile.contentLength,
+                  crc32: datasetFile.csvFile.crc32,
+                  lastModified: datasetFile.csvFile.lastModified,
+                },
+              ])
+              .execute();
 
             loadDataProgress?.increment();
             loadDataProgress?.updateETA();
             callback(null);
           })
-          .on('error', (error: Error) => {
-            errorHandler(error);
+          .on('error', async (error: Error) => {
+            await errorHandler(error);
           });
       });
     },

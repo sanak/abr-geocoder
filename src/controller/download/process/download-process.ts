@@ -27,7 +27,7 @@ import {
   CkanDownloader,
   CkanDownloaderEvent,
 } from '@usecase/ckan-downloader/ckan-downloader';
-import { Database } from 'better-sqlite3';
+import { DataSource } from 'typeorm';
 import { SingleBar } from 'cli-progress';
 import { DependencyContainer } from 'tsyringe';
 
@@ -43,7 +43,7 @@ export const downloadProcess = async ({
   metadata: DatasetMetadata;
   downloadFilePath: string | null;
 }> => {
-  const db = container.resolve<Database>(DI_TOKEN.DATABASE);
+  const ds = container.resolve<DataSource>(DI_TOKEN.DATASOURCE);
   const userAgent = container.resolve<string>(DI_TOKEN.USER_AGENT);
   const datasetUrl = container.resolve<string>(DI_TOKEN.DATASET_URL);
   const progress = container.resolve<SingleBar | undefined>(
@@ -51,7 +51,7 @@ export const downloadProcess = async ({
   );
 
   const downloader = new CkanDownloader({
-    db,
+    ds,
     userAgent,
     datasetUrl,
     ckanId,

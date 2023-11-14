@@ -25,6 +25,7 @@ import { IDatasetFileMeta } from '@domain/dataset-file';
 import { IStreamReady } from '@domain/istream-ready';
 import { DataField } from './data-field';
 import { DataWithDateFile } from './dataset-file';
+import { Pref } from '@entity/pref';
 
 export class PrefDatasetFile
   extends DataWithDateFile
@@ -71,6 +72,7 @@ export class PrefDatasetFile
       ...params,
       sql,
       csvFile,
+      entityClass: Pref,
     });
   }
 }

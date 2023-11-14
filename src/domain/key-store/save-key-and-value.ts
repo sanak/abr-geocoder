@@ -21,19 +21,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { Database } from 'better-sqlite3';
+import { DataSource } from 'typeorm';
+import { Metadata } from '@entity/metadata';
 
-export const saveKeyAndValue = ({
-  db,
+export const saveKeyAndValue = async ({
+  ds,
   key,
   value,
 }: {
-  db: Database;
+  ds: DataSource;
   key: string;
   value: string;
 }) => {
-  db.prepare('insert or replace into metadata values(@key, @value)').run({
-    key,
-    value,
-  });
+  ds.createQueryBuilder().insert().into(Metadata).values([
+    {
+      key,
+      value,
+    },
+  ]);
 };

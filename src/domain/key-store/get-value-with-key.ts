@@ -21,24 +21,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { Database } from 'better-sqlite3';
+import { Metadata } from '@entity/metadata';
+import { DataSource } from 'typeorm';
 
-export const getValueWithKey = ({
-  db,
+export const getValueWithKey = async ({
+  ds,
   key,
 }: {
-  db: Database;
+  ds: DataSource;
   key: string;
-}): string | undefined => {
-  const result = db
-    .prepare('select value from metadata where key = @key limit 1')
-    .get({
-      key,
-    }) as
-    | {
-        value: string;
-      }
-    | undefined;
+}): Promise<string | undefined> => {
+  const result = await ds
+    .createQueryBuilder()
+    .select('metadata')
+    .from(Metadata, 'metadata')
+    .where('metadata.key = :key', { key: key })
+    .getOne();
   if (!result) {
     return;
   }

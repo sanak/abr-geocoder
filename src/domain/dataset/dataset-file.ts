@@ -25,6 +25,7 @@ import {
   DatasetFileParams,
   IDatasetFile,
   IDatasetFileMeta,
+  EntityTypes,
 } from '@domain/dataset-file';
 import { IStreamReady } from '@domain/istream-ready';
 import proj4 from 'proj4';
@@ -40,6 +41,7 @@ export abstract class DatasetFile implements IDatasetFile {
   public readonly filename: string;
   public readonly sql: string;
   public readonly csvFile: IStreamReady;
+  public readonly entityClass: EntityTypes;
 
   abstract get fields(): DataField[];
 
@@ -50,17 +52,18 @@ export abstract class DatasetFile implements IDatasetFile {
     this.filename = params.filename;
     this.sql = params.sql;
     this.csvFile = params.csvFile;
+    this.entityClass = params.entityClass;
   }
 
   abstract process(rows: {
     [key: string]: string;
   }): Record<string, string | number>;
 
-  // CSVのフィールド名をDBカラム名に変換する
+  // CSVのフィールド名をDBエンティティ名に変換する
   parseFields(row: { [key: string]: string }): Record<string, string | number> {
     const result: Record<string, string | number> = {};
     this.fields.forEach(field => {
-      result[field.dbColumn] = row[field.csv] as string;
+      result[field.entity] = row[field.csv] as string;
     });
     return result;
   }
@@ -82,16 +85,16 @@ export abstract class DataForPosFile
     const parsedRow = this.parseFields(row);
 
     // 座標系の変換
-    const lat = parseFloat(parsedRow[DataField.REP_PNT_LAT.dbColumn] as string);
-    const lon = parseFloat(parsedRow[DataField.REP_PNT_LON.dbColumn] as string);
+    const lat = parseFloat(parsedRow[DataField.REP_PNT_LAT.entity] as string);
+    const lon = parseFloat(parsedRow[DataField.REP_PNT_LON.entity] as string);
     const extra = row['代表点_座標参照系'];
     const [longitude, latitude] = proj4(
       extra, // from
       'WGS84' // to
     ).forward([lon, lat]);
 
-    parsedRow[DataField.REP_PNT_LON.dbColumn] = longitude;
-    parsedRow[DataField.REP_PNT_LAT.dbColumn] = latitude;
+    parsedRow[DataField.REP_PNT_LON.entity] = longitude;
+    parsedRow[DataField.REP_PNT_LAT.entity] = latitude;
 
     return parsedRow;
   }

@@ -22,6 +22,12 @@
  * SOFTWARE.
  */
 import { IStreamReady } from './istream-ready';
+import { Entity } from 'typeorm';
+import { Pref } from '@entity/pref';
+import { City } from '@entity/city';
+import { Town } from '@entity/town';
+import { RsdtdspBlk } from '@entity/rsdtdsp-blk';
+import { RsdtdspRsdt } from '@entity/rsdtdsp-rsdt';
 
 export interface IDatasetFileMeta {
   fileArea: string;
@@ -30,9 +36,11 @@ export interface IDatasetFileMeta {
   type: string;
 }
 
+export type EntityTypes = typeof Pref | typeof City | typeof Town | typeof RsdtdspBlk | typeof RsdtdspRsdt;
 export interface IDatasetFile extends IDatasetFileMeta {
   sql: string;
   csvFile: IStreamReady;
+  entityClass: EntityTypes;
 }
 
 export type DatasetFileParams = IDatasetFile;
