@@ -46,7 +46,7 @@ export const updateCheck = async ({
   });
 
   const logger = container.resolve<Logger | undefined>(DI_TOKEN.LOGGER);
-  const ds = container.resolve<DataSource>(DI_TOKEN.DATABASE);
+  const ds = container.resolve<DataSource>(DI_TOKEN.DATASOURCE);
   const datasetUrl = container.resolve<string>(DI_TOKEN.DATASET_URL);
   const userAgent = container.resolve<string>(DI_TOKEN.USER_AGENT);
 
