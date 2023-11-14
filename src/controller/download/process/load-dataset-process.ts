@@ -40,7 +40,6 @@ import { Stream } from 'node:stream';
 import { DependencyContainer } from 'tsyringe';
 import { Logger } from 'winston';
 import { Dataset } from '@entity/dataset';
-import { DataField } from '@domain/dataset/data-field';
 
 export const loadDatasetProcess = async ({
   ds,
