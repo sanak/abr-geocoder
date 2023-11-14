@@ -27,7 +27,7 @@ import { PrefectureName } from '@domain/prefecture-name';
 import { Query } from '@domain/query';
 import { RegExpEx } from '@domain/reg-exp-ex';
 import { DASH } from '@settings/constant-values';
-import { Database, Statement } from 'better-sqlite3';
+import { DataSource } from 'typeorm';
 
 export type TownBlock = {
   lg_code: string;
@@ -61,11 +61,13 @@ export type RsdtAddr = {
  * 実質的にジオコーディングしている部分
  */
 export class AddressFinderForStep7 {
-  private readonly getBlockListStatement: Statement;
-  private readonly getRsdtListStatement: Statement;
+  private readonly ds: DataSource;
+  private readonly getBlockListStatement: string;
+  private readonly getRsdtListStatement: string;
 
-  constructor(db: Database) {
-    this.getBlockListStatement = db.prepare(`
+  constructor(ds: DataSource) {
+    this.ds = ds;
+    this.getBlockListStatement = `
       /* unit test: getBlockListStatement */
 
       select
@@ -89,21 +91,21 @@ export class AddressFinderForStep7 {
         "city"
         left join "town" on
           town.${DataField.LG_CODE.dbColumn} = city.${DataField.LG_CODE.dbColumn} and
-          (town.${DataField.OAZA_TOWN_NAME.dbColumn} || town.${DataField.CHOME_NAME.dbColumn} = @town)
+          (town.${DataField.OAZA_TOWN_NAME.dbColumn} || town.${DataField.CHOME_NAME.dbColumn} = ?)
         left join "rsdtdsp_blk" "blk" on
           blk.${DataField.LG_CODE.dbColumn} = city.${DataField.LG_CODE.dbColumn} and
           blk.${DataField.TOWN_ID.dbColumn} = town.${DataField.TOWN_ID.dbColumn}
       where
-        city.${DataField.PREF_NAME.dbColumn} = @prefecture AND 
+        city.${DataField.PREF_NAME.dbColumn} = ? AND 
         (
           "city".${DataField.COUNTY_NAME.dbColumn} ||
           "city".${DataField.CITY_NAME.dbColumn} ||
           "city".${DataField.OD_CITY_NAME.dbColumn}
-        ) = @city and
+        ) = ? and
         blk.${DataField.BLK_NUM.dbColumn} is not null
-    `);
+    `;
 
-    this.getRsdtListStatement = db.prepare(`
+    this.getRsdtListStatement = `
       /* unit test: getRsdtListStatement */
 
       select
@@ -122,7 +124,7 @@ export class AddressFinderForStep7 {
           town.${DataField.LG_CODE.dbColumn} = city.${DataField.LG_CODE.dbColumn} and
           (
             town.${DataField.OAZA_TOWN_NAME.dbColumn} ||
-            town.${DataField.CHOME_NAME.dbColumn} = @town
+            town.${DataField.CHOME_NAME.dbColumn} =?
           )
         left join "rsdtdsp_blk" "blk" on
           blk.${DataField.LG_CODE.dbColumn} = city.${DataField.LG_CODE.dbColumn} and
@@ -132,18 +134,18 @@ export class AddressFinderForStep7 {
           rsdt.${DataField.TOWN_ID.dbColumn} = town.${DataField.TOWN_ID.dbColumn} and
           rsdt.${DataField.BLK_ID.dbColumn} = blk.${DataField.BLK_ID.dbColumn}
       where
-        city.${DataField.PREF_NAME.dbColumn} = @prefecture AND
+        city.${DataField.PREF_NAME.dbColumn} = ? AND
         (
           "city".${DataField.COUNTY_NAME.dbColumn} ||
           "city".${DataField.CITY_NAME.dbColumn} ||
           "city".${DataField.OD_CITY_NAME.dbColumn}
-        ) = @city and
+        ) = ? and
         blk.${DataField.BLK_NUM.dbColumn} is not null and
         (
           rsdt.${DataField.RSDT_NUM.dbColumn} is not null or
           rsdt.${DataField.RSDT_NUM2.dbColumn} is not null
         )
-    `);
+    `;
   }
 
   async find(query: Query): Promise<Query> {
@@ -292,11 +294,11 @@ export class AddressFinderForStep7 {
     city: string;
     town: string;
   }): Promise<TownBlock[]> {
-    const results = this.getBlockListStatement.all({
+    const results = (await this.ds.query(this.getBlockListStatement, [
+      town,
       prefecture,
       city,
-      town,
-    }) as TownBlock[];
+    ])) as TownBlock[];
 
     return Promise.resolve(results);
   }
@@ -319,11 +321,11 @@ export class AddressFinderForStep7 {
     city: string;
     town: string;
   }): Promise<RsdtAddr[]> {
-    const results = this.getRsdtListStatement.all({
+    const results = (await this.ds.query(this.getRsdtListStatement, [
+      town,
       prefecture,
       city,
-      town,
-    }) as RsdtAddr[];
+    ])) as RsdtAddr[];
 
     results.sort((a, b) => {
       return (

@@ -31,7 +31,7 @@ import {
   J_DASH,
   KANJI_1to10_SYMBOLS,
 } from '@settings/constant-values';
-import { Database, Statement } from 'better-sqlite3';
+import { DataSource } from 'typeorm';
 import { PrefectureName } from '../prefecture-name';
 import { ITown } from '../town';
 import { toRegexPattern } from './to-regex-pattern';
@@ -62,20 +62,22 @@ export type FindParameters = {
  * 実質的にジオコーディングしている部分
  */
 export class AddressFinderForStep3and5 {
-  private readonly getTownStatement: Statement;
+  private readonly ds: DataSource;
+  private readonly getTownStatement: string;
   private readonly wildcardHelper: (address: string) => string;
   constructor({
-    db,
+    ds,
     wildcardHelper,
   }: {
-    db: Database;
+    ds: DataSource;
     wildcardHelper: (address: string) => string;
   }) {
+    this.ds = ds;
     this.wildcardHelper = wildcardHelper;
 
     // getTownList() で使用するSQLをstatementにしておく
     // "name"の文字数が長い順にソートする
-    this.getTownStatement = db.prepare(`
+    this.getTownStatement = `
       select
         "town".${DataField.LG_CODE.dbColumn},
         "town"."${DataField.TOWN_ID.dbColumn}",
@@ -87,15 +89,15 @@ export class AddressFinderForStep3and5 {
         "city"
         left join "town" on town.${DataField.LG_CODE.dbColumn} = city.${DataField.LG_CODE.dbColumn}
       where
-        "city"."${DataField.PREF_NAME.dbColumn}" = @prefecture AND
+        "city"."${DataField.PREF_NAME.dbColumn}" = ? AND
         (
           "city"."${DataField.COUNTY_NAME.dbColumn}" ||
           "city"."${DataField.CITY_NAME.dbColumn}" ||
           "city"."${DataField.OD_CITY_NAME.dbColumn}"
-        ) = @city AND
+        ) = ? AND
         "${DataField.TOWN_CODE.dbColumn}" <> 3
         order by length("name") desc;
-    `);
+    `;
   }
 
   async find({
@@ -347,10 +349,10 @@ export class AddressFinderForStep3and5 {
     prefecture: PrefectureName;
     city: string;
   }): Promise<TownRow[]> {
-    const results = this.getTownStatement.all({
+    const results = (await this.ds.query(this.getTownStatement, [
       prefecture,
       city,
-    }) as TownRow[];
+    ])) as TownRow[];
 
     return Promise.resolve(results);
   }

@@ -302,6 +302,7 @@ export const loadDatasetProcess = async ({
             await errorHandler(error);
           });
       });
+      await queryRunner.release();
     },
   });
 
