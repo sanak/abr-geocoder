@@ -29,7 +29,6 @@ import {
 import { IStreamReady } from '@domain/istream-ready';
 import { DataField } from './data-field';
 import { DataForPosFile } from './dataset-file';
-import { Town } from '@entity/town';
 
 export class TownPosDatasetFile extends DataForPosFile implements IDatasetFile {
   get fields(): DataField[] {
@@ -63,7 +62,6 @@ export class TownPosDatasetFile extends DataForPosFile implements IDatasetFile {
       ...params,
       sql,
       csvFile,
-      entityClass: Town,
     });
   }
 }

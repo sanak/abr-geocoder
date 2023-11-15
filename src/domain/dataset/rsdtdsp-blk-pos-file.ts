@@ -29,7 +29,6 @@ import {
 import { DataField } from './data-field';
 import { DataForPosFile } from './dataset-file';
 import { IStreamReady } from '@domain/istream-ready';
-import { RsdtdspBlk } from '@entity/rsdtdsp-blk';
 
 export class RsdtdspBlkPosFile extends DataForPosFile implements IDatasetFile {
   get fields(): DataField[] {
@@ -65,7 +64,6 @@ export class RsdtdspBlkPosFile extends DataForPosFile implements IDatasetFile {
       ...params,
       sql,
       csvFile,
-      entityClass: RsdtdspBlk,
     });
   }
 }

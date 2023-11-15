@@ -25,7 +25,6 @@ import {
   DatasetFileParams,
   IDatasetFile,
   IDatasetFileMeta,
-  EntityTypes,
 } from '@domain/dataset-file';
 import { IStreamReady } from '@domain/istream-ready';
 import proj4 from 'proj4';
@@ -41,7 +40,6 @@ export abstract class DatasetFile implements IDatasetFile {
   public readonly filename: string;
   public readonly sql: string;
   public readonly csvFile: IStreamReady;
-  public readonly entityClass: EntityTypes;
 
   abstract get fields(): DataField[];
 
@@ -52,7 +50,6 @@ export abstract class DatasetFile implements IDatasetFile {
     this.filename = params.filename;
     this.sql = params.sql;
     this.csvFile = params.csvFile;
-    this.entityClass = params.entityClass;
   }
 
   abstract process(rows: {

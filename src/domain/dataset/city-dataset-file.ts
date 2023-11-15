@@ -25,7 +25,6 @@ import { DatasetFileParams, IDatasetFileMeta } from '@domain/dataset-file';
 import { DataField } from '@domain/dataset/data-field';
 import { IStreamReady } from '@domain/istream-ready';
 import { DataWithDateFile } from './dataset-file';
-import { City } from '@entity/city';
 
 export class CityDatasetFile
   extends DataWithDateFile
@@ -104,7 +103,6 @@ export class CityDatasetFile
       ...params,
       sql,
       csvFile,
-      entityClass: City,
     });
   }
 }

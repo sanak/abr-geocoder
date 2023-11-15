@@ -40,6 +40,11 @@ import { Stream } from 'node:stream';
 import { DependencyContainer } from 'tsyringe';
 import { Logger } from 'winston';
 import { Dataset } from '@entity/dataset';
+import { Pref } from '@entity/pref';
+import { City } from '@entity/city';
+import { Town } from '@entity/town';
+import { RsdtdspBlk } from '@entity/rsdtdsp-blk';
+import { RsdtdspRsdt } from '@entity/rsdtdsp-rsdt';
 
 export const loadDatasetProcess = async ({
   ds,
@@ -147,12 +152,8 @@ export const loadDatasetProcess = async ({
       await queryRunner.connect();
 
       // CSVファイルの読み込み
-      // const statement = db.prepare(datasetFile.sql);
 
       const errorHandler = async (error: unknown) => {
-        // if (db.inTransaction) {
-        //   db.exec('ROLLBACK');
-        // }
         if (queryRunner.isTransactionActive) {
           await queryRunner.rollbackTransaction();
         }
@@ -167,7 +168,6 @@ export const loadDatasetProcess = async ({
       };
 
       // DBに登録
-      // db.exec('BEGIN');
       await queryRunner.startTransaction();
 
       datasetFile.csvFile.getStream().then(fileStream => {
@@ -185,13 +185,18 @@ export const loadDatasetProcess = async ({
                   const processed = datasetFile.process(chunk);
                   switch (datasetFile.type) {
                     case 'pref':
-                    case 'city':
-                    case 'rsdtdsp_blk':
-                    case 'rsdtdsp_rsdt':
                       await queryRunner.manager
                         .createQueryBuilder()
                         .insert()
-                        .into(datasetFile.entityClass)
+                        .into(Pref)
+                        .values([processed])
+                        .execute();
+                      break;
+                    case 'city':
+                      await queryRunner.manager
+                        .createQueryBuilder()
+                        .insert()
+                        .into(City)
                         .values([processed])
                         .execute();
                       break;
@@ -199,15 +204,31 @@ export const loadDatasetProcess = async ({
                       await queryRunner.manager
                         .createQueryBuilder()
                         .insert()
-                        .into(datasetFile.entityClass)
+                        .into(Town)
                         .values([processed])
                         .orUpdate(['rsdt_addr_flg'], ['lg_code', 'town_id'])
+                        .execute();
+                      break;
+                    case 'rsdtdsp_blk':
+                      await queryRunner.manager
+                        .createQueryBuilder()
+                        .insert()
+                        .into(RsdtdspBlk)
+                        .values([processed])
+                        .execute();
+                      break;
+                    case 'rsdtdsp_rsdt':
+                      await queryRunner.manager
+                        .createQueryBuilder()
+                        .insert()
+                        .into(RsdtdspRsdt)
+                        .values([processed])
                         .execute();
                       break;
                     case 'town_pos':
                       await queryRunner.manager
                         .createQueryBuilder()
-                        .update(datasetFile.entityClass)
+                        .update(Town)
                         .set({
                           rep_pnt_lon: processed.rep_pnt_lon,
                           rep_pnt_lat: processed.rep_pnt_lat,
@@ -225,7 +246,7 @@ export const loadDatasetProcess = async ({
                     case 'rsdtdsp_blk_pos':
                       await queryRunner.manager
                         .createQueryBuilder()
-                        .update(datasetFile.entityClass)
+                        .update(RsdtdspBlk)
                         .set({
                           rep_pnt_lon: processed.rep_pnt_lon,
                           rep_pnt_lat: processed.rep_pnt_lat,
@@ -245,7 +266,7 @@ export const loadDatasetProcess = async ({
                     case 'rsdtdsp_rsdt_pos':
                       await queryRunner.manager
                         .createQueryBuilder()
-                        .update(datasetFile.entityClass)
+                        .update(RsdtdspRsdt)
                         .set({
                           rep_pnt_lon: processed.rep_pnt_lon,
                           rep_pnt_lat: processed.rep_pnt_lat,
@@ -277,7 +298,6 @@ export const loadDatasetProcess = async ({
             })
           )
           .on('finish', async () => {
-            // db.exec('COMMIT');
             await queryRunner.commitTransaction();
             await ds
               .createQueryBuilder()
