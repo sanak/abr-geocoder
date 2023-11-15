@@ -27,25 +27,28 @@ import { MatchLevel } from '@domain/match-level';
 import { PrefectureName } from '@domain/prefecture-name';
 import { Query } from '@domain/query';
 import { describe, expect, it, jest } from '@jest/globals';
-import Database from 'better-sqlite3';
+import { DataSource } from 'typeorm';
 import Stream from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { GeocodingStep3B } from '../step3b-transform';
 import { WritableStreamToArray } from './stream-to-array.skip';
 
 jest.mock<AddressFinderForStep3and5>('@domain/geocode/address-finder-for-step3and5');
-jest.mock('better-sqlite3');
+jest.mock('typeorm');
 
 describe('step3b-transform', () => {
   it('複数の都道府県名にマッチする場合は、町名まで正規化して都道府県名を判別する', async () => {
     // 東京都府中市と にマッチする
     const dummyCallback = jest.fn();
 
-    const db = new Database('dummy');
+    const ds = new DataSource({
+      type: 'better-sqlite3',
+      database: 'dummy.sqlite',
+    });
     const wildcardHelper = (address: string) => address;
 
     const finder = new AddressFinderForStep3and5({
-      db,
+      ds,
       wildcardHelper,
     });
     const target = new GeocodingStep3B(finder);

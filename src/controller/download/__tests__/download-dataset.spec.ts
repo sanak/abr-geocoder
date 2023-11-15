@@ -23,7 +23,7 @@
  */
 import { describe, expect, it, jest } from '@jest/globals';
 import mockedFs from '@mock/fs';
-import { default as BetterSqlite3 } from 'better-sqlite3';
+import { default as typeorm } from 'typeorm';
 import { downloadDataset } from '../download-dataset';
 import { downloadProcess } from '../process/download-process';
 import { extractDatasetProcess } from '../process/extract-dataset-process';
@@ -32,7 +32,7 @@ import { DOWNLOAD_DATASET_RESULT } from '../download-dataset-result';
 jest.mock('fs');
 jest.mock('node:fs');
 jest.mock('winston');
-jest.mock<BetterSqlite3.Database>('better-sqlite3');
+jest.mock<typeorm.DataSource>('typeorm');
 jest.mock('@interface-adapter/setup-container');
 jest.mock('@usecase/ckan-downloader/ckan-downloader');
 jest.mock('@domain/key-store/get-value-with-key')

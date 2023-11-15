@@ -26,7 +26,7 @@ import { MatchLevel } from '@domain/match-level';
 import { PrefectureName } from '@domain/prefecture-name';
 import { Query } from '@domain/query';
 import { beforeAll, describe, expect, it, jest } from '@jest/globals';
-import Database from 'better-sqlite3';
+import { DataSource } from 'typeorm';
 import Stream, { PassThrough } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { GeocodingStep5 } from '../step5-transform';
@@ -40,10 +40,13 @@ const createWriteStream = () => {
 };
 
 const createAddressFinder = () => {
-  const db = new Database('dummy');
+  const ds = new DataSource({
+    type: 'better-sqlite3',
+    database: 'dummy.sqlite',
+  });
   const wildcardHelper = (address: string) => address;
   const finder = new AddressFinderForStep3and5({
-    db,
+    ds,
     wildcardHelper,
   });
   return finder;

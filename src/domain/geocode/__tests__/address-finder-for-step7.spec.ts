@@ -27,17 +27,17 @@ import { PrefectureName } from '@domain/prefecture-name';
 import { Query } from '@domain/query';
 import { describe, expect, it, jest } from '@jest/globals';
 import { DASH } from '@settings/constant-values';
-import { default as BetterSqlite3, default as Database } from 'better-sqlite3';
+import { default as typeorm, DataSource } from 'typeorm';
 import dummyBlockList from './dummyBlockList.json';
 import dummyRsdtList from './dummyRsdtList.json';
 
-jest.mock<BetterSqlite3.Database>('better-sqlite3');
+jest.mock<typeorm.DataSource>('typeorm');
 
-const MockedDB = Database as unknown as jest.Mock;
+const MockedDS = DataSource as unknown as jest.Mock;
 
-MockedDB.mockImplementation(() => {
+MockedDS.mockImplementation(() => {
   return {
-    prepare: (sql: string) => {
+    query: (sql: string) => {
       return {
         all: (params: {
           prefecture?: PrefectureName;
@@ -65,8 +65,11 @@ MockedDB.mockImplementation(() => {
 
 // TODO: カバレッジ100%になるテストケースを考える
 describe('AddressFinderForStep7', () => {
-  const mockedDB = new Database('<no sql file>');
-  const addressFinder = new AddressFinderForStep7(mockedDB);
+  const mockedDS = new DataSource({
+    type: 'better-sqlite3',
+    database: 'dummy.sqlite',
+  });
+  const addressFinder = new AddressFinderForStep7(mockedDS);
   
   it.concurrent('番地情報を返すケース(1)', async () => {
     const inputAddress = `東京都千代田区紀尾井町1-3　東京ガーデンテラス紀尾井町 19階、20階`;

@@ -25,16 +25,16 @@ import { City } from '@domain/city';
 import { Prefecture } from '@domain/prefecture';
 import { PrefectureName } from '@domain/prefecture-name';
 import { describe, expect, it, jest } from '@jest/globals';
-import { default as BetterSqlite3, default as Database } from 'better-sqlite3';
+import { DataSource } from 'typeorm';
 import { getPrefecturesFromDB } from '../get-prefectures-from-db';
 
-jest.mock<BetterSqlite3.Database>('better-sqlite3');
+jest.mock('typeorm');
 
-const MockedDB = Database as unknown as jest.Mock;
+const MockedDS = DataSource as unknown as jest.Mock;
 
-MockedDB.mockImplementation(() => {
+MockedDS.mockImplementation(() => {
   return {
-    prepare: (sql: string) => {
+    query: (sql: string) => {
       return {
         all: (params: {
           prefecture?: PrefectureName;
@@ -60,9 +60,12 @@ MockedDB.mockImplementation(() => {
 describe('getPrefecturesFromDB', () => {
 
   it('should return prefectures as Prefecture[]', async () => {
-    const mockedDB = new Database('<no sql file>');
+    const mockedDS = new DataSource({
+      type: 'better-sqlite3',
+      database: 'dummy.sqlite',
+    });
     const prefectures = await getPrefecturesFromDB({
-      db: mockedDB,
+      ds: mockedDS,
     });
     expect(prefectures).toEqual([
       new Prefecture({

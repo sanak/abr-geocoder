@@ -139,6 +139,19 @@
       ],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
-    }
+    },
+
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "test",
+      "program": "${workspaceFolder}/node_modules/jest/bin/jest",
+      "args": [
+        "--runInBand",
+        "src/domain/key-store/__tests__/save-key-and-value.spec.ts"
+      ],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+    },
   ]
 }

@@ -1,41 +1,53 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { default as BetterSqlite3, default as Database } from 'better-sqlite3';
+import { default as typeorm, DataSource } from 'typeorm';
+
 import {saveKeyAndValue} from '../save-key-and-value';
 
-jest.mock<BetterSqlite3.Database>('better-sqlite3');
+jest.mock<typeorm.DataSource>('typeorm');
 jest.mock('string-hash')
 
-const MockedDB = Database as unknown as jest.Mock;
+const MockedDS = DataSource as unknown as jest.Mock;
 
-const mockRunMethod = jest.fn();
+const mockValuesMethod = jest.fn();
 
-MockedDB.mockImplementation(() => {
+MockedDS.mockImplementation(() => {
   return {
-    prepare: (sql: string) => {
+    createQueryBuilder: () => {
       return {
-        run: mockRunMethod,
+        insert: () => {
+          return {
+            into: (entity: any) => {
+              return {
+                values: mockValuesMethod,
+              };
+            },
+          };
+        }
       };
     },
   };
 });
 
 describe("saveKeyAndValue()", () => {
-  const mockedDB = new Database('<no sql file>');
+  const mockedDS = new DataSource({
+    type: 'better-sqlite3',
+    database: 'dummy.sqlite',
+  });
 
   beforeEach(() => {
-    mockRunMethod.mockClear();
-    MockedDB.mockClear();
+    mockValuesMethod.mockClear();
+    MockedDS.mockClear();
   });
 
   it("should save value correctly", () => {
 
     saveKeyAndValue({
-      db: mockedDB,
+      ds: mockedDS,
       key: 'ba000001',
       value: '1234',
     });
-    expect(mockRunMethod).toBeCalled();
-    const receivedValue = mockRunMethod.mock.calls[0][0];
+    expect(mockValuesMethod).toBeCalled();
+    const receivedValue = mockValuesMethod.mock.calls[0][0];
     expect(receivedValue).toEqual({"key": 'ba000001', "value": "1234"});
   });
 });

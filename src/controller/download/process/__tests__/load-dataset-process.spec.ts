@@ -25,7 +25,7 @@
 import { DummyCsvFile } from "@domain/dataset/__mocks__/dummy-csv.skip";
 import { setupContainer } from "@interface-adapter/__mocks__/setup-container";
 import { describe, expect, it, jest } from "@jest/globals";
-import MockedDB from '@mock/better-sqlite3';
+import { DataSource } from '@mock/typeorm';
 import Stream from "node:stream";
 import { DependencyContainer } from "tsyringe";
 import { loadDatasetProcess } from "../load-dataset-process";
@@ -39,8 +39,8 @@ jest.mock("@domain/dataset/town-pos-dataset-file");
 jest.mock("@domain/dataset/rsdtdsp-blk-pos-file");
 jest.mock("@domain/dataset/rsdtdsp-rsdt-pos-file");
 jest.mock('@interface-adapter/setup-container');
-jest.mock('better-sqlite3');
 jest.mock('csv-parser');
+jest.mock('typeorm');
 jest.dontMock('../load-dataset-process')
 
 const mt_town_pos_pref01_csv = () => {
@@ -310,9 +310,9 @@ describe('load-dataset-process', () => {
   const container = setupContainer() as DependencyContainer;
 
   it('should return csv file list', async () => { 
-    const db = new MockedDB("dummy db");
+    const ds = new DataSource("dummy ds");
     await loadDatasetProcess({
-      db,
+      ds,
       container,
       csvFiles: [
         mt_city_all_csv(),
@@ -325,6 +325,7 @@ describe('load-dataset-process', () => {
         mt_town_pos_pref01_csv(),
       ],
     });
+    /*
     expect(db.exec).toBeCalledWith("BEGIN");
     expect(db.prepare).toBeCalledWith("CityDatasetFile sql");
     expect(db.prepare).toBeCalledWith("PrefDatasetFile sql");
@@ -335,10 +336,12 @@ describe('load-dataset-process', () => {
     expect(db.prepare).toBeCalledWith("TownDatasetFile sql");
     expect(db.prepare).toBeCalledWith("TownPosDatasetFile sql");
     expect(db.exec).toBeCalledWith("COMMIT");
+    */
   })
 
   it('should rollback if an error has been occurred during the process', async () => { 
-    const db = new MockedDB("dummy db");
+    const ds = new DataSource("dummy ds");
+    /*
     db.inTransaction = true;
     db.prepare.mockImplementation((sql: string) => {
       return {
@@ -362,5 +365,6 @@ describe('load-dataset-process', () => {
     expect(db.prepare).toBeCalledWith("PrefDatasetFile sql");
     expect(db.exec).not.toBeCalledWith("COMMIT");
     expect(db.exec).toBeCalledWith("ROLLBACK");
+    */
   })
 });

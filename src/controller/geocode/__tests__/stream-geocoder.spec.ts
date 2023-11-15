@@ -28,7 +28,6 @@ jest.mock('@domain/geocode/get-prefecture-regex-patterns');
 jest.mock('@domain/geocode/get-prefectures-from-db');
 jest.mock('@settings/patch-patterns');
 jest.mock('node:stream');
-jest.mock<BetterSqlite3.Database>('better-sqlite3');
 jest.mock('../step1-transform');
 jest.mock('../step2-transform');
 jest.mock('../step3-transform');
@@ -47,8 +46,7 @@ import { getCityPatternsForEachPrefecture as getCityP } from '@domain/geocode/ge
 import { getPrefectureRegexPatterns as getPreRegP } from '@domain/geocode/get-prefecture-regex-patterns';
 import { getPrefecturesFromDB as getPrefs } from '@domain/geocode/get-prefectures-from-db';
 import { getSameNamedPrefecturePatterns as getSamePrefs } from '@domain/geocode/get-same-named-prefecture-patterns';
-import { default as MockedBetterSqlite3 } from '@mock/better-sqlite3';
-import { default as BetterSqlite3 } from 'better-sqlite3';
+import { DataSource } from '@mock/typeorm';
 import { Readable } from 'node:stream';import * as PATCHES from '@settings/patch-patterns';
 import { StreamGeocoder } from '../stream-geocoder';
 
@@ -114,8 +112,8 @@ const mockedPatches = PATCHES as jest.MockedObject<typeof PATCHES>;
 mockedPatches.default = [];
 
 
-const createDB = () => {
-  return new MockedBetterSqlite3('<no sql file>');
+const createDS = () => {
+  return new DataSource('<no sql file>');
 }
 describe('StreamGeocoder', () => {
 
@@ -129,8 +127,8 @@ describe('StreamGeocoder', () => {
     });
 
     it('Fuzzyを指定しない場合、同じ値を返す', async () => {
-      const mockedDB = createDB();
-      await StreamGeocoder.create(mockedDB);
+      const mockedDS = createDS();
+      await StreamGeocoder.create(mockedDS);
       expect(mockedGetPreRegP).toHaveBeenCalled();
       const args = mockedGetPreRegP.mock.calls[0];
       const wildcardHelper = args[0].wildcardHelper;
@@ -139,8 +137,8 @@ describe('StreamGeocoder', () => {
 
     it('Fuzzyを指定した場合、正規表現を書き換える', async () => {
       const fuzzy = '●';
-      const mockedDB = createDB();
-      await StreamGeocoder.create(mockedDB, fuzzy);
+      const mockedDS = createDS();
+      await StreamGeocoder.create(mockedDS, fuzzy);
       expect(mockedGetPreRegP).toHaveBeenCalled();
       const args = mockedGetPreRegP.mock.calls[0];
       const wildcardHelper = args[0].wildcardHelper;
