@@ -28,7 +28,7 @@ import { Query } from '@domain/query';
 import { RegExpEx } from '@domain/reg-exp-ex';
 import { DASH } from '@settings/constant-values';
 import { DataSource } from 'typeorm';
-import { queryWithNamedParams } from '@domain/query-with-named-params';
+import { prepareSqlAndParamKeys } from '@domain/prepare-sql-and-param-keys';
 
 export type TownBlock = {
   lg_code: string;
@@ -63,90 +63,104 @@ export type RsdtAddr = {
  */
 export class AddressFinderForStep7 {
   private readonly ds: DataSource;
-  private readonly getBlockListStatement: string;
-  private readonly getRsdtListStatement: string;
+  private readonly getBlockListSql: string;
+  private readonly getBlockListParamKeys: string[];
+  private readonly getRsdtListSql: string;
+  private readonly getRsdtListParamKeys: string[];
 
   constructor(ds: DataSource) {
     this.ds = ds;
-    this.getBlockListStatement = `
-      /* unit test: getBlockListStatement */
+    const { preparedSql: blockListSql, paramKeys: blockListParamKeys } =
+      prepareSqlAndParamKeys(
+        ds,
+        `
+        /* unit test: getBlockListStatement */
 
-      select
-        "blk".${DataField.LG_CODE.dbColumn},
-        "blk".${DataField.TOWN_ID.dbColumn},
-        "blk".${DataField.BLK_ID.dbColumn},
-        city.${DataField.PREF_NAME.dbColumn} as "pref",
-        (
-          city.${DataField.COUNTY_NAME.dbColumn} ||
-          city.${DataField.CITY_NAME.dbColumn} ||
-          city.${DataField.OD_CITY_NAME.dbColumn}
-        ) as "city",
-        (
-          town.${DataField.OAZA_TOWN_NAME.dbColumn} ||
-          town.${DataField.CHOME_NAME.dbColumn}
-        ) as "town",
-        blk.${DataField.BLK_NUM.dbColumn} as "blk",
-        blk.${DataField.REP_PNT_LAT.dbColumn} as "lat",
-        blk.${DataField.REP_PNT_LON.dbColumn} as "lon"
-      from
-        "city"
-        left join "town" on
-          town.${DataField.LG_CODE.dbColumn} = city.${DataField.LG_CODE.dbColumn} and
-          (town.${DataField.OAZA_TOWN_NAME.dbColumn} || town.${DataField.CHOME_NAME.dbColumn} = @town)
-        left join "rsdtdsp_blk" "blk" on
-          blk.${DataField.LG_CODE.dbColumn} = city.${DataField.LG_CODE.dbColumn} and
-          blk.${DataField.TOWN_ID.dbColumn} = town.${DataField.TOWN_ID.dbColumn}
-      where
-        city.${DataField.PREF_NAME.dbColumn} = @prefecture AND 
-        (
-          "city".${DataField.COUNTY_NAME.dbColumn} ||
-          "city".${DataField.CITY_NAME.dbColumn} ||
-          "city".${DataField.OD_CITY_NAME.dbColumn}
-        ) = @city and
-        blk.${DataField.BLK_NUM.dbColumn} is not null
-    `;
-
-    this.getRsdtListStatement = `
-      /* unit test: getRsdtListStatement */
-
-      select
-        "rsdt".${DataField.LG_CODE.dbColumn},
-        "rsdt".${DataField.TOWN_ID.dbColumn},
-        "rsdt".${DataField.BLK_ID.dbColumn},
-        "rsdt".${DataField.ADDR_ID.dbColumn} as "addr1_id",
-        "rsdt".${DataField.ADDR2_ID.dbColumn},
-        blk.${DataField.BLK_NUM.dbColumn} as "blk",
-        rsdt.${DataField.RSDT_NUM.dbColumn} as "addr1",
-        rsdt.${DataField.RSDT_NUM2.dbColumn} as "addr2",
-        rsdt.${DataField.REP_PNT_LAT.dbColumn} as "lat",
-        rsdt.${DataField.REP_PNT_LON.dbColumn} as "lon"
-      from "city"
-        left join "town" on 
-          town.${DataField.LG_CODE.dbColumn} = city.${DataField.LG_CODE.dbColumn} and
+        select
+          "blk".${DataField.LG_CODE.dbColumn},
+          "blk".${DataField.TOWN_ID.dbColumn},
+          "blk".${DataField.BLK_ID.dbColumn},
+          city.${DataField.PREF_NAME.dbColumn} as "pref",
+          (
+            city.${DataField.COUNTY_NAME.dbColumn} ||
+            city.${DataField.CITY_NAME.dbColumn} ||
+            city.${DataField.OD_CITY_NAME.dbColumn}
+          ) as "city",
           (
             town.${DataField.OAZA_TOWN_NAME.dbColumn} ||
-            town.${DataField.CHOME_NAME.dbColumn} = @town
+            town.${DataField.CHOME_NAME.dbColumn}
+          ) as "town",
+          blk.${DataField.BLK_NUM.dbColumn} as "blk",
+          blk.${DataField.REP_PNT_LAT.dbColumn} as "lat",
+          blk.${DataField.REP_PNT_LON.dbColumn} as "lon"
+        from
+          "city"
+          left join "town" on
+            town.${DataField.LG_CODE.dbColumn} = city.${DataField.LG_CODE.dbColumn} and
+            (town.${DataField.OAZA_TOWN_NAME.dbColumn} || town.${DataField.CHOME_NAME.dbColumn} = @town)
+          left join "rsdtdsp_blk" "blk" on
+            blk.${DataField.LG_CODE.dbColumn} = city.${DataField.LG_CODE.dbColumn} and
+            blk.${DataField.TOWN_ID.dbColumn} = town.${DataField.TOWN_ID.dbColumn}
+        where
+          city.${DataField.PREF_NAME.dbColumn} = @prefecture AND 
+          (
+            "city".${DataField.COUNTY_NAME.dbColumn} ||
+            "city".${DataField.CITY_NAME.dbColumn} ||
+            "city".${DataField.OD_CITY_NAME.dbColumn}
+          ) = @city and
+          blk.${DataField.BLK_NUM.dbColumn} is not null
+        `
+      );
+    this.getBlockListSql = blockListSql;
+    this.getBlockListParamKeys = blockListParamKeys;
+
+    const { preparedSql: rsdtListSql, paramKeys: rsdtListParamKeys } =
+      prepareSqlAndParamKeys(
+        ds,
+        `
+        /* unit test: getRsdtListStatement */
+
+        select
+          "rsdt".${DataField.LG_CODE.dbColumn},
+          "rsdt".${DataField.TOWN_ID.dbColumn},
+          "rsdt".${DataField.BLK_ID.dbColumn},
+          "rsdt".${DataField.ADDR_ID.dbColumn} as "addr1_id",
+          "rsdt".${DataField.ADDR2_ID.dbColumn},
+          blk.${DataField.BLK_NUM.dbColumn} as "blk",
+          rsdt.${DataField.RSDT_NUM.dbColumn} as "addr1",
+          rsdt.${DataField.RSDT_NUM2.dbColumn} as "addr2",
+          rsdt.${DataField.REP_PNT_LAT.dbColumn} as "lat",
+          rsdt.${DataField.REP_PNT_LON.dbColumn} as "lon"
+        from "city"
+          left join "town" on 
+            town.${DataField.LG_CODE.dbColumn} = city.${DataField.LG_CODE.dbColumn} and
+            (
+              town.${DataField.OAZA_TOWN_NAME.dbColumn} ||
+              town.${DataField.CHOME_NAME.dbColumn} = @town
+            )
+          left join "rsdtdsp_blk" "blk" on
+            blk.${DataField.LG_CODE.dbColumn} = city.${DataField.LG_CODE.dbColumn} and
+            blk.${DataField.TOWN_ID.dbColumn} = town.${DataField.TOWN_ID.dbColumn}
+          left join "rsdtdsp_rsdt" "rsdt" on
+            rsdt.${DataField.LG_CODE.dbColumn} = city.${DataField.LG_CODE.dbColumn} and
+            rsdt.${DataField.TOWN_ID.dbColumn} = town.${DataField.TOWN_ID.dbColumn} and
+            rsdt.${DataField.BLK_ID.dbColumn} = blk.${DataField.BLK_ID.dbColumn}
+        where
+          city.${DataField.PREF_NAME.dbColumn} = @prefecture AND
+          (
+            "city".${DataField.COUNTY_NAME.dbColumn} ||
+            "city".${DataField.CITY_NAME.dbColumn} ||
+            "city".${DataField.OD_CITY_NAME.dbColumn}
+          ) = @city and
+          blk.${DataField.BLK_NUM.dbColumn} is not null and
+          (
+            rsdt.${DataField.RSDT_NUM.dbColumn} is not null or
+            rsdt.${DataField.RSDT_NUM2.dbColumn} is not null
           )
-        left join "rsdtdsp_blk" "blk" on
-          blk.${DataField.LG_CODE.dbColumn} = city.${DataField.LG_CODE.dbColumn} and
-          blk.${DataField.TOWN_ID.dbColumn} = town.${DataField.TOWN_ID.dbColumn}
-        left join "rsdtdsp_rsdt" "rsdt" on
-          rsdt.${DataField.LG_CODE.dbColumn} = city.${DataField.LG_CODE.dbColumn} and
-          rsdt.${DataField.TOWN_ID.dbColumn} = town.${DataField.TOWN_ID.dbColumn} and
-          rsdt.${DataField.BLK_ID.dbColumn} = blk.${DataField.BLK_ID.dbColumn}
-      where
-        city.${DataField.PREF_NAME.dbColumn} = @prefecture AND
-        (
-          "city".${DataField.COUNTY_NAME.dbColumn} ||
-          "city".${DataField.CITY_NAME.dbColumn} ||
-          "city".${DataField.OD_CITY_NAME.dbColumn}
-        ) = @city and
-        blk.${DataField.BLK_NUM.dbColumn} is not null and
-        (
-          rsdt.${DataField.RSDT_NUM.dbColumn} is not null or
-          rsdt.${DataField.RSDT_NUM2.dbColumn} is not null
-        )
-    `;
+        `
+      );
+    this.getRsdtListSql = rsdtListSql;
+    this.getRsdtListParamKeys = rsdtListParamKeys;
   }
 
   async find(query: Query): Promise<Query> {
@@ -295,14 +309,14 @@ export class AddressFinderForStep7 {
     city: string;
     town: string;
   }): Promise<TownBlock[]> {
-    const results = (await queryWithNamedParams(
-      this.ds,
-      this.getBlockListStatement,
-      {
-        prefecture,
-        city,
-        town,
-      }
+    const params: { [key: string]: string } = {
+      prefecture,
+      city,
+      town,
+    };
+    const results = (await this.ds.query(
+      this.getBlockListSql,
+      this.getBlockListParamKeys.map(key => params[key])
     )) as TownBlock[];
 
     return Promise.resolve(results);
@@ -326,14 +340,14 @@ export class AddressFinderForStep7 {
     city: string;
     town: string;
   }): Promise<RsdtAddr[]> {
-    const results = (await queryWithNamedParams(
-      this.ds,
-      this.getRsdtListStatement,
-      {
-        town,
-        prefecture,
-        city,
-      }
+    const params: { [key: string]: string } = {
+      prefecture,
+      city,
+      town,
+    };
+    const results = (await this.ds.query(
+      this.getRsdtListSql,
+      this.getRsdtListParamKeys.map(key => params[key])
     )) as RsdtAddr[];
 
     results.sort((a, b) => {

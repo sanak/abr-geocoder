@@ -35,7 +35,7 @@ import { RegExpEx } from '@domain/reg-exp-ex';
 import { isKanjiNumberFollewedByCho } from '@domain/is-kanji-number-follewed-by-cho';
 import { toRegexPattern } from '@domain/geocode/to-regex-pattern';
 import { kan2num } from '@domain/kan2num';
-import { queryWithNamedParams } from '@domain/query-with-named-params';
+import { prepareSqlAndParamKeys } from '@domain/prepare-sql-and-param-keys';
 
 export type TownRow = {
   lg_code: string;
@@ -64,7 +64,8 @@ export type FindParameters = {
  */
 export class AddressFinderForStep3and5 {
   private readonly ds: DataSource;
-  private readonly getTownStatement: string;
+  private readonly getTownSql: string;
+  private readonly getTownParamKeys: string[];
   private readonly wildcardHelper: (address: string) => string;
   constructor({
     ds,
@@ -78,7 +79,9 @@ export class AddressFinderForStep3and5 {
 
     // getTownList() で使用するSQLをstatementにしておく
     // "name"の文字数が長い順にソートする
-    this.getTownStatement = `
+    const { preparedSql, paramKeys } = prepareSqlAndParamKeys(
+      ds,
+      `
       select
         "town".${DataField.LG_CODE.dbColumn},
         "town"."${DataField.TOWN_ID.dbColumn}",
@@ -98,7 +101,10 @@ export class AddressFinderForStep3and5 {
         ) = @city AND
         "${DataField.TOWN_CODE.dbColumn}" <> 3
         order by length("name") desc;
-    `;
+      `
+    );
+    this.getTownSql = preparedSql;
+    this.getTownParamKeys = paramKeys;
   }
 
   async find({
@@ -350,13 +356,13 @@ export class AddressFinderForStep3and5 {
     prefecture: PrefectureName;
     city: string;
   }): Promise<TownRow[]> {
-    const results = (await queryWithNamedParams(
-      this.ds,
-      this.getTownStatement,
-      {
-        prefecture,
-        city,
-      }
+    const params: { [key: string]: string } = {
+      prefecture,
+      city,
+    };
+    const results = (await this.ds.query(
+      this.getTownSql,
+      this.getTownParamKeys.map(key => params[key])
     )) as TownRow[];
 
     return Promise.resolve(results);

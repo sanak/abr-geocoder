@@ -40,7 +40,7 @@ import { Stream } from 'node:stream';
 import { DependencyContainer } from 'tsyringe';
 import { Logger } from 'winston';
 import { Dataset } from '@entity/dataset';
-import { queryWithNamedParams } from '@domain/query-with-named-params';
+import { prepareSqlAndParamKeys } from '@domain/prepare-sql-and-param-keys';
 
 export const loadDatasetProcess = async ({
   ds,
@@ -148,6 +148,10 @@ export const loadDatasetProcess = async ({
       await queryRunner.connect();
 
       // CSVファイルの読み込み
+      const { preparedSql, paramKeys } = prepareSqlAndParamKeys(
+        ds,
+        datasetFile.sql
+      );
 
       const errorHandler = async (error: unknown) => {
         if (queryRunner.isTransactionActive) {
@@ -179,11 +183,9 @@ export const loadDatasetProcess = async ({
               async write(chunk, encoding, next) {
                 try {
                   const processed = datasetFile.process(chunk);
-                  await queryWithNamedParams(
-                    ds,
-                    datasetFile.sql,
-                    processed,
-                    queryRunner
+                  await queryRunner.connection.query(
+                    preparedSql,
+                    paramKeys.map(key => processed[key])
                   );
                   next(null);
                 } catch (error) {
