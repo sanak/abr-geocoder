@@ -131,6 +131,7 @@ export class InitialSchema1699885152466 implements MigrationInterface {
         "blk_num" text,
         "rsdt_num" text NOT NULL,
         "rsdt_num2" text,
+        "basic_rsdt_div" integer,
         "rsdt_addr_flg" integer NOT NULL,
         "rsdt_addr_mtd_code" integer NOT NULL,
         "oaza_frn_ltrs_flg" text,

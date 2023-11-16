@@ -49,6 +49,9 @@ export class RsdtdspRsdt {
   @Column('text', { nullable: true, comment: '住居番号2' })
   rsdt_num2!: string;
 
+  @Column('text', { nullable: true, comment: '基礎番号・住居番号区分' })
+  basic_rsdt_div!: number;
+
   @Column('integer', { comment: '住居表示フラグ' })
   rsdt_addr_flg!: number;
 
