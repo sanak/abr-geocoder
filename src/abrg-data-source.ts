@@ -9,5 +9,10 @@ export const AbrgDataSource = new DataSource({
   logging: false,
   entities: ['src/entity/*.ts'],
   migrations: ['src/migration/*.ts'],
-  subscribers: [],
+  migrationsRun: true,
+  statementCacheSize: 150,
+  prepareDatabase: db => {
+    db.pragma('journal_mode = MEMORY');
+    db.pragma('synchronous = OFF');
+  },
 });
