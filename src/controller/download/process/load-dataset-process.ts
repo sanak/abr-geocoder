@@ -33,7 +33,7 @@ import { TownDatasetFile } from '@domain/dataset/town-dataset-file';
 import { TownPosDatasetFile } from '@domain/dataset/town-pos-dataset-file';
 import { IStreamReady } from '@domain/istream-ready';
 import { DI_TOKEN } from '@interface-adapter/tokens';
-import { DataSource } from 'typeorm';
+import { DataSource, QueryRunner } from 'typeorm';
 import { MultiBar } from 'cli-progress';
 import csvParser from 'csv-parser';
 import { Stream } from 'node:stream';
@@ -140,6 +140,126 @@ export const loadDatasetProcess = async ({
     },
   });
 
+  const processBulkInsertOrEachUpdate = async (
+    datasetFile: DatasetFile,
+    queryRunner: QueryRunner,
+    processedRecords: Array<Record<string, string | number>>
+  ) => {
+    switch (datasetFile.type) {
+      case 'pref':
+        await queryRunner.manager
+          .createQueryBuilder()
+          .insert()
+          .into(Pref)
+          .values(processedRecords)
+          .execute();
+        break;
+      case 'city':
+        await queryRunner.manager
+          .createQueryBuilder()
+          .insert()
+          .into(City)
+          .values(processedRecords)
+          .execute();
+        break;
+      case 'town':
+        await queryRunner.manager
+          .createQueryBuilder()
+          .insert()
+          .into(Town)
+          .values(processedRecords)
+          .orUpdate(['rsdt_addr_flg'], ['lg_code', 'town_id'])
+          .execute();
+        break;
+      case 'rsdtdsp_blk':
+        await queryRunner.manager
+          .createQueryBuilder()
+          .insert()
+          .into(RsdtdspBlk)
+          .values(processedRecords)
+          .execute();
+        break;
+      case 'rsdtdsp_rsdt':
+        await queryRunner.manager
+          .createQueryBuilder()
+          .insert()
+          .into(RsdtdspRsdt)
+          .values(processedRecords)
+          .execute();
+        break;
+      case 'town_pos':
+        processedRecords.forEach(async processed => {
+          await queryRunner.manager
+            .createQueryBuilder()
+            .update(Town)
+            .set({
+              rep_pnt_lon: processed.rep_pnt_lon,
+              rep_pnt_lat: processed.rep_pnt_lat,
+            })
+            .where(
+              `lg_code = :lg_code AND
+              town_id = :town_id`,
+              {
+                lg_code: processed.lg_code,
+                town_id: processed.town_id,
+              }
+            )
+            .execute();
+        });
+        break;
+      case 'rsdtdsp_blk_pos':
+        processedRecords.forEach(async processed => {
+          await queryRunner.manager
+            .createQueryBuilder()
+            .update(RsdtdspBlk)
+            .set({
+              rep_pnt_lon: processed.rep_pnt_lon,
+              rep_pnt_lat: processed.rep_pnt_lat,
+            })
+            .where(
+              `lg_code = :lg_code AND
+              town_id = :town_id AND
+              blk_id = :blk_id`,
+              {
+                lg_code: processed.lg_code,
+                town_id: processed.town_id,
+                blk_id: processed.blk_id,
+              }
+            )
+            .execute();
+        });
+        break;
+      case 'rsdtdsp_rsdt_pos':
+        processedRecords.forEach(async processed => {
+          await queryRunner.manager
+            .createQueryBuilder()
+            .update(RsdtdspRsdt)
+            .set({
+              rep_pnt_lon: processed.rep_pnt_lon,
+              rep_pnt_lat: processed.rep_pnt_lat,
+            })
+            .where(
+              `lg_code = :lg_code AND
+              town_id = :town_id AND
+              blk_id = :blk_id AND
+              addr_id = :addr_id AND
+              addr2_id = :addr2_id`,
+              {
+                lg_code: processed.lg_code,
+                town_id: processed.town_id,
+                blk_id: processed.blk_id,
+                addr_id: processed.addr_id,
+                addr2_id: processed.addr2_id,
+              }
+            )
+            .execute();
+        });
+        break;
+      default:
+        throw new Error(`unknown type: ${datasetFile.type}`);
+    }
+  };
+
   const loadDataProgress = multiProgressBar?.create(csvFiles.length, 0, {
     filename: 'loading...',
   });
@@ -170,6 +290,8 @@ export const loadDatasetProcess = async ({
       // DBに登録
       await queryRunner.startTransaction();
 
+      const bulkSize = 100;
+      let processedRecords: Array<Record<string, string | number>> = [];
       datasetFile.csvFile.getStream().then(fileStream => {
         fileStream
           .pipe(
@@ -181,114 +303,18 @@ export const loadDatasetProcess = async ({
             new Stream.Writable({
               objectMode: true,
               async write(chunk, encoding, next) {
+                // logger?.info(`${JSON.stringify(chunk)}`);
                 try {
                   const processed = datasetFile.process(chunk);
-                  switch (datasetFile.type) {
-                    case 'pref':
-                      await queryRunner.manager
-                        .createQueryBuilder()
-                        .insert()
-                        .into(Pref)
-                        .values([processed])
-                        .execute();
-                      break;
-                    case 'city':
-                      await queryRunner.manager
-                        .createQueryBuilder()
-                        .insert()
-                        .into(City)
-                        .values([processed])
-                        .execute();
-                      break;
-                    case 'town':
-                      await queryRunner.manager
-                        .createQueryBuilder()
-                        .insert()
-                        .into(Town)
-                        .values([processed])
-                        .orUpdate(['rsdt_addr_flg'], ['lg_code', 'town_id'])
-                        .execute();
-                      break;
-                    case 'rsdtdsp_blk':
-                      await queryRunner.manager
-                        .createQueryBuilder()
-                        .insert()
-                        .into(RsdtdspBlk)
-                        .values([processed])
-                        .execute();
-                      break;
-                    case 'rsdtdsp_rsdt':
-                      await queryRunner.manager
-                        .createQueryBuilder()
-                        .insert()
-                        .into(RsdtdspRsdt)
-                        .values([processed])
-                        .execute();
-                      break;
-                    case 'town_pos':
-                      await queryRunner.manager
-                        .createQueryBuilder()
-                        .update(Town)
-                        .set({
-                          rep_pnt_lon: processed.rep_pnt_lon,
-                          rep_pnt_lat: processed.rep_pnt_lat,
-                        })
-                        .where(
-                          `lg_code = :lg_code AND
-                           town_id = :town_id`,
-                          {
-                            lg_code: processed.lg_code,
-                            town_id: processed.town_id,
-                          }
-                        )
-                        .execute();
-                      break;
-                    case 'rsdtdsp_blk_pos':
-                      await queryRunner.manager
-                        .createQueryBuilder()
-                        .update(RsdtdspBlk)
-                        .set({
-                          rep_pnt_lon: processed.rep_pnt_lon,
-                          rep_pnt_lat: processed.rep_pnt_lat,
-                        })
-                        .where(
-                          `lg_code = :lg_code AND
-                           town_id = :town_id AND
-                           blk_id = :blk_id`,
-                          {
-                            lg_code: processed.lg_code,
-                            town_id: processed.town_id,
-                            blk_id: processed.blk_id,
-                          }
-                        )
-                        .execute();
-                      break;
-                    case 'rsdtdsp_rsdt_pos':
-                      await queryRunner.manager
-                        .createQueryBuilder()
-                        .update(RsdtdspRsdt)
-                        .set({
-                          rep_pnt_lon: processed.rep_pnt_lon,
-                          rep_pnt_lat: processed.rep_pnt_lat,
-                        })
-                        .where(
-                          `lg_code = :lg_code AND
-                           town_id = :town_id AND
-                           blk_id = :blk_id AND
-                           addr_id = :addr_id AND
-                           addr2_id = :addr2_id`,
-                          {
-                            lg_code: processed.lg_code,
-                            town_id: processed.town_id,
-                            blk_id: processed.blk_id,
-                            addr_id: processed.addr_id,
-                            addr2_id: processed.addr2_id,
-                          }
-                        )
-                        .execute();
-                      break;
-                    default:
-                      throw new Error(`unknown type: ${datasetFile.type}`);
+                  // logger?.info(`${JSON.stringify(processed)}`);
+                  processedRecords.push(processed);
+                  if (processedRecords.length === bulkSize) {
+                    await processBulkInsertOrEachUpdate(
+                      datasetFile,
+                      queryRunner,
+                      processedRecords
+                    );
+                    processedRecords = [];
                   }
                   next(null);
                 } catch (error) {
@@ -298,6 +324,14 @@ export const loadDatasetProcess = async ({
             })
           )
           .on('finish', async () => {
+            if (processedRecords.length > 0) {
+              await processBulkInsertOrEachUpdate(
+                datasetFile,
+                queryRunner,
+                processedRecords
+              );
+              processedRecords = [];
+            }
             await queryRunner.commitTransaction();
             await ds
               .createQueryBuilder()
