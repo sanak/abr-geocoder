@@ -40,11 +40,7 @@ import { Stream } from 'node:stream';
 import { DependencyContainer } from 'tsyringe';
 import { Logger } from 'winston';
 import { Dataset } from '@entity/dataset';
-import { Pref } from '@entity/pref';
-import { City } from '@entity/city';
-import { Town } from '@entity/town';
-import { RsdtdspBlk } from '@entity/rsdtdsp-blk';
-import { RsdtdspRsdt } from '@entity/rsdtdsp-rsdt';
+import { queryWithNamedParams } from '@domain/query-with-named-params';
 
 export const loadDatasetProcess = async ({
   ds,
@@ -183,113 +179,12 @@ export const loadDatasetProcess = async ({
               async write(chunk, encoding, next) {
                 try {
                   const processed = datasetFile.process(chunk);
-                  switch (datasetFile.type) {
-                    case 'pref':
-                      await queryRunner.manager
-                        .createQueryBuilder()
-                        .insert()
-                        .into(Pref)
-                        .values([processed])
-                        .execute();
-                      break;
-                    case 'city':
-                      await queryRunner.manager
-                        .createQueryBuilder()
-                        .insert()
-                        .into(City)
-                        .values([processed])
-                        .execute();
-                      break;
-                    case 'town':
-                      await queryRunner.manager
-                        .createQueryBuilder()
-                        .insert()
-                        .into(Town)
-                        .values([processed])
-                        .orUpdate(['rsdt_addr_flg'], ['lg_code', 'town_id'])
-                        .execute();
-                      break;
-                    case 'rsdtdsp_blk':
-                      await queryRunner.manager
-                        .createQueryBuilder()
-                        .insert()
-                        .into(RsdtdspBlk)
-                        .values([processed])
-                        .execute();
-                      break;
-                    case 'rsdtdsp_rsdt':
-                      await queryRunner.manager
-                        .createQueryBuilder()
-                        .insert()
-                        .into(RsdtdspRsdt)
-                        .values([processed])
-                        .execute();
-                      break;
-                    case 'town_pos':
-                      await queryRunner.manager
-                        .createQueryBuilder()
-                        .update(Town)
-                        .set({
-                          rep_pnt_lon: processed.rep_pnt_lon,
-                          rep_pnt_lat: processed.rep_pnt_lat,
-                        })
-                        .where(
-                          `lg_code = :lg_code AND
-                           town_id = :town_id`,
-                          {
-                            lg_code: processed.lg_code,
-                            town_id: processed.town_id,
-                          }
-                        )
-                        .execute();
-                      break;
-                    case 'rsdtdsp_blk_pos':
-                      await queryRunner.manager
-                        .createQueryBuilder()
-                        .update(RsdtdspBlk)
-                        .set({
-                          rep_pnt_lon: processed.rep_pnt_lon,
-                          rep_pnt_lat: processed.rep_pnt_lat,
-                        })
-                        .where(
-                          `lg_code = :lg_code AND
-                           town_id = :town_id AND
-                           blk_id = :blk_id`,
-                          {
-                            lg_code: processed.lg_code,
-                            town_id: processed.town_id,
-                            blk_id: processed.blk_id,
-                          }
-                        )
-                        .execute();
-                      break;
-                    case 'rsdtdsp_rsdt_pos':
-                      await queryRunner.manager
-                        .createQueryBuilder()
-                        .update(RsdtdspRsdt)
-                        .set({
-                          rep_pnt_lon: processed.rep_pnt_lon,
-                          rep_pnt_lat: processed.rep_pnt_lat,
-                        })
-                        .where(
-                          `lg_code = :lg_code AND
-                           town_id = :town_id AND
-                           blk_id = :blk_id AND
-                           addr_id = :addr_id AND
-                           addr2_id = :addr2_id`,
-                          {
-                            lg_code: processed.lg_code,
-                            town_id: processed.town_id,
-                            blk_id: processed.blk_id,
-                            addr_id: processed.addr_id,
-                            addr2_id: processed.addr2_id,
-                          }
-                        )
-                        .execute();
-                      break;
-                    default:
-                      throw new Error(`unknown type: ${datasetFile.type}`);
-                  }
+                  await queryWithNamedParams(
+                    ds,
+                    datasetFile.sql,
+                    processed,
+                    queryRunner
+                  );
                   next(null);
                 } catch (error) {
                   await errorHandler(error);

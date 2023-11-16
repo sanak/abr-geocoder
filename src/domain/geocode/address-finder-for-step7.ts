@@ -28,6 +28,7 @@ import { Query } from '@domain/query';
 import { RegExpEx } from '@domain/reg-exp-ex';
 import { DASH } from '@settings/constant-values';
 import { DataSource } from 'typeorm';
+import { queryWithNamedParams } from '@domain/query-with-named-params';
 
 export type TownBlock = {
   lg_code: string;
@@ -91,17 +92,17 @@ export class AddressFinderForStep7 {
         "city"
         left join "town" on
           town.${DataField.LG_CODE.dbColumn} = city.${DataField.LG_CODE.dbColumn} and
-          (town.${DataField.OAZA_TOWN_NAME.dbColumn} || town.${DataField.CHOME_NAME.dbColumn} = ?)
+          (town.${DataField.OAZA_TOWN_NAME.dbColumn} || town.${DataField.CHOME_NAME.dbColumn} = @town)
         left join "rsdtdsp_blk" "blk" on
           blk.${DataField.LG_CODE.dbColumn} = city.${DataField.LG_CODE.dbColumn} and
           blk.${DataField.TOWN_ID.dbColumn} = town.${DataField.TOWN_ID.dbColumn}
       where
-        city.${DataField.PREF_NAME.dbColumn} = ? AND 
+        city.${DataField.PREF_NAME.dbColumn} = @prefecture AND 
         (
           "city".${DataField.COUNTY_NAME.dbColumn} ||
           "city".${DataField.CITY_NAME.dbColumn} ||
           "city".${DataField.OD_CITY_NAME.dbColumn}
-        ) = ? and
+        ) = @city and
         blk.${DataField.BLK_NUM.dbColumn} is not null
     `;
 
@@ -124,7 +125,7 @@ export class AddressFinderForStep7 {
           town.${DataField.LG_CODE.dbColumn} = city.${DataField.LG_CODE.dbColumn} and
           (
             town.${DataField.OAZA_TOWN_NAME.dbColumn} ||
-            town.${DataField.CHOME_NAME.dbColumn} =?
+            town.${DataField.CHOME_NAME.dbColumn} = @town
           )
         left join "rsdtdsp_blk" "blk" on
           blk.${DataField.LG_CODE.dbColumn} = city.${DataField.LG_CODE.dbColumn} and
@@ -134,12 +135,12 @@ export class AddressFinderForStep7 {
           rsdt.${DataField.TOWN_ID.dbColumn} = town.${DataField.TOWN_ID.dbColumn} and
           rsdt.${DataField.BLK_ID.dbColumn} = blk.${DataField.BLK_ID.dbColumn}
       where
-        city.${DataField.PREF_NAME.dbColumn} = ? AND
+        city.${DataField.PREF_NAME.dbColumn} = @prefecture AND
         (
           "city".${DataField.COUNTY_NAME.dbColumn} ||
           "city".${DataField.CITY_NAME.dbColumn} ||
           "city".${DataField.OD_CITY_NAME.dbColumn}
-        ) = ? and
+        ) = @city and
         blk.${DataField.BLK_NUM.dbColumn} is not null and
         (
           rsdt.${DataField.RSDT_NUM.dbColumn} is not null or
@@ -294,11 +295,15 @@ export class AddressFinderForStep7 {
     city: string;
     town: string;
   }): Promise<TownBlock[]> {
-    const results = (await this.ds.query(this.getBlockListStatement, [
-      town,
-      prefecture,
-      city,
-    ])) as TownBlock[];
+    const results = (await queryWithNamedParams(
+      this.ds,
+      this.getBlockListStatement,
+      {
+        prefecture,
+        city,
+        town,
+      }
+    )) as TownBlock[];
 
     return Promise.resolve(results);
   }
@@ -321,11 +326,15 @@ export class AddressFinderForStep7 {
     city: string;
     town: string;
   }): Promise<RsdtAddr[]> {
-    const results = (await this.ds.query(this.getRsdtListStatement, [
-      town,
-      prefecture,
-      city,
-    ])) as RsdtAddr[];
+    const results = (await queryWithNamedParams(
+      this.ds,
+      this.getRsdtListStatement,
+      {
+        town,
+        prefecture,
+        city,
+      }
+    )) as RsdtAddr[];
 
     results.sort((a, b) => {
       return (

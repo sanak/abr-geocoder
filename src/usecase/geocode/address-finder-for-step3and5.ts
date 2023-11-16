@@ -35,6 +35,7 @@ import { RegExpEx } from '@domain/reg-exp-ex';
 import { isKanjiNumberFollewedByCho } from '@domain/is-kanji-number-follewed-by-cho';
 import { toRegexPattern } from '@domain/geocode/to-regex-pattern';
 import { kan2num } from '@domain/kan2num';
+import { queryWithNamedParams } from '@domain/query-with-named-params';
 
 export type TownRow = {
   lg_code: string;
@@ -349,10 +350,14 @@ export class AddressFinderForStep3and5 {
     prefecture: PrefectureName;
     city: string;
   }): Promise<TownRow[]> {
-    const results = (await this.ds.query(this.getTownStatement, [
-      prefecture,
-      city,
-    ])) as TownRow[];
+    const results = (await queryWithNamedParams(
+      this.ds,
+      this.getTownStatement,
+      {
+        prefecture,
+        city,
+      }
+    )) as TownRow[];
 
     return Promise.resolve(results);
   }
