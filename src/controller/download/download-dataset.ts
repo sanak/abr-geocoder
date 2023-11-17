@@ -92,7 +92,7 @@ export const downloadDataset = async ({
     logger?.info(
       AbrgMessage.toString(AbrgMessage.ERROR_NO_UPDATE_IS_AVAILABLE)
     );
-    ds.destroy();
+    await ds.destroy();
 
     // 展開したzipファイルのディレクトリを削除
     await fs.promises.rm(extractDir, { recursive: true });
@@ -108,13 +108,13 @@ export const downloadDataset = async ({
     container,
   });
 
-  saveKeyAndValue({
+  await saveKeyAndValue({
     ds,
     key: ckanId,
     value: downloadInfo.metadata.toString(),
   });
 
-  ds.destroy();
+  await ds.destroy();
 
   // 展開したzipファイルのディレクトリを削除
   await fs.promises.rm(extractDir, { recursive: true });

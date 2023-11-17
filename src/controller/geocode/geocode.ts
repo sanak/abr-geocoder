@@ -121,7 +121,7 @@ export const geocode = async ({
     formatter,
     outputStream
   );
-  ds.destroy();
+  await ds.destroy();
 
   return GEOCODE_RESULT.SUCCESS;
 };
