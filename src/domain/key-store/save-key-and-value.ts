@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 import { DataSource } from 'typeorm';
-import { Metadata } from '@entity/metadata';
+import { prepareSqlAndParamKeys } from '@domain/prepare-sql-and-param-keys';
 
 export const saveKeyAndValue = async ({
   ds,
@@ -33,10 +33,16 @@ export const saveKeyAndValue = async ({
   key: string;
   value: string;
 }) => {
-  ds.createQueryBuilder().insert().into(Metadata).values([
-    {
-      key,
-      value,
-    },
-  ]);
+  const { preparedSql, paramKeys } = prepareSqlAndParamKeys(
+    ds,
+    'insert or replace into metadata values(@key, @value)'
+  );
+  const params: { [key: string]: string | number } = {
+    key,
+    value,
+  };
+  await ds.query(
+    preparedSql,
+    paramKeys.map(key => params[key])
+  );
 };

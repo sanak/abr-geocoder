@@ -21,8 +21,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { Metadata } from '@entity/metadata';
 import { DataSource } from 'typeorm';
+import { prepareSqlAndParamKeys } from '@domain/prepare-sql-and-param-keys';
 
 export const getValueWithKey = async ({
   ds,
@@ -31,12 +31,17 @@ export const getValueWithKey = async ({
   ds: DataSource;
   key: string;
 }): Promise<string | undefined> => {
-  const result = await ds
-    .createQueryBuilder()
-    .select('metadata')
-    .from(Metadata, 'metadata')
-    .where('metadata.key = :key', { key: key })
-    .getOne();
+  const { preparedSql, paramKeys } = prepareSqlAndParamKeys(
+    ds,
+    'select value from metadata where key = @key limit 1'
+  );
+  const params: { [key: string]: string | number } = {
+    key,
+  };
+  const result = await ds.query(
+    preparedSql,
+    paramKeys.map(key => params[key])
+  );
   if (!result) {
     return;
   }

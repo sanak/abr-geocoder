@@ -39,7 +39,6 @@ import csvParser from 'csv-parser';
 import { Stream } from 'node:stream';
 import { DependencyContainer } from 'tsyringe';
 import { Logger } from 'winston';
-import { Dataset } from '@entity/dataset';
 import { prepareSqlAndParamKeys } from '@domain/prepare-sql-and-param-keys';
 
 export const loadDatasetProcess = async ({
@@ -196,20 +195,34 @@ export const loadDatasetProcess = async ({
           )
           .on('finish', async () => {
             await queryRunner.commitTransaction();
-            await ds
-              .createQueryBuilder()
-              .insert()
-              .into(Dataset)
-              .values([
-                {
-                  key: datasetFile.filename,
-                  type: datasetFile.type,
-                  content_length: datasetFile.csvFile.contentLength,
-                  crc32: datasetFile.csvFile.crc32,
-                  last_modified: datasetFile.csvFile.lastModified,
-                },
-              ])
-              .execute();
+            const params: { [key: string]: string | number } = {
+              key: datasetFile.filename,
+              type: datasetFile.type,
+              content_length: datasetFile.csvFile.contentLength,
+              crc32: datasetFile.csvFile.crc32,
+              last_modified: datasetFile.csvFile.lastModified,
+            };
+            const { preparedSql, paramKeys } = prepareSqlAndParamKeys(
+              ds,
+              `INSERT OR REPLACE INTO "dataset"
+              (
+                key,
+                type,
+                content_length,
+                crc32,
+                last_modified
+              ) values (
+                @key,
+                @type,
+                @content_length,
+                @crc32,
+                @last_modified
+              )`
+            );
+            await ds.query(
+              preparedSql,
+              paramKeys.map(key => params[key])
+            );
 
             loadDataProgress?.increment();
             loadDataProgress?.updateETA();
