@@ -147,9 +147,11 @@ export const loadDatasetProcess = async ({
       const sql = format(preparedSql, paramsList);
       await queryRunner.connection.query(sql);
     } else {
-      paramsList.forEach(async params => {
+      // awaitがあるため、forEachでなくforループで回す
+      for (let i = 0; i < paramsList.length; i++) {
+        const params = paramsList[i];
         await queryRunner.connection.query(preparedSql, params);
-      });
+      }
     }
   };
 
@@ -191,8 +193,6 @@ export const loadDatasetProcess = async ({
 
       const bulkSize = 1000;
       let paramsList: Array<Array<string | number>> = [];
-      const commitBulkInterval = 1000;
-      let processedBulkCount = 0;
       datasetFile.csvFile.getStream().then(fileStream => {
         fileStream
           .pipe(
@@ -216,11 +216,6 @@ export const loadDatasetProcess = async ({
                       paramsList
                     );
                     paramsList = [];
-                    processedBulkCount++;
-                    if (processedBulkCount % commitBulkInterval === 0) {
-                      await queryRunner.commitTransaction();
-                      await queryRunner.startTransaction();
-                    }
                   }
                   next(null);
                 } catch (error) {
