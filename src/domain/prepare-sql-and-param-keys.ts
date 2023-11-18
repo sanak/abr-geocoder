@@ -2,7 +2,8 @@ import { DataSource } from 'typeorm';
 
 export const prepareSqlAndParamKeys = (
   ds: DataSource,
-  sql: string
+  sql: string,
+  usePgFormat?: boolean
 ): {
   preparedSql: string;
   paramKeys: string[];
@@ -24,7 +25,10 @@ export const prepareSqlAndParamKeys = (
   if (matchedInsertOrReplace) {
     if (dbType === 'postgres') {
       tempSql = tempSql.replace(matchedInsertOrReplace[0], 'INSERT INTO');
-      tempSql = tempSql.replace(/-- /g, '');
+      if (usePgFormat) {
+        tempSql = tempSql.replace(/VALUES\s*\([\s$0-9,]+\)/m, 'VALUES %L ');
+      }
+      tempSql = tempSql.replace(/--/g, '');
     }
   }
   return {
