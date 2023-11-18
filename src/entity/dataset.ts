@@ -9,12 +9,12 @@ export class Dataset {
   @Column('text')
   type!: string;
 
-  @Column('integer')
+  @Column('bigint')
   content_length!: number;
 
-  @Column('integer')
+  @Column('bigint')
   crc32!: number;
 
-  @Column('integer')
+  @Column('bigint')
   last_modified!: number;
 }

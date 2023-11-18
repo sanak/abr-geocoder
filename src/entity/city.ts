@@ -42,10 +42,10 @@ export class City {
   @Column('text', { nullable: true, comment: '政令市区名_英字' })
   od_city_name_roma!: string;
 
-  @Column('date', { nullable: true, comment: '効力発生日' })
+  @Column('text', { nullable: true, comment: '効力発生日' })
   efct_date!: string;
 
-  @Column('date', { nullable: true, comment: '廃止日' })
+  @Column('text', { nullable: true, comment: '廃止日' })
   ablt_date!: string;
 
   @Column('text', { nullable: true, comment: '備考' })

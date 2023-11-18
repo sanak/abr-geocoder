@@ -155,6 +155,7 @@ export const loadDatasetProcess = async ({
       const errorHandler = async (error: unknown) => {
         if (queryRunner.isTransactionActive) {
           await queryRunner.rollbackTransaction();
+          await queryRunner.release();
         }
 
         if (error instanceof Error) {
@@ -169,6 +170,8 @@ export const loadDatasetProcess = async ({
       // DBに登録
       await queryRunner.startTransaction();
 
+      const commitInterval = 1000;
+      let processedCount = 0;
       datasetFile.csvFile.getStream().then(fileStream => {
         fileStream
           .pipe(
@@ -186,6 +189,11 @@ export const loadDatasetProcess = async ({
                     preparedSql,
                     paramKeys.map(key => processed[key])
                   );
+                  processedCount++;
+                  if (processedCount % commitInterval === 0) {
+                    await queryRunner.commitTransaction();
+                    await queryRunner.startTransaction();
+                  }
                   next(null);
                 } catch (error) {
                   await errorHandler(error);
@@ -223,6 +231,7 @@ export const loadDatasetProcess = async ({
               preparedSql,
               paramKeys.map(key => params[key])
             );
+            await queryRunner.release();
 
             loadDataProgress?.increment();
             loadDataProgress?.updateETA();
@@ -232,7 +241,6 @@ export const loadDatasetProcess = async ({
             await errorHandler(error);
           });
       });
-      await queryRunner.release();
     },
   });
 

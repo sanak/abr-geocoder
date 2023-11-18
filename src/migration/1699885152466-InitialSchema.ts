@@ -10,8 +10,8 @@ export class InitialSchema1699885152466 implements MigrationInterface {
         "pref_name" text NOT NULL,
         "pref_name_kana" text NOT NULL,
         "pref_name_roma" text NOT NULL,
-        "efct_date" date,
-        "ablt_date" date,
+        "efct_date" text,
+        "ablt_date" text,
         "remarks" text
       )
     `);
@@ -33,8 +33,8 @@ export class InitialSchema1699885152466 implements MigrationInterface {
         "od_city_name" text,
         "od_city_name_kana" text,
         "od_city_name_roma" text,
-        "efct_date" date,
-        "ablt_date" date,
+        "efct_date" text,
+        "ablt_date" text,
         "remarks" text
       )
     `);
@@ -75,8 +75,8 @@ export class InitialSchema1699885152466 implements MigrationInterface {
         "koaza_frn_ltrs_flg" text,
         "status_flg" text,
         "wake_num_flg" integer,
-        "efct_date" date,
-        "ablt_date" date,
+        "efct_date" text,
+        "ablt_date" text,
         "src_code" integer,
         "post_code" text,
         "remarks" text,
@@ -104,8 +104,8 @@ export class InitialSchema1699885152466 implements MigrationInterface {
         "oaza_frn_ltrs_flg" text,
         "koaza_frn_ltrs_flg" text,
         "status_flg" text,
-        "efct_date" date,
-        "ablt_date" date,
+        "efct_date" text,
+        "ablt_date" text,
         "src_code" integer,
         "remarks" text,
         "rep_pnt_lon" float,
@@ -137,8 +137,8 @@ export class InitialSchema1699885152466 implements MigrationInterface {
         "oaza_frn_ltrs_flg" text,
         "koaza_frn_ltrs_flg" text,
         "status_flg" text,
-        "efct_date" date,
-        "ablt_date" date,
+        "efct_date" text,
+        "ablt_date" text,
         "src_code" integer,
         "remarks" text,
         "rep_pnt_lon" float,
@@ -174,9 +174,9 @@ export class InitialSchema1699885152466 implements MigrationInterface {
       CREATE TABLE "dataset" (
         "key" text PRIMARY KEY NOT NULL,
         "type" text NOT NULL,
-        "content_length" integer NOT NULL,
-        "crc32" integer NOT NULL,
-        "last_modified" integer NOT NULL
+        "content_length" bigint NOT NULL,
+        "crc32" bigint NOT NULL,
+        "last_modified" bigint NOT NULL
       )
     `);
     await queryRunner.query(`

@@ -67,10 +67,10 @@ export class RsdtdspRsdt {
   @Column('text', { nullable: true, comment: '状態フラグ' })
   status_flg!: string;
 
-  @Column('date', { nullable: true, comment: '効力発生日' })
+  @Column('text', { nullable: true, comment: '効力発生日' })
   efct_date!: string;
 
-  @Column('date', { nullable: true, comment: '廃止日' })
+  @Column('text', { nullable: true, comment: '廃止日' })
   ablt_date!: string;
 
   @Column('integer', { nullable: true, comment: '原典資料コード' })
