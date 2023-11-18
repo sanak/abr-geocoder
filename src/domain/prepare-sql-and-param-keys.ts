@@ -20,10 +20,10 @@ export const prepareSqlAndParamKeys = (
       tempSql = tempSql.replace(matchedParam, placeHolder);
     }
   }
-  const matchedInsertOrReplace = tempSql.match(/^INSERT OR REPLACE INTO /i);
+  const matchedInsertOrReplace = tempSql.match(/^INSERT OR REPLACE INTO/i);
   if (matchedInsertOrReplace) {
     if (dbType === 'postgres') {
-      tempSql = tempSql.replace(matchedInsertOrReplace[0], 'INSERT INTO ');
+      tempSql = tempSql.replace(matchedInsertOrReplace[0], 'INSERT INTO');
       tempSql = tempSql.replace(/-- /g, '');
     }
   }
