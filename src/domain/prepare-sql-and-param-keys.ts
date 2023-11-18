@@ -10,14 +10,21 @@ export const prepareSqlAndParamKeys = (
   let tempSql = sql;
   const keys = [];
   const dbType = ds.options.type;
-  const matches = tempSql.match(/@[a-zA-Z_0-9]+/g);
-  if (matches) {
-    for (let i = 0; i < matches.length; i++) {
-      const match = matches[i];
-      const paramName = match.replace('@', '');
+  const matchedParams = tempSql.match(/@[a-zA-Z_0-9]+/g);
+  if (matchedParams) {
+    for (let i = 0; i < matchedParams.length; i++) {
+      const matchedParam = matchedParams[i];
+      const paramName = matchedParam.replace('@', '');
       keys.push(paramName);
       const placeHolder = dbType === 'postgres' ? `$${i + 1}` : '?';
-      tempSql = tempSql.replace(match, placeHolder);
+      tempSql = tempSql.replace(matchedParam, placeHolder);
+    }
+  }
+  const matchedInsertOrReplace = tempSql.match(/^INSERT OR REPLACE INTO /i);
+  if (matchedInsertOrReplace) {
+    if (dbType === 'postgres') {
+      tempSql = tempSql.replace(matchedInsertOrReplace[0], 'INSERT INTO ');
+      tempSql = tempSql.replace(/-- /g, '');
     }
   }
   return {
