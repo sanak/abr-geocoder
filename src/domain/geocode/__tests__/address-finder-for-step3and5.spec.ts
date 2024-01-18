@@ -25,11 +25,11 @@ import { AddressFinderForStep3and5, TownRow } from '@domain/geocode/address-find
 import { PrefectureName } from '@domain/prefecture-name';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { DASH } from '@settings/constant-values';
-import { default as BetterSqlite3, default as Database } from 'better-sqlite3';
+import { DataSource } from 'typeorm';
 
-jest.mock<BetterSqlite3.Database>('better-sqlite3');
+jest.mock<DataSource>('typeorm');
 
-const MockedDB = Database as unknown as jest.Mock;
+const MockedDS = DataSource as unknown as jest.Mock;
 const tokyoTowns: TownRow[] = [
   {
     lg_code: '132063',
@@ -132,26 +132,22 @@ const kyotoTowns: TownRow[] = [
   },
 ];
 
-MockedDB.mockImplementation(() => {
+MockedDS.mockImplementation(() => {
   return {
-    prepare: (sql: string) => {
-      return {
-        all: (params: { prefecture: PrefectureName; city: string }) => {
-          switch (params.prefecture) {
-            case PrefectureName.TOKYO:
-              return tokyoTowns;
+    query: (sql: string, params: string[]) => {
+      switch (params[0]) {
+        case PrefectureName.TOKYO:
+          return Promise.resolve(tokyoTowns);
 
-            case PrefectureName.KYOTO:
-              return kyotoTowns;
+        case PrefectureName.KYOTO:
+          return Promise.resolve(kyotoTowns);
 
-            case PrefectureName.SHIZUOKA:
-              return [];
+        case PrefectureName.SHIZUOKA:
+          return Promise.resolve([]);
 
-            default:
-              throw new Error(`Unexpected prefecture : ${params.prefecture}`);
-          }
-        },
-      };
+        default:
+          throw new Error(`Unexpected prefecture : ${params[0]}`);
+      }
     },
   };
 });
@@ -160,15 +156,18 @@ const wildcardHelper = (address: string) => {
   return address;
 };
 describe('AddressFinderForStep3and5', () => {
-  const mockedDB = new Database('<no sql file>');
+  const mockedDS = new DataSource({
+    type: 'better-sqlite3',
+    database: ':memory:',
+  });
 
   const instance = new AddressFinderForStep3and5({
-    db: mockedDB,
+    ds: mockedDS,
     wildcardHelper,
   });
 
   beforeEach(() => {
-    MockedDB.mockClear();
+    MockedDS.mockClear();
   });
 
   it.concurrent('特定できるはずのケース', async () => {

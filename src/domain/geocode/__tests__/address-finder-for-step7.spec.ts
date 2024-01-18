@@ -27,46 +27,42 @@ import { PrefectureName } from '@domain/prefecture-name';
 import { Query } from '@domain/query';
 import { describe, expect, it, jest } from '@jest/globals';
 import { DASH } from '@settings/constant-values';
-import { default as BetterSqlite3, default as Database } from 'better-sqlite3';
+import { DataSource } from 'typeorm';
 import dummyBlockList from './dummyBlockList.json';
 import dummyRsdtList from './dummyRsdtList.json';
 
-jest.mock<BetterSqlite3.Database>('better-sqlite3');
+jest.mock<DataSource>('typeorm');
 
-const MockedDB = Database as unknown as jest.Mock;
+const MockedDS = DataSource as unknown as jest.Mock;
 
-MockedDB.mockImplementation(() => {
+MockedDS.mockImplementation(() => {
   return {
-    prepare: (sql: string) => {
-      return {
-        all: (params: {
-          prefecture?: PrefectureName;
-          city?: string;
-          town?: string;
-        }) => {
-          // ダミーデータは紀尾井町のデータだけなので、それ以外は空リストを返す
-          if (params.prefecture !== PrefectureName.TOKYO) {
-            return [];
-          }
-
-          // statementに合わせてデータを返す
-          if (/unit\s+test:\s+getBlockListStatement/i.test(sql)) {
-            return dummyBlockList;
-          }
-          if (/unit\s+test:\s+getRsdtListStatement/i.test(sql)) {
-            return dummyRsdtList;
-          }
-          throw new Error('Unexpected sql was given');
-        }
+    query: (sql: string, params: string[]) => {
+      // ダミーデータは紀尾井町のデータだけなので、それ以外は空リストを返す
+      // パラメータ配列内で@prefectureは2番目に来る([@town, @prefecture, @city])
+      if (params[1] !== PrefectureName.TOKYO) {
+        return Promise.resolve([]);
       }
-    },
-  };
+
+      // sqlに合わせてデータを返す
+      if (/unit\s+test:\s+getBlockListSql/i.test(sql)) {
+        return Promise.resolve(dummyBlockList);
+      }
+      if (/unit\s+test:\s+getRsdtListSql/i.test(sql)) {
+        return Promise.resolve(dummyRsdtList);
+      }
+      throw new Error('Unexpected sql was given');
+    }
+  }
 });
 
 // TODO: カバレッジ100%になるテストケースを考える
 describe('AddressFinderForStep7', () => {
-  const mockedDB = new Database('<no sql file>');
-  const addressFinder = new AddressFinderForStep7(mockedDB);
+  const mockedDS = new DataSource({
+    type: 'better-sqlite3',
+    database: ':memory:',
+  });
+  const addressFinder = new AddressFinderForStep7(mockedDS);
   
   it.concurrent('番地情報を返すケース(1)', async () => {
     const inputAddress = `東京都千代田区紀尾井町1-3　東京ガーデンテラス紀尾井町 19階、20階`;
