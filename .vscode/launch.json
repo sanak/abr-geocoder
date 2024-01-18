@@ -185,6 +185,21 @@
       ],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
-    }
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "test",
+      "program": "${workspaceFolder}/node_modules/jest/bin/jest",
+      "preLaunchTask": "npm: build",
+      "runtimeArgs": [
+        "--require",
+        "ts-node/register"
+      ],
+      "args": [
+      ],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+    },
   ]
 }

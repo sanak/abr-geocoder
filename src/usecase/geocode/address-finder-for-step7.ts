@@ -151,7 +151,7 @@ export class AddressFinderForStep7 {
     `;
 
     const smallBlockListSql = `
-      /* unit test: getSmallBlockListStatement */
+      /* unit test: getSmallBlockListSql */
 
       select
         "town".${DataField.LG_CODE.dbColumn},

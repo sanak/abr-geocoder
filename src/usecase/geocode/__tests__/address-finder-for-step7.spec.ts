@@ -26,77 +26,72 @@ import { PrefectureName } from '@domain/prefecture-name';
 import { Query } from '@domain/query';
 import { describe, expect, it, jest } from '@jest/globals';
 import { DASH, SINGLE_DASH_ALTERNATIVE, SPACE } from '@settings/constant-values';
-import { default as BetterSqlite3, default as Database } from 'better-sqlite3';
+import { DataSource } from 'typeorm';
 import dummyBlockList from './dummyBlockList.json';
 import dummyRsdtList2 from './dummyRsdtList2.json';
 import dummySmallBlockListIwate from './dummySmallBlockListIwate.json';
 import dummySmallBlockListMiyagi from './dummySmallBlockListMiyagi.json';
 import { AddressFinderForStep7 } from '../address-finder-for-step7';
 
-jest.mock<BetterSqlite3.Database>('better-sqlite3');
+jest.mock<DataSource>('typeorm');
 
-const MockedDB = Database as unknown as jest.Mock;
+const MockedDS = DataSource as unknown as jest.Mock;
 
-MockedDB.mockImplementation(() => {
+MockedDS.mockImplementation(() => {
   return {
-    prepare: (sql: string) => {
-      return {
-        all: (params: {
-          prefecture?: PrefectureName;
-          city?: string;
-          town?: string;
-        }) => {
-          // statementに合わせてデータを返す
-          if (sql.includes('/* unit test: getBlockListStatement */')) {
-            switch(params.prefecture) {
-              case PrefectureName.TOKYO:
-                return dummyBlockList;
-              
-              default:
-                return [];
-            }
-          }
-          if (sql.includes('/* unit test: getRsdtListStatement2 */')) {
-            return dummyRsdtList2;
-          }
-          if (sql.includes('/* unit test: getSmallBlockListStatement */')) {
-
-            switch (params.prefecture) {
-              case PrefectureName.MIYAGI:
-                return dummySmallBlockListMiyagi;
-
-              case PrefectureName.IWATE:
-                return dummySmallBlockListIwate;
-              
-              case PrefectureName.FUKUSHIMA:
-                return [
-                  {
-                    "lg_code": "072044",
-                    "town_id": "0113116",
-                    "pref": "福島県",
-                    "city": "いわき市",
-                    "town": "山玉町",
-                    "koaza_name": "脇川",
-                    "lat": 36.901176,
-                    "lon": 140.725118
-                  }
-                ];
-
-              default:
-                return [];
-            }
-          }
-          throw new Error('Unexpected sql was given');
+    query: (sql: string, params: string[]) => {
+      // statementに合わせてデータを返す
+      if (sql.includes('/* unit test: getBlockListSql */')) {
+        switch(params[1]) {
+          case PrefectureName.TOKYO:
+            return Promise.resolve(dummyBlockList);
+          
+          default:
+            return Promise.resolve([]);
         }
       }
-    },
-  };
+      if (sql.includes('/* unit test: getRsdtList2Sql */')) {
+        return Promise.resolve(dummyRsdtList2);
+      }
+      if (sql.includes('/* unit test: getSmallBlockListSql */')) {
+
+        switch (params[1]) {
+          case PrefectureName.MIYAGI:
+            return Promise.resolve(dummySmallBlockListMiyagi);
+
+          case PrefectureName.IWATE:
+            return Promise.resolve(dummySmallBlockListIwate);
+          
+          case PrefectureName.FUKUSHIMA:
+            return Promise.resolve([
+              {
+                "lg_code": "072044",
+                "town_id": "0113116",
+                "pref": "福島県",
+                "city": "いわき市",
+                "town": "山玉町",
+                "koaza_name": "脇川",
+                "lat": 36.901176,
+                "lon": 140.725118
+              }
+            ]);
+
+          default:
+            return Promise.resolve([]);
+        }
+      }
+      throw new Error('Unexpected sql was given');
+    }
+  }
 });
 
 // TODO: カバレッジ100%になるテストケースを考える
 describe('AddressFinderForStep7', () => {
-  const mockedDB = new Database('<no sql file>');
-  const addressFinder = new AddressFinderForStep7(mockedDB);
+  const mockedDS = new DataSource({
+    type: 'better-sqlite3',
+    database: ':memory:',
+  });
+  const addressFinder = new AddressFinderForStep7(mockedDS);
   
   describe('find', () => {
     it.concurrent('住居表示の街区までマッチするケース1', async () => {
