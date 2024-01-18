@@ -27,7 +27,8 @@ import { PrefectureName } from '@domain/prefecture-name';
 import { Query } from '@domain/query';
 import { RegExpEx } from '@domain/reg-exp-ex';
 import { DASH } from '@settings/constant-values';
-import { Database, Statement } from 'better-sqlite3';
+import { DataSource } from 'typeorm';
+import { prepareSqlAndParamKeys } from '@domain/prepare-sql-and-param-keys';
 
 export type TownBlock = {
   lg_code: string;
@@ -61,12 +62,16 @@ export type RsdtAddr = {
  * 実質的にジオコーディングしている部分
  */
 export class AddressFinderForStep7 {
-  private readonly getBlockListStatement: Statement;
-  private readonly getRsdtListStatement: Statement;
+  private readonly ds: DataSource;
+  private readonly getBlockListSql: string;
+  private readonly getBlockListParamKeys: string[];
+  private readonly getRsdtListSql: string;
+  private readonly getRsdtListParamKeys: string[];
 
-  constructor(db: Database) {
-    this.getBlockListStatement = db.prepare(`
-      /* unit test: getBlockListStatement */
+  constructor(ds: DataSource) {
+    this.ds = ds;
+    const blockListSql = `
+      /* unit test: getBlockListSql */
 
       select
         "blk".${DataField.LG_CODE.dbColumn},
@@ -101,10 +106,14 @@ export class AddressFinderForStep7 {
           "city".${DataField.OD_CITY_NAME.dbColumn}
         ) = @city and
         blk.${DataField.BLK_NUM.dbColumn} is not null
-    `);
+    `;
+    const { preparedSql: blockListPreparedSql, paramKeys: blockListParamKeys } =
+      prepareSqlAndParamKeys(ds, blockListSql);
+    this.getBlockListSql = blockListPreparedSql;
+    this.getBlockListParamKeys = blockListParamKeys;
 
-    this.getRsdtListStatement = db.prepare(`
-      /* unit test: getRsdtListStatement */
+    const rsdtListSql = `
+      /* unit test: getRsdtListSql */
 
       select
         "rsdt".${DataField.LG_CODE.dbColumn},
@@ -143,7 +152,12 @@ export class AddressFinderForStep7 {
           rsdt.${DataField.RSDT_NUM.dbColumn} is not null or
           rsdt.${DataField.RSDT_NUM2.dbColumn} is not null
         )
-    `);
+    `;
+
+    const { preparedSql: rsdtListPreparedSql, paramKeys: rsdtListParamKeys } =
+      prepareSqlAndParamKeys(ds, rsdtListSql);
+    this.getRsdtListSql = rsdtListPreparedSql;
+    this.getRsdtListParamKeys = rsdtListParamKeys;
   }
 
   async find(query: Query): Promise<Query> {
@@ -292,11 +306,15 @@ export class AddressFinderForStep7 {
     city: string;
     town: string;
   }): Promise<TownBlock[]> {
-    const results = this.getBlockListStatement.all({
+    const params: { [key: string]: string } = {
       prefecture,
       city,
       town,
-    }) as TownBlock[];
+    };
+    const results = (await this.ds.query(
+      this.getBlockListSql,
+      this.getBlockListParamKeys.map(key => params[key])
+    )) as TownBlock[];
 
     return Promise.resolve(results);
   }
@@ -319,11 +337,15 @@ export class AddressFinderForStep7 {
     city: string;
     town: string;
   }): Promise<RsdtAddr[]> {
-    const results = this.getRsdtListStatement.all({
+    const params: { [key: string]: string } = {
       prefecture,
       city,
       town,
-    }) as RsdtAddr[];
+    };
+    const results = (await this.ds.query(
+      this.getRsdtListSql,
+      this.getRsdtListParamKeys.map(key => params[key])
+    )) as RsdtAddr[];
 
     results.sort((a, b) => {
       return (

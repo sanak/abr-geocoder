@@ -33,19 +33,20 @@ import { TownDatasetFile } from '@domain/dataset/town-dataset-file';
 import { TownPosDatasetFile } from '@domain/dataset/town-pos-dataset-file';
 import { IStreamReady } from '@domain/istream-ready';
 import { DI_TOKEN } from '@interface-adapter/tokens';
-import { Database } from 'better-sqlite3';
+import { DataSource } from 'typeorm';
 import { MultiBar } from 'cli-progress';
 import csvParser from 'csv-parser';
 import { Stream } from 'node:stream';
 import { DependencyContainer } from 'tsyringe';
 import { Logger } from 'winston';
+import { prepareSqlAndParamKeys } from '@domain/prepare-sql-and-param-keys';
 
 export const loadDatasetProcess = async ({
-  db,
+  ds,
   container,
   csvFiles,
 }: {
-  db: Database;
+  ds: DataSource;
   csvFiles: IStreamReady[];
   container: DependencyContainer;
 }) => {
@@ -139,15 +140,21 @@ export const loadDatasetProcess = async ({
   });
   const loadDataStream = new Stream.Writable({
     objectMode: true,
-    write(datasetFile: DatasetFile, encoding, callback) {
+    async write(datasetFile: DatasetFile, encoding, callback) {
       // 1ファイルごと transform() が呼び出される
 
-      // CSVファイルの読み込み
-      const statement = db.prepare(datasetFile.sql);
+      const queryRunner = ds.createQueryRunner();
+      await queryRunner.connect();
 
-      const errorHandler = (error: unknown) => {
-        if (db.inTransaction) {
-          db.exec('ROLLBACK');
+      // CSVファイルの読み込み
+      const { preparedSql, paramKeys } = prepareSqlAndParamKeys(
+        ds,
+        datasetFile.sql
+      );
+
+      const errorHandler = async (error: unknown) => {
+        if (queryRunner.isTransactionActive) {
+          await queryRunner.rollbackTransaction();
         }
 
         if (error instanceof Error) {
@@ -160,7 +167,8 @@ export const loadDatasetProcess = async ({
       };
 
       // DBに登録
-      db.exec('BEGIN');
+      await queryRunner.startTransaction();
+
       datasetFile.csvFile.getStream().then(fileStream => {
         fileStream
           .pipe(
@@ -171,10 +179,13 @@ export const loadDatasetProcess = async ({
           .pipe(
             new Stream.Writable({
               objectMode: true,
-              write(chunk, encoding, next) {
+              async write(chunk, encoding, next) {
                 try {
                   const processed = datasetFile.process(chunk);
-                  statement.run(processed);
+                  await queryRunner.connection.query(
+                    preparedSql,
+                    paramKeys.map(key => processed[key])
+                  );
                   next(null);
                 } catch (error) {
                   errorHandler(error);
@@ -182,31 +193,40 @@ export const loadDatasetProcess = async ({
               },
             })
           )
-          .on('finish', () => {
-            db.exec('COMMIT');
-
-            db.prepare(
-              `INSERT OR REPLACE INTO "dataset"
-          (
-            key,
-            type,
-            content_length,
-            crc32,
-            last_modified
-          ) values (
-            @key,
-            @type,
-            @content_length,
-            @crc32,
-            @last_modified
-          )`
-            ).run({
+          .on('finish', async () => {
+            await queryRunner.commitTransaction();
+            const params: { [key: string]: string | number } = {
               key: datasetFile.filename,
               type: datasetFile.type,
               content_length: datasetFile.csvFile.contentLength,
               crc32: datasetFile.csvFile.crc32,
               last_modified: datasetFile.csvFile.lastModified,
-            });
+            };
+            const {
+              preparedSql: datasetPreparedSql,
+              paramKeys: datasetParamKeys,
+            } = prepareSqlAndParamKeys(
+              ds,
+              `INSERT OR REPLACE INTO "dataset"
+              (
+                key,
+                type,
+                content_length,
+                crc32,
+                last_modified
+              ) values (
+                @key,
+                @type,
+                @content_length,
+                @crc32,
+                @last_modified
+              )`
+            );
+            await ds.query(
+              datasetPreparedSql,
+              datasetParamKeys.map(key => params[key])
+            );
+            await queryRunner.release();
 
             loadDataProgress?.increment();
             loadDataProgress?.updateETA();

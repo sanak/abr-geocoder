@@ -24,7 +24,7 @@
 export enum DI_TOKEN {
   USER_AGENT = 'user_agent',
   DATASET_URL = 'dataset_url',
-  DATABASE = 'database',
+  DATASOURCE = 'datasource',
   LOGGER = 'logger',
   INFINITY_PROGRESS_BAR = 'infinity_progress_bar',
   PROGRESS_BAR = 'progress_bar',

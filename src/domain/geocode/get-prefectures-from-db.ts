@@ -25,14 +25,14 @@ import { City, ICity } from '@domain/city';
 import { DataField } from '@domain/dataset/data-field';
 import { IPrefecture, Prefecture } from '@domain/prefecture';
 import { PrefectureName } from '@domain/prefecture-name';
-import { Database, Statement } from 'better-sqlite3';
+import { DataSource } from 'typeorm';
 
 export const getPrefecturesFromDB = async ({
-  db,
+  ds,
 }: {
-  db: Database;
+  ds: DataSource;
 }): Promise<IPrefecture[]> => {
-  const statement: Statement = db.prepare(`
+  const sql: string = `
     SELECT
       pref_name AS "name",
       json_group_array(json_object(
@@ -45,9 +45,9 @@ export const getPrefecturesFromDB = async ({
       )) AS "cities"
     FROM city
     GROUP BY pref_name
-  `);
+  `;
 
-  const prefectures = statement.all() as {
+  const prefectures = (await ds.query(sql)) as {
     name: string;
     cities: string;
   }[];

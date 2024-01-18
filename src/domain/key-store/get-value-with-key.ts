@@ -21,24 +21,27 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { Database } from 'better-sqlite3';
+import { DataSource } from 'typeorm';
+import { prepareSqlAndParamKeys } from '@domain/prepare-sql-and-param-keys';
 
-export const getValueWithKey = ({
-  db,
+export const getValueWithKey = async ({
+  ds,
   key,
 }: {
-  db: Database;
+  ds: DataSource;
   key: string;
-}): string | undefined => {
-  const result = db
-    .prepare('select value from metadata where key = @key limit 1')
-    .get({
-      key,
-    }) as
-    | {
-        value: string;
-      }
-    | undefined;
+}): Promise<string | undefined> => {
+  const { preparedSql, paramKeys } = prepareSqlAndParamKeys(
+    ds,
+    'select value from metadata where key = @key limit 1'
+  );
+  const params: { [key: string]: string | number } = {
+    key,
+  };
+  const result = await ds.query(
+    preparedSql,
+    paramKeys.map(key => params[key])
+  );
   if (!result) {
     return;
   }

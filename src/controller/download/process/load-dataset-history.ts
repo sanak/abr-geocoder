@@ -22,14 +22,14 @@
  * SOFTWARE.
  */
 import { DatasetRow } from '@domain/dataset/dataset-row';
-import { Database } from 'better-sqlite3';
+import { DataSource } from 'typeorm';
 
 export const loadDatasetHistory = async ({
-  db,
+  ds,
 }: {
-  db: Database;
+  ds: DataSource;
 }): Promise<Map<string, DatasetRow>> => {
-  const rows = db.prepare('select * from dataset').all() as {
+  const rows = (await ds.query('select * from dataset')) as {
     key: string;
     type: string;
     content_length: number;
