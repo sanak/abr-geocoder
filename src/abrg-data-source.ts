@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { DataSource, DataSourceOptions } from 'typeorm';
 
-const commonOptions = {
+export const commonOptions = {
   synchronize: false,
   logging: false,
   entities: ['src/entity/*.ts'],
@@ -12,6 +12,7 @@ const commonOptions = {
 const sqliteOptions: DataSourceOptions = {
   ...commonOptions,
   type: 'better-sqlite3',
+  // src/interface-adapter/providers/provide-data-source.ts 内で絶対パスに置換
   database: '~/.abr-geocoder/ba000001.sqlite',
 };
 

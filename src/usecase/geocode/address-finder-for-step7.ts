@@ -30,7 +30,8 @@ import { RegExpEx } from '@domain/reg-exp-ex';
 import { Trie } from '@domain/trie';
 import { zen2HankakuNum } from '@domain/zen2hankaku-num';
 import { DASH, SPACE } from '@settings/constant-values';
-import { Database, Statement } from 'better-sqlite3';
+import { DataSource } from 'typeorm';
+import { prepareSqlAndParamKeys } from '@domain/prepare-sql-and-param-keys';
 
 export type TownSmallBlock = {
   lg_code: string;
@@ -75,13 +76,18 @@ export type RsdtAddr = {
  * 実質的にジオコーディングしている部分
  */
 export class AddressFinderForStep7 {
-  private readonly getBlockListStatement: Statement;
-  private readonly getRsdtListStatement2: Statement;
-  private readonly getSmallBlockListStatement: Statement;
+  private readonly ds: DataSource;
+  private readonly getBlockListSql: string;
+  private readonly getBlockListParamKeys: string[];
+  private readonly getRsdtList2Sql: string;
+  private readonly getRsdtList2ParamKeys: string[];
+  private readonly getSmallBlockListSql: string;
+  private readonly getSmallBlockListParamKeys: string[];
 
-  constructor(db: Database) {
-    this.getBlockListStatement = db.prepare(`
-      /* unit test: getBlockListStatement */
+  constructor(ds: DataSource) {
+    this.ds = ds;
+    const blockListSql = `
+      /* unit test: getBlockListSql */
 
       select
         "blk".${DataField.LG_CODE.dbColumn},
@@ -117,10 +123,14 @@ export class AddressFinderForStep7 {
           "city".${DataField.OD_CITY_NAME.dbColumn}
         ) = @city and
         blk.${DataField.BLK_NUM.dbColumn} is not null
-    `);
+    `;
+    const { preparedSql: blockListPreparedSql, paramKeys: blockListParamKeys } =
+      prepareSqlAndParamKeys(ds, blockListSql);
+    this.getBlockListSql = blockListPreparedSql;
+    this.getBlockListParamKeys = blockListParamKeys;
 
-    this.getRsdtListStatement2 = db.prepare(`
-      /* unit test: getRsdtListStatement2 */
+    const rsdtList2Sql = `
+      /* unit test: getRsdtList2Sql */
 
       select
         ${DataField.ADDR_ID.dbColumn} as "addr1_id",
@@ -138,9 +148,9 @@ export class AddressFinderForStep7 {
       order by
         ${DataField.RSDT_NUM.dbColumn} desc,
         ${DataField.RSDT_NUM2.dbColumn} desc
-    `);
+    `;
 
-    this.getSmallBlockListStatement = db.prepare(`
+    const smallBlockListSql = `
       /* unit test: getSmallBlockListStatement */
 
       select
@@ -174,7 +184,18 @@ export class AddressFinderForStep7 {
         "town".${DataField.KOAZA_NAME.dbColumn} like @koaza
       order by
         town.${DataField.KOAZA_NAME.dbColumn} desc
-    `);
+    `;
+
+    const { preparedSql: rsdtList2PreparedSql, paramKeys: rsdtList2ParamKeys } =
+      prepareSqlAndParamKeys(ds, rsdtList2Sql);
+    this.getRsdtList2Sql = rsdtList2PreparedSql;
+    this.getRsdtList2ParamKeys = rsdtList2ParamKeys;
+    const {
+      preparedSql: smallBlockListPreparedSql,
+      paramKeys: smallBlockListParamKeys,
+    } = prepareSqlAndParamKeys(ds, smallBlockListSql);
+    this.getSmallBlockListSql = smallBlockListPreparedSql;
+    this.getSmallBlockListParamKeys = smallBlockListParamKeys;
   }
 
   // 小字を検索する
@@ -474,12 +495,16 @@ export class AddressFinderForStep7 {
     town: string;
     koaza: string;
   }): Promise<TownSmallBlock[]> {
-    const results = (await this.getSmallBlockListStatement.all({
+    const params: { [key: string]: string } = {
       prefecture,
       city,
       town,
       koaza: `${koaza}%`,
-    })) as TownSmallBlock[];
+    };
+    const results = (await this.ds.query(
+      this.getSmallBlockListSql,
+      this.getSmallBlockListParamKeys.map(key => params[key])
+    )) as TownSmallBlock[];
 
     return Promise.resolve(
       results.map(smallBlock => {
@@ -508,11 +533,15 @@ export class AddressFinderForStep7 {
     city: string;
     town: string;
   }): Promise<TownBlock[]> {
-    const results = (await this.getBlockListStatement.all({
+    const params: { [key: string]: string } = {
       prefecture,
       city,
       town,
-    })) as TownBlock[];
+    };
+    const results = (await this.ds.query(
+      this.getBlockListSql,
+      this.getBlockListParamKeys.map(key => params[key])
+    )) as TownBlock[];
 
     return Promise.resolve(
       results.map(town => {
@@ -531,11 +560,15 @@ export class AddressFinderForStep7 {
     town_id: string;
     block_id: string;
   }): Promise<RsdtAddr[]> {
-    const results = this.getRsdtListStatement2.all({
+    const params: { [key: string]: string } = {
       lg_code,
       town_id,
       block_id,
-    }) as RsdtAddr[];
+    };
+    const results = (await this.ds.query(
+      this.getRsdtList2Sql,
+      this.getRsdtList2ParamKeys.map(key => params[key])
+    )) as RsdtAddr[];
 
     // better-sqlite3自体はasyncではないが、将来的にTypeORMに変更したいので
     // asyncで関数を作っておく
