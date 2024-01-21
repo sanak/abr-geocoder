@@ -201,5 +201,18 @@
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
     },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "test:system",
+      "program": "${workspaceFolder}/spec/execution-test.spec.mjs",
+      "preLaunchTask": "npm: build",
+      "runtimeArgs": [
+        "--require",
+        "ts-node/register"
+      ],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+    },
   ]
 }
