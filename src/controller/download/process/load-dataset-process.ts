@@ -188,7 +188,7 @@ export const loadDatasetProcess = async ({
                   );
                   next(null);
                 } catch (error) {
-                  errorHandler(error);
+                  await errorHandler(error);
                 }
               },
             })
@@ -232,8 +232,9 @@ export const loadDatasetProcess = async ({
             loadDataProgress?.updateETA();
             callback(null);
           })
-          .on('error', (error: Error) => {
-            errorHandler(error);
+          .on('error', async (error: Error) => {
+            await errorHandler(error);
+            await queryRunner.release();
           });
       });
     },

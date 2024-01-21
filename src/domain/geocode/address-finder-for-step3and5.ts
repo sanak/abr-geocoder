@@ -100,7 +100,7 @@ export class AddressFinderForStep3and5 {
           "city"."${DataField.OD_CITY_NAME.dbColumn}"
         ) = @city AND
         "${DataField.TOWN_CODE.dbColumn}" <> 3
-        order by length("name") desc;
+        order by length("${DataField.OAZA_TOWN_NAME.dbColumn}" || "${DataField.CHOME_NAME.dbColumn}") desc;
       `
     );
     this.getTownSql = preparedSql;
