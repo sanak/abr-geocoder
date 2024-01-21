@@ -7,20 +7,21 @@ import { Entity, Index, PrimaryColumn, Column } from 'typeorm';
   { unique: true }
 )
 export class RsdtdspRsdt {
-  @PrimaryColumn('text', { comment: '全国地方公共団体コード' })
+  @PrimaryColumn('varchar', { length: '6', comment: '全国地方公共団体コード' })
   lg_code!: string;
 
-  @PrimaryColumn('text', { comment: '町字ID' })
+  @PrimaryColumn('varchar', { length: '7', comment: '町字ID' })
   town_id!: string;
 
-  @PrimaryColumn('text', { comment: '街区ID' })
+  @PrimaryColumn('varchar', { length: '3', comment: '街区ID' })
   blk_id!: string;
 
-  @PrimaryColumn('text', { comment: '住居ID' })
+  @PrimaryColumn('varchar', { length: '3', comment: '住居ID' })
   addr_id!: string;
 
-  @PrimaryColumn('text', {
-    // nullable: true, // TODO: インデックスに含まれるため、nullableにできない
+  @PrimaryColumn('varchar', {
+    length: '5',
+    // nullable: true, // インデックスに含まれるため、nullableにできない
     comment: '住居2ID',
   })
   addr2_id!: string;

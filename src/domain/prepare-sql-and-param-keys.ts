@@ -25,6 +25,8 @@ export const prepareSqlAndParamKeys = (
     if (dsType === 'postgres') {
       tempSql = tempSql.replace(matchedInsertOrReplace[0], 'INSERT INTO');
       tempSql = tempSql.replace(/-- /g, '');
+    } else if (dsType === 'mysql') {
+      tempSql = tempSql.replace(matchedInsertOrReplace[0], 'REPLACE INTO');
     }
   }
   const matchedJSONFunctions = tempSql.match(

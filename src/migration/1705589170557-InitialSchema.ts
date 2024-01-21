@@ -36,7 +36,7 @@ export class InitialSchema1705589170557 implements MigrationInterface {
 
     await queryRunner.query(`
       CREATE TABLE "pref" (
-        "lg_code" text PRIMARY KEY NOT NULL,
+        "lg_code" varchar(6) PRIMARY KEY NOT NULL,
         "pref_name" text NOT NULL,
         "pref_name_kana" text NOT NULL,
         "pref_name_roma" text NOT NULL,
@@ -51,7 +51,7 @@ export class InitialSchema1705589170557 implements MigrationInterface {
 
     await queryRunner.query(`
       CREATE TABLE "city" (
-        "lg_code" text PRIMARY KEY NOT NULL,
+        "lg_code" varchar(6) PRIMARY KEY NOT NULL,
         "pref_name" text NOT NULL,
         "pref_name_kana" text NOT NULL,
         "pref_name_roma" text NOT NULL,
@@ -75,8 +75,8 @@ export class InitialSchema1705589170557 implements MigrationInterface {
 
     await queryRunner.query(`
       CREATE TABLE "town" (
-        "lg_code" text NOT NULL,
-        "town_id" text NOT NULL,
+        "lg_code" varchar(6) NOT NULL,
+        "town_id" varchar(7) NOT NULL,
         "town_code" integer NOT NULL,
         "pref_name" text NOT NULL,
         "pref_name_kana" text NOT NULL,
@@ -123,9 +123,9 @@ export class InitialSchema1705589170557 implements MigrationInterface {
 
     await queryRunner.query(`
       CREATE TABLE "rsdtdsp_blk" (
-        "lg_code" text NOT NULL,
-        "town_id" text NOT NULL,
-        "blk_id" text NOT NULL,
+        "lg_code" varchar(6) NOT NULL,
+        "town_id" varchar(7) NOT NULL,
+        "blk_id" varchar(3) NOT NULL,
         "city_name" text NOT NULL,
         "od_city_name" text,
         "oaza_town_name" text NOT NULL,
@@ -152,11 +152,11 @@ export class InitialSchema1705589170557 implements MigrationInterface {
 
     await queryRunner.query(`
       CREATE TABLE "rsdtdsp_rsdt" (
-        "lg_code" text NOT NULL,
-        "town_id" text NOT NULL,
-        "blk_id" text NOT NULL,
-        "addr_id" text NOT NULL,
-        "addr2_id" text NOT NULL,
+        "lg_code" varchar(6) NOT NULL,
+        "town_id" varchar(7) NOT NULL,
+        "blk_id" varchar(3) NOT NULL,
+        "addr_id" varchar(3) NOT NULL,
+        "addr2_id" varchar(5) NOT NULL,
         "city_name" text NOT NULL,
         "od_city_name" text,
         "oaza_town_name" text NOT NULL,
@@ -198,7 +198,7 @@ export class InitialSchema1705589170557 implements MigrationInterface {
 
     await queryRunner.query(`
       CREATE TABLE "metadata" (
-        "key" text PRIMARY KEY NOT NULL,
+        "key" varchar(255) PRIMARY KEY NOT NULL,
         "value" text NOT NULL
       )
     `);
@@ -208,7 +208,7 @@ export class InitialSchema1705589170557 implements MigrationInterface {
 
     await queryRunner.query(`
       CREATE TABLE "dataset" (
-        "key" text PRIMARY KEY NOT NULL,
+        "key" varchar(255) PRIMARY KEY NOT NULL,
         "type" text NOT NULL,
         "content_length" bigint NOT NULL,
         "crc32" bigint NOT NULL,
