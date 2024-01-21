@@ -4,6 +4,75 @@ export class InitialSchema1705589170557 implements MigrationInterface {
   name = 'InitialSchema1705589170557';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    let needsOldDataMigration = false;
+    const isSqlite = queryRunner.connection.options.type === 'better-sqlite3';
+    if (isSqlite) {
+      const hasOldMetadataIdx =
+        (
+          await queryRunner.query(
+            "SELECT 1 FROM sqlite_master WHERE type = 'index' AND name = 'metadata_key'"
+          )
+        )?.length > 0;
+      if (hasOldMetadataIdx) {
+        needsOldDataMigration = true;
+      }
+    }
+    if (needsOldDataMigration) {
+      // TypeORM対応以前からのマイグレーションの場合は、元テーブルをリネームしておく
+      await queryRunner.query('ALTER TABLE "pref" RENAME TO "pref_old"');
+      await queryRunner.query('ALTER TABLE "city" RENAME TO "city_old"');
+      await queryRunner.query('ALTER TABLE "town" RENAME TO "town_old"');
+      await queryRunner.query(
+        'ALTER TABLE "rsdtdsp_blk" RENAME TO "rsdtdsp_blk_old"'
+      );
+      await queryRunner.query(
+        'ALTER TABLE "rsdtdsp_rsdt" RENAME TO "rsdtdsp_rsdt_old"'
+      );
+      await queryRunner.query(
+        'ALTER TABLE "metadata" RENAME TO "metadata_old"'
+      );
+      await queryRunner.query('ALTER TABLE "dataset" RENAME TO "dataset_old"');
+    }
+
+    await queryRunner.query(`
+      CREATE TABLE "pref" (
+        "lg_code" text PRIMARY KEY NOT NULL,
+        "pref_name" text NOT NULL,
+        "pref_name_kana" text NOT NULL,
+        "pref_name_roma" text NOT NULL,
+        "efct_date" text,
+        "ablt_date" text,
+        "remarks" text
+      )
+    `);
+    await queryRunner.query(`
+      CREATE UNIQUE INDEX "pref_code_idx" ON "pref" ("lg_code")
+    `);
+
+    await queryRunner.query(`
+      CREATE TABLE "city" (
+        "lg_code" text PRIMARY KEY NOT NULL,
+        "pref_name" text NOT NULL,
+        "pref_name_kana" text NOT NULL,
+        "pref_name_roma" text NOT NULL,
+        "county_name" text,
+        "county_name_kana" text,
+        "county_name_roma" text,
+        "city_name" text NOT NULL,
+        "city_name_kana" text NOT NULL,
+        "city_name_roma" text NOT NULL,
+        "od_city_name" text,
+        "od_city_name_kana" text,
+        "od_city_name_roma" text,
+        "efct_date" text,
+        "ablt_date" text,
+        "remarks" text
+      )
+    `);
+    await queryRunner.query(`
+      CREATE UNIQUE INDEX "city_code_idx" ON "city" ("lg_code")
+    `);
+
     await queryRunner.query(`
       CREATE TABLE "town" (
         "lg_code" text NOT NULL,
@@ -51,20 +120,7 @@ export class InitialSchema1705589170557 implements MigrationInterface {
     await queryRunner.query(`
       CREATE UNIQUE INDEX "town_code_idx" ON "town" ("lg_code", "town_id")
     `);
-    await queryRunner.query(`
-      CREATE TABLE "pref" (
-        "lg_code" text PRIMARY KEY NOT NULL,
-        "pref_name" text NOT NULL,
-        "pref_name_kana" text NOT NULL,
-        "pref_name_roma" text NOT NULL,
-        "efct_date" text,
-        "ablt_date" text,
-        "remarks" text
-      )
-    `);
-    await queryRunner.query(`
-      CREATE UNIQUE INDEX "pref_code_idx" ON "pref" ("lg_code")
-    `);
+
     await queryRunner.query(`
       CREATE TABLE "rsdtdsp_blk" (
         "lg_code" text NOT NULL,
@@ -93,27 +149,7 @@ export class InitialSchema1705589170557 implements MigrationInterface {
     await queryRunner.query(`
       CREATE UNIQUE INDEX "rsdtdsp_blk_code_idx" ON "rsdtdsp_blk" ("lg_code", "town_id", "blk_id")
     `);
-    await queryRunner.query(`
-      CREATE TABLE "metadata" (
-        "key" text PRIMARY KEY NOT NULL,
-        "value" text NOT NULL
-      )
-    `);
-    await queryRunner.query(`
-      CREATE UNIQUE INDEX "metadata_key_idx" ON "metadata" ("key")
-    `);
-    await queryRunner.query(`
-      CREATE TABLE "dataset" (
-        "key" text PRIMARY KEY NOT NULL,
-        "type" text NOT NULL,
-        "content_length" bigint NOT NULL,
-        "crc32" bigint NOT NULL,
-        "last_modified" bigint NOT NULL
-      )
-    `);
-    await queryRunner.query(`
-      CREATE UNIQUE INDEX "dataset_key_idx" ON "dataset" ("key")
-    `);
+
     await queryRunner.query(`
       CREATE TABLE "rsdtdsp_rsdt" (
         "lg_code" text NOT NULL,
@@ -159,44 +195,65 @@ export class InitialSchema1705589170557 implements MigrationInterface {
         "addr2_id"
       )
     `);
+
     await queryRunner.query(`
-      CREATE TABLE "city" (
-        "lg_code" text PRIMARY KEY NOT NULL,
-        "pref_name" text NOT NULL,
-        "pref_name_kana" text NOT NULL,
-        "pref_name_roma" text NOT NULL,
-        "county_name" text,
-        "county_name_kana" text,
-        "county_name_roma" text,
-        "city_name" text NOT NULL,
-        "city_name_kana" text NOT NULL,
-        "city_name_roma" text NOT NULL,
-        "od_city_name" text,
-        "od_city_name_kana" text,
-        "od_city_name_roma" text,
-        "efct_date" text,
-        "ablt_date" text,
-        "remarks" text
+      CREATE TABLE "metadata" (
+        "key" text PRIMARY KEY NOT NULL,
+        "value" text NOT NULL
       )
     `);
     await queryRunner.query(`
-      CREATE UNIQUE INDEX "city_code_idx" ON "city" ("lg_code")
+      CREATE UNIQUE INDEX "metadata_key_idx" ON "metadata" ("key")
     `);
+
+    await queryRunner.query(`
+      CREATE TABLE "dataset" (
+        "key" text PRIMARY KEY NOT NULL,
+        "type" text NOT NULL,
+        "content_length" bigint NOT NULL,
+        "crc32" bigint NOT NULL,
+        "last_modified" bigint NOT NULL
+      )
+    `);
+    await queryRunner.query(`
+      CREATE UNIQUE INDEX "dataset_key_idx" ON "dataset" ("key")
+    `);
+
+    if (needsOldDataMigration) {
+      // 元テーブルからデータをコピー後、元テーブル・インデックスを削除
+      await queryRunner.query('INSERT INTO "pref" SELECT * FROM "pref_old"');
+      await queryRunner.query('INSERT INTO "city" SELECT * FROM "city_old"');
+      await queryRunner.query('INSERT INTO "town" SELECT * FROM "town_old"');
+      await queryRunner.query(
+        'INSERT INTO "rsdtdsp_blk" SELECT * FROM "rsdtdsp_blk_old"'
+      );
+      await queryRunner.query(
+        'INSERT INTO "rsdtdsp_rsdt" SELECT * FROM "rsdtdsp_rsdt_old"'
+      );
+      await queryRunner.query(
+        'INSERT INTO "metadata" SELECT * FROM "metadata_old"'
+      );
+      await queryRunner.query(
+        'INSERT INTO "dataset" SELECT * FROM "dataset_old"'
+      );
+      await queryRunner.query('DROP INDEX IF EXISTS "dataset_key"');
+      await queryRunner.query('DROP TABLE IF EXISTS "dataset_old"');
+      await queryRunner.query('DROP INDEX IF EXISTS "metadata_key"');
+      await queryRunner.query('DROP TABLE IF EXISTS "metadata_old"');
+      await queryRunner.query('DROP INDEX IF EXISTS "rsdtdsp_rsdt_code"');
+      await queryRunner.query('DROP TABLE IF EXISTS "rsdtdsp_rsdt_old"');
+      await queryRunner.query('DROP INDEX IF EXISTS "rsdtdsp_blk_code"');
+      await queryRunner.query('DROP TABLE IF EXISTS "rsdtdsp_blk_old"');
+      await queryRunner.query('DROP INDEX IF EXISTS "town_code"');
+      await queryRunner.query('DROP TABLE IF EXISTS "town_old"');
+      await queryRunner.query('DROP INDEX IF EXISTS "city_code"');
+      await queryRunner.query('DROP TABLE IF EXISTS "city_old"');
+      await queryRunner.query('DROP INDEX IF EXISTS "pref_code"');
+      await queryRunner.query('DROP TABLE IF EXISTS "pref_old"');
+    }
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`
-      DROP INDEX "city_code_idx"
-    `);
-    await queryRunner.query(`
-      DROP TABLE "city"
-    `);
-    await queryRunner.query(`
-      DROP INDEX "rsdtdsp_rsdt_code_idx"
-    `);
-    await queryRunner.query(`
-      DROP TABLE "rsdtdsp_rsdt"
-    `);
     await queryRunner.query(`
       DROP INDEX "dataset_key_idx"
     `);
@@ -210,22 +267,34 @@ export class InitialSchema1705589170557 implements MigrationInterface {
       DROP TABLE "metadata"
     `);
     await queryRunner.query(`
+      DROP INDEX "rsdtdsp_rsdt_code_idx"
+    `);
+    await queryRunner.query(`
+      DROP TABLE "rsdtdsp_rsdt"
+    `);
+    await queryRunner.query(`
       DROP INDEX "rsdtdsp_blk_code_idx"
     `);
     await queryRunner.query(`
       DROP TABLE "rsdtdsp_blk"
     `);
     await queryRunner.query(`
-      DROP INDEX "pref_code_idx"
+      DROP INDEX "city_code_idx"
     `);
     await queryRunner.query(`
-      DROP TABLE "pref"
+      DROP TABLE "city"
     `);
     await queryRunner.query(`
       DROP INDEX "town_code_idx"
     `);
     await queryRunner.query(`
       DROP TABLE "town"
+    `);
+    await queryRunner.query(`
+      DROP INDEX "pref_code_idx"
+    `);
+    await queryRunner.query(`
+      DROP TABLE "pref"
     `);
   }
 }
