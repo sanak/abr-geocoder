@@ -3,10 +3,10 @@ import { Entity, Index, PrimaryColumn, Column } from 'typeorm';
 @Entity()
 @Index('town_code_idx', ['lg_code', 'town_id'], { unique: true })
 export class Town {
-  @PrimaryColumn('text', { comment: '全国地方公共団体コード' })
+  @PrimaryColumn('varchar', { length: '6', comment: '全国地方公共団体コード' })
   lg_code!: string;
 
-  @PrimaryColumn('text', { comment: '町字ID' })
+  @PrimaryColumn('varchar', { length: '7', comment: '町字ID' })
   town_id!: string;
 
   @Column('integer', { comment: '町字区分コード' })

@@ -33,7 +33,7 @@ export const getValueWithKey = async ({
 }): Promise<string | undefined> => {
   const { preparedSql, paramKeys } = prepareSqlAndParamKeys(
     ds,
-    'select value from metadata where key = @key limit 1'
+    'select value from metadata where "key" = @key limit 1'
   );
   const params: { [key: string]: string | number } = {
     key,

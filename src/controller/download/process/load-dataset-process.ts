@@ -209,7 +209,7 @@ export const loadDatasetProcess = async ({
               ds,
               `INSERT OR REPLACE INTO "dataset"
               (
-                key,
+                "key",
                 type,
                 content_length,
                 crc32,

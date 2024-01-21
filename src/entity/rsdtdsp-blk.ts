@@ -5,13 +5,13 @@ import { Entity, Index, PrimaryColumn, Column } from 'typeorm';
   unique: true,
 })
 export class RsdtdspBlk {
-  @PrimaryColumn('text', { comment: '全国地方公共団体コード' })
+  @PrimaryColumn('varchar', { length: '6', comment: '全国地方公共団体コード' })
   lg_code!: string;
 
-  @PrimaryColumn('text', { comment: '町字ID' })
+  @PrimaryColumn('varchar', { length: '7', comment: '町字ID' })
   town_id!: string;
 
-  @PrimaryColumn('text', { comment: '街区ID' })
+  @PrimaryColumn('varchar', { length: '3', comment: '街区ID' })
   blk_id!: string;
 
   @Column('text', { comment: '市区町村名' })
