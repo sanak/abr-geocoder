@@ -38,12 +38,12 @@ export const getValueWithKey = async ({
   const params: { [key: string]: string | number } = {
     key,
   };
-  const result = await ds.query(
+  const result = (await ds.query(
     preparedSql,
     paramKeys.map(key => params[key])
-  );
-  if (!result) {
+  )) as { value: string }[];
+  if (!result || result.length === 0) {
     return;
   }
-  return result.value;
+  return result[0].value;
 };

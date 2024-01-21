@@ -61,7 +61,6 @@ export class TownDatasetFile
       DataField.OAZA_TOWN_ALT_NAME_FLG,
       DataField.KOAZA_FRN_LTRS_FLG,
       DataField.OAZA_FRN_LTRS_FLG,
-      DataField.KOAZA_FRN_LTRS_FLG,
       DataField.STATUS_FLG,
       DataField.WAKE_NUM_FLG,
       DataField.EFCT_DATE,
@@ -112,7 +111,6 @@ export class TownDatasetFile
         ${DataField.OAZA_TOWN_ALT_NAME_FLG.dbColumn},
         ${DataField.KOAZA_FRN_LTRS_FLG.dbColumn},
         ${DataField.OAZA_FRN_LTRS_FLG.dbColumn},
-        ${DataField.KOAZA_FRN_LTRS_FLG.dbColumn},
         ${DataField.STATUS_FLG.dbColumn},
         ${DataField.WAKE_NUM_FLG.dbColumn},
         ${DataField.EFCT_DATE.dbColumn},
@@ -152,7 +150,6 @@ export class TownDatasetFile
         @${DataField.OAZA_TOWN_ALT_NAME_FLG.dbColumn},
         @${DataField.KOAZA_FRN_LTRS_FLG.dbColumn},
         @${DataField.OAZA_FRN_LTRS_FLG.dbColumn},
-        @${DataField.KOAZA_FRN_LTRS_FLG.dbColumn},
         @${DataField.STATUS_FLG.dbColumn},
         @${DataField.WAKE_NUM_FLG.dbColumn},
         @${DataField.EFCT_DATE.dbColumn},
@@ -161,6 +158,8 @@ export class TownDatasetFile
         @${DataField.POST_CODE.dbColumn},
         @${DataField.REMARKS.dbColumn}
       )
+      -- ON CONFLICT (${DataField.LG_CODE.dbColumn}, ${DataField.TOWN_ID.dbColumn})
+      -- DO NOTHING
       `;
     return new TownDatasetFile({
       ...params,
