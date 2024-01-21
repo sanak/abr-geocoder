@@ -81,6 +81,9 @@ MockedDS.mockImplementation(() => {
         }
       }
       throw new Error('Unexpected sql was given');
+    },
+    options: {
+      type: 'better-sqlite3'
     }
   }
 });

@@ -47,6 +47,9 @@ MockedDS.mockImplementation(() => {
         }
       ]);
     },
+    options: {
+      type: 'better-sqlite3',
+    },
   };
 });
 describe('getPrefecturesFromDB', () => {

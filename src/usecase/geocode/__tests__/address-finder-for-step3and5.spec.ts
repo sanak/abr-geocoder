@@ -149,6 +149,9 @@ MockedDS.mockImplementation(() => {
           throw new Error(`Unexpected prefecture : ${params[0]}`);
       }
     },
+    options: {
+      type: 'better-sqlite3',
+    },
   };
 });
 
