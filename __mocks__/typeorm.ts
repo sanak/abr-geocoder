@@ -43,7 +43,10 @@ export const DataSource = jest.fn().mockImplementation(
       }),
       destroy: jest.fn(() => {
         return Promise.resolve();
-      })
+      }),
+      options: {
+        type: 'better-sqlite3'
+      }
     };
   }
 );

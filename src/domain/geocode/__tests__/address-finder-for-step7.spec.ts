@@ -52,7 +52,10 @@ MockedDS.mockImplementation(() => {
         return Promise.resolve(dummyRsdtList);
       }
       throw new Error('Unexpected sql was given');
-    }
+    },
+    options: {
+      type: 'better-sqlite3',
+    },
   }
 });
 

@@ -12,9 +12,12 @@ describe("getValueWithKey()", () => {
     MockedDS.mockImplementation(() => {
       return {
         query: (sql: string, params: string[]) => {
-          return Promise.resolve({
+          return Promise.resolve([{
             value: '1234',
-          });
+          }]);
+        },
+        options: {
+          type: 'better-sqlite3',
         },
       };
     });
@@ -36,6 +39,9 @@ describe("getValueWithKey()", () => {
       return {
         query: (sql: string, params: string[]) => {
           return Promise.resolve(undefined);
+        },
+        options: {
+          type: 'better-sqlite3',
         },
       };
     });

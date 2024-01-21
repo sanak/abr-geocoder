@@ -11,7 +11,10 @@ const mockRunMethod = jest.fn();
 
 MockedDS.mockImplementation(() => {
   return {
-    query: mockRunMethod // (sql: string, params: string[]) => {}
+    query: mockRunMethod, // (sql: string, params: string[]) => {}
+    options: {
+      type: 'better-sqlite3',
+    },
   };
 });
 
