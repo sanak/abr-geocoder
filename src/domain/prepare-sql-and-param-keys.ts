@@ -38,6 +38,8 @@ export const prepareSqlAndParamKeys = (
       if (matchedJSONFucntion.toLowerCase() === 'json_group_array') {
         if (dsType === 'postgres') {
           tempSql = tempSql.replace(matchedJSONFucntion, 'json_agg');
+        } else if (dsType === 'mysql') {
+          tempSql = tempSql.replace(matchedJSONFucntion, 'json_arrayagg');
         }
       } else if (matchedJSONFucntion.toLowerCase() === 'json_object') {
         if (dsType === 'postgres') {
