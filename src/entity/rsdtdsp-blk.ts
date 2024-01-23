@@ -1,9 +1,6 @@
-import { Entity, Index, PrimaryColumn, Column } from 'typeorm';
+import { Entity, PrimaryColumn, Column } from 'typeorm';
 
 @Entity()
-@Index('rsdtdsp_blk_code_idx', ['lg_code', 'town_id', 'blk_id'], {
-  unique: true,
-})
 export class RsdtdspBlk {
   @PrimaryColumn('varchar', { length: '6', comment: '全国地方公共団体コード' })
   lg_code!: string;

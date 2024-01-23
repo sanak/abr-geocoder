@@ -1,7 +1,6 @@
-import { Entity, Index, PrimaryColumn, Column } from 'typeorm';
+import { Entity, PrimaryColumn, Column } from 'typeorm';
 
 @Entity()
-@Index('city_code_idx', ['lg_code'], { unique: true })
 export class City {
   @PrimaryColumn('varchar', { length: '6', comment: '全国地方公共団体コード' })
   lg_code!: string;

@@ -5,8 +5,7 @@ export class InitialSchema1705589170557 implements MigrationInterface {
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     let needsOldDataMigration = false;
-    const isSqlite = queryRunner.connection.options.type === 'better-sqlite3';
-    if (isSqlite) {
+    if (queryRunner.connection.options.type === 'better-sqlite3') {
       const hasOldMetadataIdx =
         (
           await queryRunner.query(
@@ -45,9 +44,6 @@ export class InitialSchema1705589170557 implements MigrationInterface {
         "remarks" text
       )
     `);
-    await queryRunner.query(`
-      CREATE UNIQUE INDEX "pref_code_idx" ON "pref" ("lg_code")
-    `);
 
     await queryRunner.query(`
       CREATE TABLE "city" (
@@ -68,9 +64,6 @@ export class InitialSchema1705589170557 implements MigrationInterface {
         "ablt_date" text,
         "remarks" text
       )
-    `);
-    await queryRunner.query(`
-      CREATE UNIQUE INDEX "city_code_idx" ON "city" ("lg_code")
     `);
 
     await queryRunner.query(`
@@ -112,13 +105,10 @@ export class InitialSchema1705589170557 implements MigrationInterface {
         "src_code" smallint,
         "post_code" text,
         "remarks" text,
-        "rep_pnt_lon" double precision,
-        "rep_pnt_lat" double precision,
+        "rep_pnt_lon" float,
+        "rep_pnt_lat" float,
         PRIMARY KEY ("lg_code", "town_id")
       )
-    `);
-    await queryRunner.query(`
-      CREATE UNIQUE INDEX "town_code_idx" ON "town" ("lg_code", "town_id")
     `);
 
     await queryRunner.query(`
@@ -141,13 +131,10 @@ export class InitialSchema1705589170557 implements MigrationInterface {
         "ablt_date" text,
         "src_code" smallint,
         "remarks" text,
-        "rep_pnt_lon" double precision,
-        "rep_pnt_lat" double precision,
+        "rep_pnt_lon" float,
+        "rep_pnt_lat" float,
         PRIMARY KEY ("lg_code", "town_id", "blk_id")
       )
-    `);
-    await queryRunner.query(`
-      CREATE UNIQUE INDEX "rsdtdsp_blk_code_idx" ON "rsdtdsp_blk" ("lg_code", "town_id", "blk_id")
     `);
 
     await queryRunner.query(`
@@ -175,8 +162,8 @@ export class InitialSchema1705589170557 implements MigrationInterface {
         "ablt_date" text,
         "src_code" smallint,
         "remarks" text,
-        "rep_pnt_lon" double precision,
-        "rep_pnt_lat" double precision,
+        "rep_pnt_lon" float,
+        "rep_pnt_lat" float,
         PRIMARY KEY (
             "lg_code",
             "town_id",
@@ -186,24 +173,12 @@ export class InitialSchema1705589170557 implements MigrationInterface {
         )
       )
     `);
-    await queryRunner.query(`
-      CREATE UNIQUE INDEX "rsdtdsp_rsdt_code_idx" ON "rsdtdsp_rsdt" (
-        "lg_code",
-        "town_id",
-        "blk_id",
-        "addr_id",
-        "addr2_id"
-      )
-    `);
 
     await queryRunner.query(`
       CREATE TABLE "metadata" (
         "key" varchar(255) PRIMARY KEY NOT NULL,
         "value" text NOT NULL
       )
-    `);
-    await queryRunner.query(`
-      CREATE UNIQUE INDEX "metadata_key_idx" ON "metadata" ("key")
     `);
 
     await queryRunner.query(`
@@ -215,9 +190,28 @@ export class InitialSchema1705589170557 implements MigrationInterface {
         "last_modified" bigint NOT NULL
       )
     `);
-    await queryRunner.query(`
-      CREATE UNIQUE INDEX "dataset_key_idx" ON "dataset" ("key")
-    `);
+
+    if (queryRunner.connection.options.type === 'mysql') {
+      // MySQLの場合は代表点経度・緯度の型を float から double precision に変更
+      await queryRunner.query(
+        'ALTER TABLE "town" MODIFY "rep_pnt_lon" double precision'
+      );
+      await queryRunner.query(
+        'ALTER TABLE "town" MODIFY "rep_pnt_lat" double precision'
+      );
+      await queryRunner.query(
+        'ALTER TABLE "rsdtdsp_blk" MODIFY "rep_pnt_lon" double precision'
+      );
+      await queryRunner.query(
+        'ALTER TABLE "rsdtdsp_blk" MODIFY "rep_pnt_lat" double precision'
+      );
+      await queryRunner.query(
+        'ALTER TABLE "rsdtdsp_rsdt" MODIFY "rep_pnt_lon" double precision'
+      );
+      await queryRunner.query(
+        'ALTER TABLE "rsdtdsp_rsdt" MODIFY "rep_pnt_lat" double precision'
+      );
+    }
 
     if (needsOldDataMigration) {
       // 元テーブルからデータをコピー後、元テーブル・インデックスを削除
@@ -255,43 +249,22 @@ export class InitialSchema1705589170557 implements MigrationInterface {
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
-      DROP INDEX "dataset_key_idx"
-    `);
-    await queryRunner.query(`
       DROP TABLE "dataset"
-    `);
-    await queryRunner.query(`
-      DROP INDEX "metadata_key_idx"
     `);
     await queryRunner.query(`
       DROP TABLE "metadata"
     `);
     await queryRunner.query(`
-      DROP INDEX "rsdtdsp_rsdt_code_idx"
-    `);
-    await queryRunner.query(`
       DROP TABLE "rsdtdsp_rsdt"
-    `);
-    await queryRunner.query(`
-      DROP INDEX "rsdtdsp_blk_code_idx"
     `);
     await queryRunner.query(`
       DROP TABLE "rsdtdsp_blk"
     `);
     await queryRunner.query(`
-      DROP INDEX "city_code_idx"
-    `);
-    await queryRunner.query(`
       DROP TABLE "city"
     `);
     await queryRunner.query(`
-      DROP INDEX "town_code_idx"
-    `);
-    await queryRunner.query(`
       DROP TABLE "town"
-    `);
-    await queryRunner.query(`
-      DROP INDEX "pref_code_idx"
     `);
     await queryRunner.query(`
       DROP TABLE "pref"
