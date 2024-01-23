@@ -33,13 +33,14 @@ import { TownDatasetFile } from '@domain/dataset/town-dataset-file';
 import { TownPosDatasetFile } from '@domain/dataset/town-pos-dataset-file';
 import { IStreamReady } from '@domain/istream-ready';
 import { DI_TOKEN } from '@interface-adapter/tokens';
-import { DataSource } from 'typeorm';
+import { DataSource, QueryRunner } from 'typeorm';
 import { MultiBar } from 'cli-progress';
 import csvParser from 'csv-parser';
 import { Stream } from 'node:stream';
 import { DependencyContainer } from 'tsyringe';
 import { Logger } from 'winston';
 import { prepareSqlAndParamKeys } from '@domain/prepare-sql-and-param-keys';
+import { replaceSqlInsertValues } from '@domain/replace-sql-insert-values';
 
 export const loadDatasetProcess = async ({
   ds,
@@ -135,6 +136,30 @@ export const loadDatasetProcess = async ({
     },
   });
 
+  const processBulkInsertOrEachUpdate = async (
+    ds: DataSource,
+    datasetFile: DatasetFile,
+    queryRunner: QueryRunner,
+    preparedSql: string,
+    paramsList: Array<Array<string | number>>
+  ) => {
+    if (!datasetFile.type.includes('pos')) {
+      const sql = replaceSqlInsertValues(
+        ds,
+        preparedSql,
+        paramsList[0].length,
+        paramsList.length
+      );
+      await queryRunner.connection.query(sql, paramsList.flat());
+    } else {
+      // awaitがあるため、forEachでなくforループで回す
+      for (let i = 0; i < paramsList.length; i++) {
+        const params = paramsList[i];
+        await queryRunner.connection.query(preparedSql, params);
+      }
+    }
+  };
+
   const loadDataProgress = multiProgressBar?.create(csvFiles.length, 0, {
     filename: 'loading...',
   });
@@ -169,6 +194,12 @@ export const loadDatasetProcess = async ({
       // DBに登録
       await queryRunner.startTransaction();
 
+      let bulkInsertSize = 500;
+      if (process.env.BULK_INSERT_SIZE) {
+        bulkInsertSize = parseInt(process.env.BULK_INSERT_SIZE);
+      }
+      let paramsList: Array<Array<string | number>> = [];
+
       datasetFile.csvFile.getStream().then(fileStream => {
         fileStream
           .pipe(
@@ -182,10 +213,17 @@ export const loadDatasetProcess = async ({
               async write(chunk, encoding, next) {
                 try {
                   const processed = datasetFile.process(chunk);
-                  await queryRunner.connection.query(
-                    preparedSql,
-                    paramKeys.map(key => processed[key])
-                  );
+                  paramsList.push(paramKeys.map(key => processed[key]));
+                  if (paramsList.length === bulkInsertSize) {
+                    await processBulkInsertOrEachUpdate(
+                      ds,
+                      datasetFile,
+                      queryRunner,
+                      preparedSql,
+                      paramsList
+                    );
+                    paramsList = [];
+                  }
                   next(null);
                 } catch (error) {
                   await errorHandler(error);
@@ -194,6 +232,22 @@ export const loadDatasetProcess = async ({
             })
           )
           .on('finish', async () => {
+            if (paramsList.length > 0) {
+              try {
+                await processBulkInsertOrEachUpdate(
+                  ds,
+                  datasetFile,
+                  queryRunner,
+                  preparedSql,
+                  paramsList
+                );
+                paramsList = [];
+              } catch (error) {
+                await errorHandler(error);
+                await queryRunner.release();
+                return;
+              }
+            }
             await queryRunner.commitTransaction();
             const params: { [key: string]: string | number } = {
               key: datasetFile.filename,
