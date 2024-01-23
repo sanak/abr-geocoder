@@ -53,10 +53,10 @@ export class RsdtdspRsdt {
   @Column('text', { nullable: true, comment: '基礎番号・住居番号区分' })
   basic_rsdt_div!: number;
 
-  @Column('integer', { comment: '住居表示フラグ' })
+  @Column('smallint', { comment: '住居表示フラグ' })
   rsdt_addr_flg!: number;
 
-  @Column('integer', { comment: '住居表示方式コード' })
+  @Column('smallint', { comment: '住居表示方式コード' })
   rsdt_addr_mtd_code!: number;
 
   @Column('text', { nullable: true, comment: '大字・町_外字フラグ' })
@@ -74,16 +74,16 @@ export class RsdtdspRsdt {
   @Column('text', { nullable: true, comment: '廃止日' })
   ablt_date!: string;
 
-  @Column('integer', { nullable: true, comment: '原典資料コード' })
+  @Column('smallint', { nullable: true, comment: '原典資料コード' })
   src_code!: number;
 
   @Column('text', { nullable: true, comment: '備考' })
   remarks!: string;
 
   // 住居表示-住居位置参照(mt_rsdtdsp_rsdt_pos_prefXX)から結合
-  @Column('float', { nullable: true, comment: '代表点_経度' })
+  @Column('double precision', { nullable: true, comment: '代表点_経度' })
   rep_pnt_lon!: number;
 
-  @Column('float', { nullable: true, comment: '代表点_緯度' })
+  @Column('double precision', { nullable: true, comment: '代表点_緯度' })
   rep_pnt_lat!: number;
 }
