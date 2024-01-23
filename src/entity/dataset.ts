@@ -1,7 +1,6 @@
-import { Entity, Index, PrimaryColumn, Column } from 'typeorm';
+import { Entity, PrimaryColumn, Column } from 'typeorm';
 
 @Entity()
-@Index('dataset_key_idx', ['key'], { unique: true })
 export class Dataset {
   @PrimaryColumn('varchar', { length: '255' })
   key!: string;
