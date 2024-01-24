@@ -152,11 +152,10 @@ export const loadDatasetProcess = async ({
       );
       await queryRunner.connection.query(sql, paramsList.flat());
     } else {
-      // awaitがあるため、forEachでなくforループで回す
-      for (let i = 0; i < paramsList.length; i++) {
-        const params = paramsList[i];
-        await queryRunner.connection.query(preparedSql, params);
-      }
+      const tasks = paramsList.map(params => {
+        return queryRunner.connection.query(preparedSql, params);
+      });
+      await Promise.all(tasks);
     }
   };
 
