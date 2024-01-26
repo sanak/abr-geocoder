@@ -22,11 +22,18 @@ export const prepareSqlAndParamKeys = (
   }
   const matchedInsertOrReplace = tempSql.match(/^INSERT OR REPLACE INTO/i);
   if (matchedInsertOrReplace) {
-    if (dsType === 'postgres') {
-      tempSql = tempSql.replace(matchedInsertOrReplace[0], 'INSERT INTO');
-      tempSql = tempSql.replace(/-- /g, '');
-    } else if (dsType === 'mysql') {
-      tempSql = tempSql.replace(matchedInsertOrReplace[0], 'REPLACE INTO');
+    switch (dsType) {
+      case 'postgres':
+        tempSql = tempSql.replace(matchedInsertOrReplace[0], 'INSERT INTO');
+        tempSql = tempSql.replace(/-- /g, '');
+        break;
+
+      case 'mysql':
+        tempSql = tempSql.replace(matchedInsertOrReplace[0], 'REPLACE INTO');
+        break;
+
+      default:
+        break;
     }
   }
   const matchedJSONFunctions = tempSql.match(
