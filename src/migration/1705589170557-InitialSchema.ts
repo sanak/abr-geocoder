@@ -230,20 +230,22 @@ export class InitialSchema1705589170557 implements MigrationInterface {
       await queryRunner.query(
         'INSERT INTO "dataset" SELECT * FROM "dataset_old"'
       );
-      await queryRunner.query('DROP INDEX IF EXISTS "dataset_key"');
-      await queryRunner.query('DROP TABLE IF EXISTS "dataset_old"');
-      await queryRunner.query('DROP INDEX IF EXISTS "metadata_key"');
-      await queryRunner.query('DROP TABLE IF EXISTS "metadata_old"');
-      await queryRunner.query('DROP INDEX IF EXISTS "rsdtdsp_rsdt_code"');
-      await queryRunner.query('DROP TABLE IF EXISTS "rsdtdsp_rsdt_old"');
-      await queryRunner.query('DROP INDEX IF EXISTS "rsdtdsp_blk_code"');
-      await queryRunner.query('DROP TABLE IF EXISTS "rsdtdsp_blk_old"');
-      await queryRunner.query('DROP INDEX IF EXISTS "town_code"');
-      await queryRunner.query('DROP TABLE IF EXISTS "town_old"');
-      await queryRunner.query('DROP INDEX IF EXISTS "city_code"');
-      await queryRunner.query('DROP TABLE IF EXISTS "city_old"');
-      await queryRunner.query('DROP INDEX IF EXISTS "pref_code"');
-      await queryRunner.query('DROP TABLE IF EXISTS "pref_old"');
+      await queryRunner.query(`
+        DROP INDEX IF EXISTS "dataset_key";
+        DROP TABLE IF EXISTS "dataset_old";
+        DROP INDEX IF EXISTS "metadata_key";
+        DROP TABLE IF EXISTS "metadata_old";
+        DROP INDEX IF EXISTS "rsdtdsp_rsdt_code";
+        DROP TABLE IF EXISTS "rsdtdsp_rsdt_old";
+        DROP INDEX IF EXISTS "rsdtdsp_blk_code";
+        DROP TABLE IF EXISTS "rsdtdsp_blk_old";
+        DROP INDEX IF EXISTS "town_code";
+        DROP TABLE IF EXISTS "town_old";
+        DROP INDEX IF EXISTS "city_code";
+        DROP TABLE IF EXISTS "city_old";
+        DROP INDEX IF EXISTS "pref_code";
+        DROP TABLE IF EXISTS "pref_old";
+      `);
     }
   }
 
