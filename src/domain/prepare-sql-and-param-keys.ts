@@ -39,22 +39,33 @@ export const prepareSqlAndParamKeys = (
   const matchedJSONFunctions = tempSql.match(
     /(json_group_array|json_object)/gi
   );
-  if (matchedJSONFunctions) {
-    for (let i = 0; i < matchedJSONFunctions.length; i++) {
-      const matchedJSONFucntion = matchedJSONFunctions[i];
-      if (matchedJSONFucntion.toLowerCase() === 'json_group_array') {
-        if (dsType === 'postgres') {
-          tempSql = tempSql.replace(matchedJSONFucntion, 'json_agg');
-        } else if (dsType === 'mysql') {
-          tempSql = tempSql.replace(matchedJSONFucntion, 'json_arrayagg');
-        }
-      } else if (matchedJSONFucntion.toLowerCase() === 'json_object') {
-        if (dsType === 'postgres') {
-          tempSql = tempSql.replace(matchedJSONFucntion, 'json_build_object');
-        }
-      }
-    }
+  if (!matchedJSONFunctions) {
+    return {
+      preparedSql: tempSql,
+      paramKeys: keys,
+    };
   }
+
+  matchedJSONFunctions.forEach(matchedJSONFucntion => {
+    const functionName = matchedJSONFucntion.toLowerCase();
+    switch (`${functionName}-${dsType}`) {
+      case 'json_group_array-postgress':
+        tempSql = tempSql.replace(matchedJSONFucntion, 'json_agg');
+        break;
+
+      case 'json_group_array-mysql':
+        tempSql = tempSql.replace(matchedJSONFucntion, 'json_arrayagg');
+        break;
+
+      case 'json_object-postgres':
+        tempSql = tempSql.replace(matchedJSONFucntion, 'json_build_object');
+        break;
+
+      default:
+        break;
+    }
+  });
+
   return {
     preparedSql: tempSql,
     paramKeys: keys,
