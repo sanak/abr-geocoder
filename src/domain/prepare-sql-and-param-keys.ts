@@ -1,4 +1,6 @@
 import { DataSource } from 'typeorm';
+import { RegExpEx } from '@domain/reg-exp-ex';
+import { DASH } from '@settings/constant-values';
 
 export const prepareSqlAndParamKeys = (
   ds: DataSource,
@@ -10,17 +12,21 @@ export const prepareSqlAndParamKeys = (
   let tempSql = sql;
   const keys = [];
   const dsType = ds.options.type;
-  const matchedParams = tempSql.match(/@[a-zA-Z_0-9]+/g);
+  const matchedParams = tempSql.match(
+    RegExpEx.create(`${DASH}[a-zA-Z_0-9]+`, 'g')
+  );
   if (matchedParams) {
     for (let i = 0; i < matchedParams.length; i++) {
       const matchedParam = matchedParams[i];
-      const paramName = matchedParam.replace('@', '');
+      const paramName = matchedParam.replace(DASH, '');
       keys.push(paramName);
       const placeHolder = dsType === 'postgres' ? `$${i + 1}` : '?';
       tempSql = tempSql.replace(matchedParam, placeHolder);
     }
   }
-  const matchedInsertOrReplace = tempSql.match(/^INSERT OR REPLACE INTO/i);
+  const matchedInsertOrReplace = tempSql.match(
+    RegExpEx.create('^INSERT OR REPLACE INTO', 'i')
+  );
   if (matchedInsertOrReplace) {
     switch (dsType) {
       case 'postgres':
@@ -37,7 +43,7 @@ export const prepareSqlAndParamKeys = (
     }
   }
   const matchedJSONFunctions = tempSql.match(
-    /(json_group_array|json_object)/gi
+    RegExpEx.create('(json_group_array|json_object)', 'gi')
   );
   if (!matchedJSONFunctions) {
     return {
