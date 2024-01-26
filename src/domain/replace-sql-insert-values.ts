@@ -14,22 +14,20 @@ export const replaceSqlInsertValues = (
       ? /VALUES[\s\n]*\([\s\n$0-9,]+\)/im
       : /VALUES[\s\n]*\([\s\n?,]+\)/im;
   const matchedInsertValues = tempSql.match(pattern);
-  if (matchedInsertValues) {
-    for (let rowIdx = 0; rowIdx < rowCount; rowIdx++) {
-      const placeHolders = [];
-      for (let paramIdx = 0; paramIdx < paramsCount; paramIdx++) {
-        const placeHolder =
-          dsType === 'postgres'
-            ? `$${rowIdx * paramsCount + paramIdx + 1}`
-            : '?';
-        placeHolders.push(placeHolder);
-      }
-      rows.push(`(${placeHolders.join(',')})`);
-    }
-    tempSql = tempSql.replace(
-      matchedInsertValues[0],
-      'VALUES ' + rows.join(',')
-    );
+  if (!matchedInsertValues) {
+    return tempSql;
   }
+
+  for (let rowIdx = 0; rowIdx < rowCount; rowIdx++) {
+    const placeHolders = [];
+    for (let paramIdx = 0; paramIdx < paramsCount; paramIdx++) {
+      const placeHolder =
+        dsType === 'postgres' ? `$${rowIdx * paramsCount + paramIdx + 1}` : '?';
+      placeHolders.push(placeHolder);
+    }
+    rows.push(`(${placeHolders.join(',')})`);
+  }
+  tempSql = tempSql.replace(matchedInsertValues[0], 'VALUES ' + rows.join(','));
+
   return tempSql;
 };
