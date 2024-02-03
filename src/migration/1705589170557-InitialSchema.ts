@@ -105,8 +105,8 @@ export class InitialSchema1705589170557 implements MigrationInterface {
         "src_code" smallint,
         "post_code" text,
         "remarks" text,
-        "rep_pnt_lon" float,
-        "rep_pnt_lat" float,
+        "rep_pnt_lon" double precision,
+        "rep_pnt_lat" double precision,
         PRIMARY KEY ("lg_code", "town_id")
       )
     `);
@@ -131,8 +131,8 @@ export class InitialSchema1705589170557 implements MigrationInterface {
         "ablt_date" text,
         "src_code" smallint,
         "remarks" text,
-        "rep_pnt_lon" float,
-        "rep_pnt_lat" float,
+        "rep_pnt_lon" double precision,
+        "rep_pnt_lat" double precision,
         PRIMARY KEY ("lg_code", "town_id", "blk_id")
       )
     `);
@@ -162,8 +162,8 @@ export class InitialSchema1705589170557 implements MigrationInterface {
         "ablt_date" text,
         "src_code" smallint,
         "remarks" text,
-        "rep_pnt_lon" float,
-        "rep_pnt_lat" float,
+        "rep_pnt_lon" double precision,
+        "rep_pnt_lat" double precision,
         PRIMARY KEY (
             "lg_code",
             "town_id",
@@ -190,28 +190,6 @@ export class InitialSchema1705589170557 implements MigrationInterface {
         "last_modified" bigint NOT NULL
       )
     `);
-
-    if (queryRunner.connection.options.type === 'mysql') {
-      // MySQLの場合は代表点経度・緯度の型を float から double precision に変更
-      await queryRunner.query(
-        'ALTER TABLE "town" MODIFY "rep_pnt_lon" double precision'
-      );
-      await queryRunner.query(
-        'ALTER TABLE "town" MODIFY "rep_pnt_lat" double precision'
-      );
-      await queryRunner.query(
-        'ALTER TABLE "rsdtdsp_blk" MODIFY "rep_pnt_lon" double precision'
-      );
-      await queryRunner.query(
-        'ALTER TABLE "rsdtdsp_blk" MODIFY "rep_pnt_lat" double precision'
-      );
-      await queryRunner.query(
-        'ALTER TABLE "rsdtdsp_rsdt" MODIFY "rep_pnt_lon" double precision'
-      );
-      await queryRunner.query(
-        'ALTER TABLE "rsdtdsp_rsdt" MODIFY "rep_pnt_lat" double precision'
-      );
-    }
 
     if (needsOldDataMigration) {
       // 元テーブルからデータをコピー後、元テーブル・インデックスを削除
