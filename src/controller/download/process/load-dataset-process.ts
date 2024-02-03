@@ -55,6 +55,7 @@ export const loadDatasetProcess = async ({
   const multiProgressBar = container.resolve<MultiBar | undefined>(
     DI_TOKEN.MULTI_PROGRESS_BAR
   );
+  const BULK_INSERT_CHUNK_SIZE = 500;
 
   // _pos_ ファイルのSQL が updateになっているので、
   // それ以外の基本的な情報を先に insert する必要がある。
@@ -144,13 +145,20 @@ export const loadDatasetProcess = async ({
     paramsList: Array<Array<string | number>>
   ) => {
     if (!datasetFile.type.includes('pos')) {
-      const sql = replaceSqlInsertValues(
-        ds,
-        preparedSql,
-        paramsList[0].length,
-        paramsList.length
-      );
-      await queryRunner.connection.query(sql, paramsList.flat());
+      const paramsBlockList = [];
+      for (let i = 0; i < paramsList.length; i += BULK_INSERT_CHUNK_SIZE) {
+        paramsBlockList.push(paramsList.slice(i, i + BULK_INSERT_CHUNK_SIZE));
+      }
+      const tasks = paramsBlockList.map(paramsBlock => {
+        const sql = replaceSqlInsertValues(
+          ds,
+          preparedSql,
+          paramsBlock[0].length,
+          paramsBlock.length
+        );
+        return queryRunner.connection.query(sql, paramsBlock.flat());
+      });
+      await Promise.all(tasks);
     } else {
       const tasks = paramsList.map(params => {
         return queryRunner.connection.query(preparedSql, params);
