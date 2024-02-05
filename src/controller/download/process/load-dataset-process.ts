@@ -55,7 +55,7 @@ export const loadDatasetProcess = async ({
   const multiProgressBar = container.resolve<MultiBar | undefined>(
     DI_TOKEN.MULTI_PROGRESS_BAR
   );
-  const BULK_INSERT_CHUNK_SIZE = 500;
+  const BULK_INSERT_SIZE = 500;
 
   // _pos_ ファイルのSQL が updateになっているので、
   // それ以外の基本的な情報を先に insert する必要がある。
@@ -145,20 +145,13 @@ export const loadDatasetProcess = async ({
     paramsList: Array<Array<string | number>>
   ) => {
     if (!datasetFile.type.includes('pos')) {
-      const paramsBlockList = [];
-      for (let i = 0; i < paramsList.length; i += BULK_INSERT_CHUNK_SIZE) {
-        paramsBlockList.push(paramsList.slice(i, i + BULK_INSERT_CHUNK_SIZE));
-      }
-      const tasks = paramsBlockList.map(paramsBlock => {
-        const sql = replaceSqlInsertValues(
-          ds,
-          preparedSql,
-          paramsBlock[0].length,
-          paramsBlock.length
-        );
-        return queryRunner.connection.query(sql, paramsBlock.flat());
-      });
-      await Promise.all(tasks);
+      const sql = replaceSqlInsertValues(
+        ds,
+        preparedSql,
+        paramsList[0].length,
+        paramsList.length
+      );
+      await queryRunner.connection.query(sql, paramsList.flat());
     } else {
       const tasks = paramsList.map(params => {
         return queryRunner.connection.query(preparedSql, params);
@@ -201,10 +194,6 @@ export const loadDatasetProcess = async ({
       // DBに登録
       await queryRunner.startTransaction();
 
-      let bulkInsertSize = 500;
-      if (process.env.BULK_INSERT_SIZE) {
-        bulkInsertSize = parseInt(process.env.BULK_INSERT_SIZE);
-      }
       let paramsList: Array<Array<string | number>> = [];
 
       datasetFile.csvFile.getStream().then(fileStream => {
@@ -221,7 +210,7 @@ export const loadDatasetProcess = async ({
                 try {
                   const processed = datasetFile.process(chunk);
                   paramsList.push(paramKeys.map(key => processed[key]));
-                  if (paramsList.length === bulkInsertSize) {
+                  if (paramsList.length === BULK_INSERT_SIZE) {
                     await processBulkInsertOrEachUpdate(
                       ds,
                       datasetFile,
