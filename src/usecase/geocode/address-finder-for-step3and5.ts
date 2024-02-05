@@ -35,7 +35,8 @@ import {
   J_DASH,
   KANJI_1to10_SYMBOLS,
 } from '@settings/constant-values';
-import { Database, Statement } from 'better-sqlite3';
+import { DataSource } from 'typeorm';
+import { prepareSqlAndParamKeys } from '@domain/prepare-sql-and-param-keys';
 
 export type TownRow = {
   lg_code: string;
@@ -63,20 +64,25 @@ export type FindParameters = {
  * 実質的にジオコーディングしている部分
  */
 export class AddressFinderForStep3and5 {
-  private readonly getTownStatement: Statement;
+  private readonly ds: DataSource;
+  private readonly getTownSql: string;
+  private readonly getTownParamKeys: string[];
   private readonly wildcardHelper: (address: string) => string;
   constructor({
-    db,
+    ds,
     wildcardHelper,
   }: {
-    db: Database;
+    ds: DataSource;
     wildcardHelper: (address: string) => string;
   }) {
+    this.ds = ds;
     this.wildcardHelper = wildcardHelper;
 
-    // getTownList() で使用するSQLをstatementにしておく
+    // getTownList() で使用するSQL・パラメータキーを用意しておく
     // "name"の文字数が長い順にソートする
-    this.getTownStatement = db.prepare(`
+    const { preparedSql, paramKeys } = prepareSqlAndParamKeys(
+      ds,
+      `
       select
         "town".${DataField.LG_CODE.dbColumn},
         "town"."${DataField.TOWN_ID.dbColumn}",
@@ -96,7 +102,10 @@ export class AddressFinderForStep3and5 {
         ) = @city AND
         "${DataField.TOWN_CODE.dbColumn}" <> 3
         order by length("name") desc;
-    `);
+      `
+    );
+    this.getTownSql = preparedSql;
+    this.getTownParamKeys = paramKeys;
   }
 
   async find({
@@ -383,10 +392,14 @@ export class AddressFinderForStep3and5 {
     prefecture: PrefectureName;
     city: string;
   }): Promise<TownRow[]> {
-    const results = this.getTownStatement.all({
+    const params: { [key: string]: string } = {
       prefecture,
       city,
-    }) as TownRow[];
+    };
+    const results = (await this.ds.query(
+      this.getTownSql,
+      this.getTownParamKeys.map(key => params[key])
+    )) as TownRow[];
 
     return Promise.resolve(
       results.map(townRow => {

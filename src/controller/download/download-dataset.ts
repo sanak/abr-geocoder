@@ -28,7 +28,7 @@ import { AbrgMessage } from '@abrg-message/abrg-message';
 import { saveKeyAndValue } from '@domain/key-store/save-key-and-value';
 import { setupContainer } from '@interface-adapter/setup-container';
 import { DI_TOKEN } from '@interface-adapter/tokens';
-import { Database } from 'better-sqlite3';
+import { DataSource } from 'typeorm';
 import fs from 'node:fs';
 import path from 'node:path';
 import { Logger } from 'winston';
@@ -70,9 +70,9 @@ export const downloadDataset = async ({
     return DOWNLOAD_DATASET_RESULT.CAN_NOT_ACCESS_TO_DATASET_ERROR;
   }
 
-  const db = container.resolve<Database>(DI_TOKEN.DATABASE);
+  const ds = container.resolve<DataSource>(DI_TOKEN.DATASOURCE);
   const datasetHistory = await loadDatasetHistory({
-    db,
+    ds,
   });
 
   // --------------------------------------
@@ -92,7 +92,7 @@ export const downloadDataset = async ({
     logger?.info(
       AbrgMessage.toString(AbrgMessage.ERROR_NO_UPDATE_IS_AVAILABLE)
     );
-    db.close();
+    await ds.destroy();
 
     // 展開したzipファイルのディレクトリを削除
     await fs.promises.rm(extractDir, { recursive: true });
@@ -103,18 +103,18 @@ export const downloadDataset = async ({
   logger?.info(AbrgMessage.toString(AbrgMessage.LOADING_INTO_DATABASE));
 
   await loadDatasetProcess({
-    db,
+    ds,
     csvFiles,
     container,
   });
 
-  saveKeyAndValue({
-    db,
+  await saveKeyAndValue({
+    ds,
     key: ckanId,
     value: downloadInfo.metadata.toString(),
   });
 
-  db.close();
+  await ds.destroy();
 
   // 展開したzipファイルのディレクトリを削除
   await fs.promises.rm(extractDir, { recursive: true });

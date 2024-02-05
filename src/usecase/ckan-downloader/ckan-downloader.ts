@@ -30,7 +30,7 @@ import { getRequest } from '@domain/http/get-request';
 import { headRequest } from '@domain/http/head-request';
 import { getValueWithKey } from '@domain/key-store/get-value-with-key';
 import { saveKeyAndValue } from '@domain/key-store/save-key-and-value';
-import { Database } from 'better-sqlite3';
+import { DataSource } from 'typeorm';
 import { StatusCodes } from 'http-status-codes';
 import EventEmitter from 'node:events';
 import fs from 'node:fs';
@@ -42,7 +42,7 @@ import { verifyPartialDownloadedFile } from './verify-partial-downloaded-file';
 export interface CkanDownloaderParams {
   userAgent: string;
   datasetUrl: string;
-  db: Database;
+  ds: DataSource;
   ckanId: string;
   dstDir: string;
 }
@@ -56,7 +56,7 @@ export enum CkanDownloaderEvent {
 export class CkanDownloader extends EventEmitter {
   private readonly userAgent: string;
   private readonly datasetUrl: string;
-  private readonly db: Database;
+  private readonly ds: DataSource;
   private readonly ckanId: string;
   private readonly dstDir: string;
   private cacheMetadata: DatasetMetadata | null = null;
@@ -64,14 +64,14 @@ export class CkanDownloader extends EventEmitter {
   constructor({
     userAgent,
     datasetUrl,
-    db,
+    ds,
     ckanId,
     dstDir,
   }: CkanDownloaderParams) {
     super();
     this.userAgent = userAgent;
     this.datasetUrl = datasetUrl;
-    this.db = db;
+    this.ds = ds;
     this.ckanId = ckanId;
     this.dstDir = dstDir;
   }
@@ -118,9 +118,9 @@ export class CkanDownloader extends EventEmitter {
       });
     }
 
-    const csvMeta = (() => {
-      const csvMetaStr = getValueWithKey({
-        db: this.db,
+    const csvMeta = await (async () => {
+      const csvMetaStr = await getValueWithKey({
+        ds: this.ds,
         key: this.ckanId,
       });
       if (!csvMetaStr) {
@@ -167,8 +167,8 @@ export class CkanDownloader extends EventEmitter {
   }
 
   async updateCheck(): Promise<boolean> {
-    const csvMetaStr = getValueWithKey({
-      db: this.db,
+    const csvMetaStr = await getValueWithKey({
+      ds: this.ds,
       key: this.ckanId,
     });
     if (!csvMetaStr) {
@@ -255,7 +255,7 @@ export class CkanDownloader extends EventEmitter {
                 lastModified: headers['last-modified'] as string,
               });
               saveKeyAndValue({
-                db: this.db,
+                ds: this.ds,
                 key: this.ckanId,
                 value: newCsvMeta.toString(),
               });
@@ -281,7 +281,7 @@ export class CkanDownloader extends EventEmitter {
               });
 
               saveKeyAndValue({
-                db: this.db,
+                ds: this.ds,
                 key: this.ckanId,
                 value: newCsvMeta.toString(),
               });

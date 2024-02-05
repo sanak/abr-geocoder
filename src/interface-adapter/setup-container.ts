@@ -37,7 +37,7 @@ import { GeoJsonTransform } from './formatters/geo-json-transform';
 import { JsonTransform } from './formatters/json-transform';
 import { NdGeoJsonTransform } from './formatters/nd-geo-json-transform';
 import { NdJsonTransform } from './formatters/nd-json-transform';
-import { provideDatabase } from './providers/provide-database';
+import { provideDataSource } from './providers/provide-data-source';
 import { provideInifinityProgressBar } from './providers/provide-inifinity-progress-bar';
 import { provideLogger } from './providers/provide-logger';
 import { provideMultiProgressBar } from './providers/provide-multi-progress-bar';
@@ -80,13 +80,12 @@ export const setupContainer = async ({
     });
   }
 
-  // アプリケーション全体を通して使用するデータベース
-  const db = await provideDatabase({
-    schemaFilePath,
+  // アプリケーション全体を通して使用するデータソース
+  const ds = await provideDataSource({
     sqliteFilePath,
   });
-  myContainer.register(DI_TOKEN.DATABASE, {
-    useValue: db,
+  myContainer.register(DI_TOKEN.DATASOURCE, {
+    useValue: ds,
   });
 
   // ロガー

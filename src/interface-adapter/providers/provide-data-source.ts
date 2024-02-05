@@ -21,25 +21,27 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import type BetterSqlite3 from 'better-sqlite3';
-import Database from 'better-sqlite3';
-import fs from 'node:fs';
+import { DataSource, DataSourceOptions } from 'typeorm';
+import { AbrgDataSource, commonOptions } from '../../abrg-data-source';
 
-export const provideDatabase = async ({
+export const provideDataSource = async ({
   sqliteFilePath,
-  schemaFilePath,
 }: {
   sqliteFilePath: string;
-  schemaFilePath: string;
-}): Promise<BetterSqlite3.Database> => {
-  const schemaSQL = await fs.promises.readFile(schemaFilePath, 'utf8');
-  const db = new Database(sqliteFilePath);
-
-  // We use these dangerous settings to improve performance, because if data is corrupted,
-  // we can always just regenerate the database.
-  // ref: https://qastack.jp/programming/1711631/improve-insert-per-second-performance-of-sqlite
-  db.pragma('journal_mode = MEMORY');
-  db.pragma('synchronous = OFF');
-  db.exec(schemaSQL);
-  return db;
+}): Promise<DataSource> => {
+  if (AbrgDataSource.options.type === 'better-sqlite3') {
+    const options: DataSourceOptions = {
+      ...commonOptions,
+      type: 'better-sqlite3',
+      database: sqliteFilePath,
+      statementCacheSize: 150,
+      prepareDatabase: db => {
+        db.pragma('journal_mode = MEMORY');
+        db.pragma('synchronous = OFF');
+      },
+    };
+    return await new DataSource(options).initialize();
+  } else {
+    return await AbrgDataSource.initialize();
+  }
 };

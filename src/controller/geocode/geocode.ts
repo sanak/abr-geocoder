@@ -24,7 +24,7 @@
 // reflect-metadata is necessary for DI
 import 'reflect-metadata';
 
-import { Database } from 'better-sqlite3';
+import { DataSource } from 'typeorm';
 import byline from 'byline';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -68,11 +68,11 @@ export const geocode = async ({
     ckanId,
   });
 
-  // データベースのインスタンスを取得
-  const db: Database = container.resolve(DI_TOKEN.DATABASE);
+  // データソースのインスタンスを取得
+  const ds: DataSource = container.resolve(DI_TOKEN.DATASOURCE);
 
   // Geocodingを行うメイン部分
-  const geocoder = await StreamGeocoder.create(db, fuzzy);
+  const geocoder = await StreamGeocoder.create(ds, fuzzy);
 
   // Streamを1行単位にしてくれる TransformStream
   const lineStream = byline.createStream();
@@ -127,7 +127,7 @@ export const geocode = async ({
     formatter,
     outputStream
   );
-  db.close();
+  await ds.destroy();
 
   return GEOCODE_RESULT.SUCCESS;
 };

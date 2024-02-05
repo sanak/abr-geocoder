@@ -22,18 +22,21 @@
  * SOFTWARE.
  */
 
-import MockedDB from '@mock/better-sqlite3';
+import { DataSource as MockedDS } from '@mock/typeorm';
 import { describe, expect, it, jest } from "@jest/globals";
 import { loadDatasetHistory } from '../load-dataset-history';
 import { expectedResult } from '../__mocks__/load-dataset-history';
-jest.mock('better-sqlite3');
+jest.mock('typeorm');
 jest.dontMock('../load-dataset-history')
 
 describe('load-dataset-history', () => {
   it('should return a Map<string, DatasetRow>', async () => {
-    const db = new MockedDB('dummy database');
-    db.prepare.mockImplementation(() => ({
-      all: jest.fn().mockReturnValue([
+    const ds = new MockedDS({
+      type: 'better-sqlite3',
+      database: 'dummy database',
+    });
+    ds.query.mockImplementation(() => (
+      Promise.resolve([
         {
           key: 'mt_city_all.csv',
           type: 'city',
@@ -97,11 +100,11 @@ describe('load-dataset-history', () => {
           crc32: 4236985285,
           last_modified: 1674556138000,
         }
-      ]),
-    }));
+      ])
+    ));
 
     const results = await loadDatasetHistory({
-      db,
+      ds,
     });
 
     expect(results).toEqual(expectedResult);

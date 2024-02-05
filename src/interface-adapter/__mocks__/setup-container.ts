@@ -24,13 +24,10 @@
 import { jest } from '@jest/globals';
 import { DI_TOKEN } from '../tokens';
 import { PassThrough } from 'node:stream';
-import { default as Database } from 'better-sqlite3';
+import { DataSource } from 'typeorm';
 
 // __mocks__/winston
 jest.mock('winston');
-
-// __mocks__/better-sqlite3
-jest.mock('better-sqlite3');
 
 export const setupContainer = jest.fn().mockImplementation(() => {
   return {
@@ -39,8 +36,11 @@ export const setupContainer = jest.fn().mockImplementation(() => {
         case DI_TOKEN.LOGGER:
           return undefined;
 
-        case DI_TOKEN.DATABASE:
-          return new Database('dummy');
+        case DI_TOKEN.DATASOURCE:
+          return new DataSource({
+            type: 'better-sqlite3',
+            database: ':memory:',
+          });
 
         case DI_TOKEN.DATASET_URL:
           return 'dataset_url';

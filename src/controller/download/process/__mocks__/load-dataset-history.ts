@@ -23,7 +23,7 @@
  */
 import { DatasetRow } from "@domain/dataset/dataset-row";
 import { jest } from '@jest/globals';
-import { Database } from "better-sqlite3";
+import { DataSource } from "typeorm";
 
 export const expectedResult = new Map<string, DatasetRow>([
   ['mt_city_all.csv', new DatasetRow({
@@ -85,7 +85,7 @@ export const expectedResult = new Map<string, DatasetRow>([
 ]);
 
 export const loadDatasetHistory = jest.fn(async (params: {
-  db: Database,
+  ds: DataSource,
 }): Promise<Map<string, DatasetRow>> => {
   return Promise.resolve(expectedResult);
 });

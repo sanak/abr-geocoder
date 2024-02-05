@@ -35,7 +35,7 @@ import { RegExpEx } from '@domain/reg-exp-ex';
 import PATCH_PATTERNS from '@settings/patch-patterns';
 import { AddressFinderForStep3and5 } from '@usecase/geocode/address-finder-for-step3and5';
 import { AddressFinderForStep7 } from '@usecase/geocode/address-finder-for-step7';
-import { Database } from 'better-sqlite3';
+import { DataSource } from 'typeorm';
 import { Readable, Transform, Writable } from 'node:stream';
 import { TransformCallback } from 'stream';
 import { GeocodingStep1 } from './step1-transform';
@@ -75,14 +75,14 @@ export class StreamGeocoder extends Transform {
   }
 
   static create = async (
-    database: Database,
+    dataSource: DataSource,
     fuzzy?: string
   ): Promise<StreamGeocoder> => {
     /**
      * 都道府県とそれに続く都市名を取得する
      */
     const prefectures: IPrefecture[] = await getPrefecturesFromDB({
-      db: database,
+      ds: dataSource,
     });
 
     /**
@@ -167,7 +167,7 @@ export class StreamGeocoder extends Transform {
     // step3はデータベースを使って都道府県と市町村を特定するため、処理が複雑になる
     // なので、さらに別のストリームで処理を行う
     const addressFinderForStep3and5 = new AddressFinderForStep3and5({
-      db: database,
+      ds: dataSource,
       wildcardHelper,
     });
 
@@ -301,7 +301,7 @@ export class StreamGeocoder extends Transform {
     // }
     //
     /* eslint-enable no-irregular-whitespace */
-    const addressFinderForStep7 = new AddressFinderForStep7(database);
+    const addressFinderForStep7 = new AddressFinderForStep7(dataSource);
     const step7 = new GeocodingStep7(addressFinderForStep7);
 
     // {SPACE} と {DASH} をもとに戻す

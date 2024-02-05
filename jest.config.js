@@ -25,6 +25,7 @@ module.exports = {
     'node:fs': '<rootDir>/__mocks__/fs.ts',
     'node:os': '<rootDir>/__mocks__/os.ts',
     'better-sqlite3': '<rootDir>/__mocks__/better-sqlite3.ts',
+    'typeorm': '<rootDir>/__mocks__/typeorm.ts',
     'csv-parser': '<rootDir>/__mocks__/csv-parser.ts',
     ...pathsToModuleNameMapper(compilerOptions.paths),
   },

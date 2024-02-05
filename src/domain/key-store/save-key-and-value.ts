@@ -21,19 +21,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { Database } from 'better-sqlite3';
+import { DataSource } from 'typeorm';
+import { prepareSqlAndParamKeys } from '@domain/prepare-sql-and-param-keys';
 
-export const saveKeyAndValue = ({
-  db,
+export const saveKeyAndValue = async ({
+  ds,
   key,
   value,
 }: {
-  db: Database;
+  ds: DataSource;
   key: string;
   value: string;
 }) => {
-  db.prepare('insert or replace into metadata values(@key, @value)').run({
+  const { preparedSql, paramKeys } = prepareSqlAndParamKeys(
+    ds,
+    'insert or replace into metadata values(@key, @value)'
+  );
+  const params: { [key: string]: string | number } = {
     key,
     value,
-  });
+  };
+  await ds.query(
+    preparedSql,
+    paramKeys.map(key => params[key])
+  );
 };
