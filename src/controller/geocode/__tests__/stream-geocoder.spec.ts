@@ -46,8 +46,7 @@ import { getCityPatternsForEachPrefecture as getCityP } from '@domain/geocode/ge
 import { getPrefectureRegexPatterns as getPreRegP } from '@domain/geocode/get-prefecture-regex-patterns';
 import { getPrefecturesFromDB as getPrefs } from '@domain/geocode/get-prefectures-from-db';
 import { getSameNamedPrefecturePatterns as getSamePrefs } from '@domain/geocode/get-same-named-prefecture-patterns';
-import { DataSource as MockedDataSource } from '@mock/typeorm';
-import { DataSource } from 'typeorm';
+import { DataSourceProvider as MockedDataSource } from '@interface-adapter/data-source-providers/__mocks__/data-source-provider';
 import { Readable } from 'node:stream';import * as PATCHES from '@settings/patch-patterns';
 import { StreamGeocoder } from '../stream-geocoder';
 
@@ -112,7 +111,6 @@ mockedReadable.prototype.pipe.mockReturnValue({
 const mockedPatches = PATCHES as jest.MockedObject<typeof PATCHES>;
 mockedPatches.default = [];
 
-// FIXME: TypeORM
 const createDS = () => {
   return new MockedDataSource('<no sql file>');
 }

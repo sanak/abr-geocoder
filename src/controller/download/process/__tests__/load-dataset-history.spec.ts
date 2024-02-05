@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-import { DataSource as MockedDS } from '@mock/typeorm';
+import { DataSourceProvider as MockedDS } from '@interface-adapter/data-source-providers/__mocks__/data-source-provider';
 import { describe, expect, it, jest } from "@jest/globals";
 import { loadDatasetHistory } from '../load-dataset-history';
 import { expectedResult } from '../__mocks__/load-dataset-history';
@@ -31,10 +31,7 @@ jest.dontMock('../load-dataset-history')
 
 describe('load-dataset-history', () => {
   it('should return a Map<string, DatasetRow>', async () => {
-    const ds = new MockedDS({
-      type: 'better-sqlite3',
-      database: 'dummy database',
-    });
+    const ds = new MockedDS();
     ds.query.mockImplementation(() => (
       Promise.resolve([
         {

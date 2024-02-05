@@ -32,7 +32,7 @@ import Stream from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { GeocodingStep3B } from '../step3b-transform';
 import { WritableStreamToArray } from './stream-to-array.skip';
-import { DataSource } from 'typeorm';
+import { DataSourceProvider } from '@interface-adapter/data-source-providers/__mocks__/data-source-provider';
 
 jest.mock<AddressFinderForStep3and5>('@usecase/geocode/address-finder-for-step3and5');
 // jest.mock('typeorm');
@@ -42,10 +42,7 @@ describe('step3b-transform', () => {
     // 東京都府中市と にマッチする
     const dummyCallback = jest.fn();
 
-    const ds = new DataSource({
-      type: 'better-sqlite3',
-      database: ':memory:',
-    });
+    const ds = new DataSourceProvider();
     const wildcardHelper = (address: string) => address;
 
     const finder = new AddressFinderForStep3and5({

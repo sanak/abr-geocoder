@@ -25,11 +25,9 @@ import { PrefectureName } from '@domain/prefecture-name';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { DASH } from '@settings/constant-values';
 import { AddressFinderForStep3and5, TownRow } from '../address-finder-for-step3and5';
-import { DataSource } from 'typeorm';
+import { DataSourceProvider } from '@interface-adapter/data-source-providers/__mocks__/data-source-provider';
 
-jest.mock<DataSource>('typeorm');
-
-const MockedDS = DataSource as unknown as jest.Mock;
+const MockedDS = DataSourceProvider as unknown as jest.Mock;
 const tokyoTowns: TownRow[] = [
   {
     lg_code: '132063',
@@ -134,6 +132,12 @@ const kyotoTowns: TownRow[] = [
 
 MockedDS.mockImplementation(() => {
   return {
+    prepare: (sql: string) => {
+      return {
+        sql: sql.replace(/(@prefecture|@city)/g, '?'),
+        paramKeys: ['prefecture', 'city'],
+      };
+    },
     query: (sql: string, params: string[]) => {
       switch (params[0]) {
         case PrefectureName.TOKYO:
@@ -149,9 +153,6 @@ MockedDS.mockImplementation(() => {
           throw new Error(`Unexpected prefecture : ${params[0]}`);
       }
     },
-    options: {
-      type: 'better-sqlite3',
-    },
   };
 });
 
@@ -159,10 +160,7 @@ const wildcardHelper = (address: string) => {
   return address;
 };
 describe('AddressFinderForStep3and5', () => {
-  const mockedDS = new DataSource({
-    type: 'better-sqlite3',
-    database: ':memory:',
-  });
+  const mockedDS = new DataSourceProvider();
 
   const instance = new AddressFinderForStep3and5({
     ds: mockedDS,

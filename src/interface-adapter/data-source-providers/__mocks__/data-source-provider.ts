@@ -1,6 +1,4 @@
 // import { jest } from '@jest/globals';
-// import 'reflect-metadata';
-
 export const QueryRunner = jest.fn().mockImplementation(
   () => {
     return {
@@ -29,11 +27,20 @@ export const QueryRunner = jest.fn().mockImplementation(
   }
 );
 
-export const DataSource = jest.fn().mockImplementation(
+export const DataSourceProvider = jest.fn().mockImplementation(
   () => {
     return {
       initialize: jest.fn(() => {
         return Promise.resolve(this);
+      }),
+      prepare: jest.fn((sql: string) => {
+        return {
+          sql: sql,
+          paramKeys: []
+        }
+      }),
+      replaceInsertValues: jest.fn((sql: string) => {
+        return sql;
       }),
       query: jest.fn().mockImplementation(() => {
         return Promise.resolve([]);
@@ -43,10 +50,7 @@ export const DataSource = jest.fn().mockImplementation(
       }),
       destroy: jest.fn(() => {
         return Promise.resolve();
-      }),
-      options: {
-        type: 'better-sqlite3'
-      }
+      })
     };
   }
 );

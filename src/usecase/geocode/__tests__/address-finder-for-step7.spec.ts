@@ -26,19 +26,23 @@ import { PrefectureName } from '@domain/prefecture-name';
 import { Query } from '@domain/query';
 import { describe, expect, it, jest } from '@jest/globals';
 import { DASH, SINGLE_DASH_ALTERNATIVE, SPACE } from '@settings/constant-values';
-import { DataSource } from 'typeorm';
+import { DataSourceProvider } from '@interface-adapter/data-source-providers/__mocks__/data-source-provider';
 import dummyBlockList from './dummyBlockList.json';
 import dummyRsdtList2 from './dummyRsdtList2.json';
 import dummySmallBlockListIwate from './dummySmallBlockListIwate.json';
 import dummySmallBlockListMiyagi from './dummySmallBlockListMiyagi.json';
 import { AddressFinderForStep7 } from '../address-finder-for-step7';
 
-jest.mock<DataSource>('typeorm');
-
-const MockedDS = DataSource as unknown as jest.Mock;
+const MockedDS = DataSourceProvider as unknown as jest.Mock;
 
 MockedDS.mockImplementation(() => {
   return {
+    prepare: (sql: string) => {
+      return {
+        sql: sql.replace(/(@town|@prefecture|@city)/g, '?'),
+        paramKeys: ['town', 'prefecture', 'city'],
+      };
+    },
     query: (sql: string, params: string[]) => {
       // statementに合わせてデータを返す
       if (sql.includes('/* unit test: getBlockListSql */')) {
@@ -82,18 +86,12 @@ MockedDS.mockImplementation(() => {
       }
       throw new Error('Unexpected sql was given');
     },
-    options: {
-      type: 'better-sqlite3'
-    }
   }
 });
 
 // TODO: カバレッジ100%になるテストケースを考える
 describe('AddressFinderForStep7', () => {
-  const mockedDS = new DataSource({
-    type: 'better-sqlite3',
-    database: ':memory:',
-  });
+  const mockedDS = new DataSourceProvider();
   const addressFinder = new AddressFinderForStep7(mockedDS);
   
   describe('find', () => {
