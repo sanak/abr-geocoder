@@ -25,13 +25,12 @@ import { City, ICity } from '@domain/city';
 import { DataField } from '@domain/dataset/data-field';
 import { IPrefecture, Prefecture } from '@domain/prefecture';
 import { PrefectureName } from '@domain/prefecture-name';
-import { DataSource } from 'typeorm';
-import { prepareSqlAndParamKeys } from '@domain/prepare-sql-and-param-keys';
+import { DataSourceProvider } from '@interface-adapter/data-source-providers/data-source-provider';
 
 export const getPrefecturesFromDB = async ({
   ds,
 }: {
-  ds: DataSource;
+  ds: DataSourceProvider;
 }): Promise<IPrefecture[]> => {
   const sql: string = `
     SELECT
@@ -47,9 +46,9 @@ export const getPrefecturesFromDB = async ({
     FROM city
     GROUP BY pref_name
   `;
-  const { preparedSql } = prepareSqlAndParamKeys(ds, sql);
+  const prepared = ds.prepare(sql);
 
-  const prefectures = (await ds.query(preparedSql)) as {
+  const prefectures = (await ds.query(prepared.sql)) as {
     name: string;
     cities: string;
   }[];

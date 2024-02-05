@@ -28,7 +28,6 @@ import { AbrgMessage } from '@abrg-message/abrg-message';
 import { saveKeyAndValue } from '@domain/key-store/save-key-and-value';
 import { setupContainer } from '@interface-adapter/setup-container';
 import { DI_TOKEN } from '@interface-adapter/tokens';
-import { DataSource } from 'typeorm';
 import fs from 'node:fs';
 import path from 'node:path';
 import { Logger } from 'winston';
@@ -37,6 +36,7 @@ import { downloadProcess } from './process/download-process';
 import { extractDatasetProcess } from './process/extract-dataset-process';
 import { loadDatasetHistory } from './process/load-dataset-history';
 import { loadDatasetProcess } from './process/load-dataset-process';
+import { DataSourceProvider } from '@interface-adapter/data-source-providers/data-source-provider';
 
 export const downloadDataset = async ({
   ckanId,
@@ -70,7 +70,7 @@ export const downloadDataset = async ({
     return DOWNLOAD_DATASET_RESULT.CAN_NOT_ACCESS_TO_DATASET_ERROR;
   }
 
-  const ds = container.resolve<DataSource>(DI_TOKEN.DATASOURCE);
+  const ds = container.resolve<DataSourceProvider>(DI_TOKEN.DATASOURCE);
   const datasetHistory = await loadDatasetHistory({
     ds,
   });

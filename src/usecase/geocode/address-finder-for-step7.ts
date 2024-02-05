@@ -30,8 +30,7 @@ import { RegExpEx } from '@domain/reg-exp-ex';
 import { Trie } from '@domain/trie';
 import { zen2HankakuNum } from '@domain/zen2hankaku-num';
 import { DASH, SPACE } from '@settings/constant-values';
-import { DataSource } from 'typeorm';
-import { prepareSqlAndParamKeys } from '@domain/prepare-sql-and-param-keys';
+import { DataSourceProvider } from '@interface-adapter/data-source-providers/data-source-provider';
 
 export type TownSmallBlock = {
   lg_code: string;
@@ -76,7 +75,7 @@ export type RsdtAddr = {
  * 実質的にジオコーディングしている部分
  */
 export class AddressFinderForStep7 {
-  private readonly ds: DataSource;
+  private readonly ds: DataSourceProvider;
   private readonly getBlockListSql: string;
   private readonly getBlockListParamKeys: string[];
   private readonly getRsdtList2Sql: string;
@@ -84,7 +83,7 @@ export class AddressFinderForStep7 {
   private readonly getSmallBlockListSql: string;
   private readonly getSmallBlockListParamKeys: string[];
 
-  constructor(ds: DataSource) {
+  constructor(ds: DataSourceProvider) {
     this.ds = ds;
     const blockListSql = `
       /* unit test: getBlockListSql */
@@ -124,10 +123,9 @@ export class AddressFinderForStep7 {
         ) = @city and
         blk.${DataField.BLK_NUM.dbColumn} is not null
     `;
-    const { preparedSql: blockListPreparedSql, paramKeys: blockListParamKeys } =
-      prepareSqlAndParamKeys(ds, blockListSql);
-    this.getBlockListSql = blockListPreparedSql;
-    this.getBlockListParamKeys = blockListParamKeys;
+    const blockListPrepared = ds.prepare(blockListSql);
+    this.getBlockListSql = blockListPrepared.sql;
+    this.getBlockListParamKeys = blockListPrepared.paramKeys;
 
     const rsdtList2Sql = `
       /* unit test: getRsdtList2Sql */
@@ -186,16 +184,12 @@ export class AddressFinderForStep7 {
         town.${DataField.KOAZA_NAME.dbColumn} desc
     `;
 
-    const { preparedSql: rsdtList2PreparedSql, paramKeys: rsdtList2ParamKeys } =
-      prepareSqlAndParamKeys(ds, rsdtList2Sql);
-    this.getRsdtList2Sql = rsdtList2PreparedSql;
-    this.getRsdtList2ParamKeys = rsdtList2ParamKeys;
-    const {
-      preparedSql: smallBlockListPreparedSql,
-      paramKeys: smallBlockListParamKeys,
-    } = prepareSqlAndParamKeys(ds, smallBlockListSql);
-    this.getSmallBlockListSql = smallBlockListPreparedSql;
-    this.getSmallBlockListParamKeys = smallBlockListParamKeys;
+    const rsdtList2Prepared = ds.prepare(rsdtList2Sql);
+    this.getRsdtList2Sql = rsdtList2Prepared.sql;
+    this.getRsdtList2ParamKeys = rsdtList2Prepared.paramKeys;
+    const smallBlockListPrepared = ds.prepare(smallBlockListSql);
+    this.getSmallBlockListSql = smallBlockListPrepared.sql;
+    this.getSmallBlockListParamKeys = smallBlockListPrepared.paramKeys;
   }
 
   // 小字を検索する

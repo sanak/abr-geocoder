@@ -22,12 +22,12 @@
  * SOFTWARE.
  */
 import { DatasetRow } from '@domain/dataset/dataset-row';
-import { DataSource } from 'typeorm';
+import { DataSourceProvider } from '@interface-adapter/data-source-providers/data-source-provider';
 
 export const loadDatasetHistory = async ({
   ds,
 }: {
-  ds: DataSource;
+  ds: DataSourceProvider;
 }): Promise<Map<string, DatasetRow>> => {
   const rows = (await ds.query('select * from dataset')) as {
     key: string;
