@@ -1,28 +1,27 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { DataSource } from 'typeorm';
+import { DataSourceProvider } from '@interface-adapter/data-source-providers/__mocks__/data-source-provider';
 import {saveKeyAndValue} from '../save-key-and-value';
 
-// jest.mock<DataSource>('typeorm');
 jest.mock('string-hash')
 
-const MockedDS = DataSource as unknown as jest.Mock;
+const MockedDS = DataSourceProvider as unknown as jest.Mock;
 
 const mockRunMethod = jest.fn();
 
 MockedDS.mockImplementation(() => {
   return {
-    query: mockRunMethod, // (sql: string, params: string[]) => {}
-    options: {
-      type: 'better-sqlite3',
+    prepare: (sql: string) => {
+      return {
+        sql: sql.replace(/(@key|@value)/g, '?'),
+        paramKeys: ['key', 'value'],
+      }
     },
+    query: mockRunMethod, // (sql: string, params: string[]) => {}
   };
 });
 
 describe("saveKeyAndValue()", () => {
-  const mockedDS = new DataSource({
-    type: 'better-sqlite3',
-    database: ':memory:',
-  });
+  const mockedDS = new DataSourceProvider();
 
   beforeEach(() => {
     mockRunMethod.mockClear();

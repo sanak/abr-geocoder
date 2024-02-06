@@ -27,9 +27,9 @@ import {
   CkanDownloader,
   CkanDownloaderEvent,
 } from '@usecase/ckan-downloader/ckan-downloader';
-import { DataSource } from 'typeorm';
 import { SingleBar } from 'cli-progress';
 import { DependencyContainer } from 'tsyringe';
+import { DataSourceProvider } from '@interface-adapter/data-source-providers/data-source-provider';
 
 export const downloadProcess = async ({
   container,
@@ -43,7 +43,7 @@ export const downloadProcess = async ({
   metadata: DatasetMetadata;
   downloadFilePath: string | null;
 }> => {
-  const ds = container.resolve<DataSource>(DI_TOKEN.DATASOURCE);
+  const ds = container.resolve<DataSourceProvider>(DI_TOKEN.DATASOURCE);
   const userAgent = container.resolve<string>(DI_TOKEN.USER_AGENT);
   const datasetUrl = container.resolve<string>(DI_TOKEN.DATASET_URL);
   const progress = container.resolve<SingleBar | undefined>(

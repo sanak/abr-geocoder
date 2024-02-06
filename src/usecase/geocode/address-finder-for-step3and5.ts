@@ -29,14 +29,13 @@ import { PrefectureName } from '@domain/prefecture-name';
 import { RegExpEx } from '@domain/reg-exp-ex';
 import { ITown } from '@domain/town';
 import { zen2HankakuNum } from '@domain/zen2hankaku-num';
+import { DataSourceProvider } from '@interface-adapter/data-source-providers/data-source-provider';
 import {
   DASH,
   DASH_SYMBOLS,
   J_DASH,
   KANJI_1to10_SYMBOLS,
 } from '@settings/constant-values';
-import { DataSource } from 'typeorm';
-import { prepareSqlAndParamKeys } from '@domain/prepare-sql-and-param-keys';
 
 export type TownRow = {
   lg_code: string;
@@ -64,7 +63,7 @@ export type FindParameters = {
  * 実質的にジオコーディングしている部分
  */
 export class AddressFinderForStep3and5 {
-  private readonly ds: DataSource;
+  private readonly ds: DataSourceProvider;
   private readonly getTownSql: string;
   private readonly getTownParamKeys: string[];
   private readonly wildcardHelper: (address: string) => string;
@@ -72,7 +71,7 @@ export class AddressFinderForStep3and5 {
     ds,
     wildcardHelper,
   }: {
-    ds: DataSource;
+    ds: DataSourceProvider;
     wildcardHelper: (address: string) => string;
   }) {
     this.ds = ds;
@@ -80,8 +79,7 @@ export class AddressFinderForStep3and5 {
 
     // getTownList() で使用するSQL・パラメータキーを用意しておく
     // "name"の文字数が長い順にソートする
-    const { preparedSql, paramKeys } = prepareSqlAndParamKeys(
-      ds,
+    const prepared = ds.prepare(
       `
       select
         "town".${DataField.LG_CODE.dbColumn},
@@ -104,8 +102,8 @@ export class AddressFinderForStep3and5 {
         order by length("name") desc;
       `
     );
-    this.getTownSql = preparedSql;
-    this.getTownParamKeys = paramKeys;
+    this.getTownSql = prepared.sql;
+    this.getTownParamKeys = prepared.paramKeys;
   }
 
   async find({

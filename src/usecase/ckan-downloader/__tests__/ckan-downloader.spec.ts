@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { DataSource } from 'typeorm';
+import { DataSourceProvider } from '@interface-adapter/data-source-providers/__mocks__/data-source-provider';
 
 jest.mock('@domain/http/head-request');
 
@@ -35,10 +35,7 @@ describe('CkanDownloader', () => {
     ckanDownloader = new CkanDownloader({
       userAgent: 'testUserAgent',
       datasetUrl: 'testDatasetUrl',
-      ds: new DataSource({
-        type: 'better-sqlite3',
-        database: ':memory:',
-      }), // mock this according to your DataSource implementation
+      ds: new DataSourceProvider(),
       ckanId: 'testCkanId',
       dstDir: 'testDstDir',
     });

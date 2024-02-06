@@ -33,21 +33,20 @@ import { TownDatasetFile } from '@domain/dataset/town-dataset-file';
 import { TownPosDatasetFile } from '@domain/dataset/town-pos-dataset-file';
 import { IStreamReady } from '@domain/istream-ready';
 import { DI_TOKEN } from '@interface-adapter/tokens';
-import { DataSource, QueryRunner } from 'typeorm';
+import { QueryRunner } from 'typeorm';
 import { MultiBar } from 'cli-progress';
 import csvParser from 'csv-parser';
 import { Stream } from 'node:stream';
 import { DependencyContainer } from 'tsyringe';
 import { Logger } from 'winston';
-import { prepareSqlAndParamKeys } from '@domain/prepare-sql-and-param-keys';
-import { replaceSqlInsertValues } from '@domain/replace-sql-insert-values';
+import { DataSourceProvider } from '@interface-adapter/data-source-providers/data-source-provider';
 
 export const loadDatasetProcess = async ({
   ds,
   container,
   csvFiles,
 }: {
-  ds: DataSource;
+  ds: DataSourceProvider;
   csvFiles: IStreamReady[];
   container: DependencyContainer;
 }) => {
@@ -138,15 +137,14 @@ export const loadDatasetProcess = async ({
   });
 
   const processBulkInsertOrEachUpdate = async (
-    ds: DataSource,
+    ds: DataSourceProvider,
     datasetFile: DatasetFile,
     queryRunner: QueryRunner,
     preparedSql: string,
     paramsList: Array<Array<string | number>>
   ) => {
     if (!datasetFile.type.includes('pos')) {
-      const sql = replaceSqlInsertValues(
-        ds,
+      const sql = ds.replaceInsertValues(
         preparedSql,
         paramsList[0].length,
         paramsList.length
@@ -172,10 +170,7 @@ export const loadDatasetProcess = async ({
       await queryRunner.connect();
 
       // CSVファイルの読み込み
-      const { preparedSql, paramKeys } = prepareSqlAndParamKeys(
-        ds,
-        datasetFile.sql
-      );
+      const prepared = ds.prepare(datasetFile.sql);
 
       const errorHandler = async (error: unknown) => {
         if (queryRunner.isTransactionActive) {
@@ -209,13 +204,15 @@ export const loadDatasetProcess = async ({
               async write(chunk, encoding, next) {
                 try {
                   const processed = datasetFile.process(chunk);
-                  paramsList.push(paramKeys.map(key => processed[key]));
+                  paramsList.push(
+                    prepared.paramKeys.map(key => processed[key])
+                  );
                   if (paramsList.length === BULK_INSERT_SIZE) {
                     await processBulkInsertOrEachUpdate(
                       ds,
                       datasetFile,
                       queryRunner,
-                      preparedSql,
+                      prepared.sql,
                       paramsList
                     );
                     paramsList = [];
@@ -234,7 +231,7 @@ export const loadDatasetProcess = async ({
                   ds,
                   datasetFile,
                   queryRunner,
-                  preparedSql,
+                  prepared.sql,
                   paramsList
                 );
                 paramsList = [];
@@ -252,11 +249,7 @@ export const loadDatasetProcess = async ({
               crc32: datasetFile.csvFile.crc32,
               last_modified: datasetFile.csvFile.lastModified,
             };
-            const {
-              preparedSql: datasetPreparedSql,
-              paramKeys: datasetParamKeys,
-            } = prepareSqlAndParamKeys(
-              ds,
+            const datasetPrepared = ds.prepare(
               `INSERT OR REPLACE INTO "dataset"
               (
                 "key",
@@ -273,8 +266,8 @@ export const loadDatasetProcess = async ({
               )`
             );
             await ds.query(
-              datasetPreparedSql,
-              datasetParamKeys.map(key => params[key])
+              datasetPrepared.sql,
+              datasetPrepared.paramKeys.map(key => params[key])
             );
             await queryRunner.release();
 

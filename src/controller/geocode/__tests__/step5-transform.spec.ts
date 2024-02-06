@@ -26,24 +26,20 @@ import { MatchLevel } from '@domain/match-level';
 import { PrefectureName } from '@domain/prefecture-name';
 import { Query } from '@domain/query';
 import { beforeAll, afterAll, describe, expect, it, jest } from '@jest/globals';
-import { DataSource } from 'typeorm';
+import { DataSourceProvider } from '@interface-adapter/data-source-providers/__mocks__/data-source-provider';
 import Stream, { PassThrough } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { GeocodingStep5 } from '../step5-transform';
 import { WritableStreamToArray } from './stream-to-array.skip';
 
 jest.mock<AddressFinderForStep3and5>('@usecase/geocode/address-finder-for-step3and5');
-// jest.mock('typeorm');
 
 const createWriteStream = () => {
   return new WritableStreamToArray<Query>();
 };
 
 const createAddressFinder = () => {
-  const ds = new DataSource({
-    type: 'better-sqlite3',
-    database: ':memory:',
-  });
+  const ds = new DataSourceProvider();
   const wildcardHelper = (address: string) => address;
   const finder = new AddressFinderForStep3and5({
     ds,

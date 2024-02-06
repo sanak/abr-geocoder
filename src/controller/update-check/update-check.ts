@@ -28,10 +28,10 @@ import { AbrgMessage } from '@abrg-message/abrg-message';
 import { setupContainer } from '@interface-adapter/setup-container';
 import { DI_TOKEN } from '@interface-adapter/tokens';
 import { CkanDownloader } from '@usecase/ckan-downloader/ckan-downloader';
-import { DataSource } from 'typeorm';
 
 import { Logger } from 'winston';
 import { UPDATE_CHECK_RESULT } from './update-check-result';
+import { DataSourceProvider } from '@interface-adapter/data-source-providers/data-source-provider';
 
 export const updateCheck = async ({
   ckanId,
@@ -46,7 +46,7 @@ export const updateCheck = async ({
   });
 
   const logger = container.resolve<Logger | undefined>(DI_TOKEN.LOGGER);
-  const ds = container.resolve<DataSource>(DI_TOKEN.DATASOURCE);
+  const ds = container.resolve<DataSourceProvider>(DI_TOKEN.DATASOURCE);
   const datasetUrl = container.resolve<string>(DI_TOKEN.DATASET_URL);
   const userAgent = container.resolve<string>(DI_TOKEN.USER_AGENT);
 

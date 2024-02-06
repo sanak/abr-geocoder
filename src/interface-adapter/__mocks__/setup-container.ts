@@ -24,7 +24,7 @@
 import { jest } from '@jest/globals';
 import { DI_TOKEN } from '../tokens';
 import { PassThrough } from 'node:stream';
-import { DataSource } from 'typeorm';
+import { DataSourceProvider } from '../data-source-providers/__mocks__/data-source-provider';
 
 // __mocks__/winston
 jest.mock('winston');
@@ -37,10 +37,7 @@ export const setupContainer = jest.fn().mockImplementation(() => {
           return undefined;
 
         case DI_TOKEN.DATASOURCE:
-          return new DataSource({
-            type: 'better-sqlite3',
-            database: ':memory:',
-          });
+          return new DataSourceProvider();
 
         case DI_TOKEN.DATASET_URL:
           return 'dataset_url';

@@ -41,6 +41,7 @@ jest.mock('@controller/geocode/geocode');
 jest.mock('@controller/download/download-dataset');
 jest.mock('@domain/upward-file-search');
 jest.mock('@domain/parse-package-json');
+jest.mock('@interface-adapter/setup-container');
 
 describe('cli', () => {
   describe('cli.ts', () => {

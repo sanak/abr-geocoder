@@ -24,7 +24,6 @@
 // reflect-metadata is necessary for DI
 import 'reflect-metadata';
 
-import { DataSource } from 'typeorm';
 import byline from 'byline';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -43,6 +42,7 @@ import { NormalizeTransform } from '@interface-adapter/formatters/normalize-tran
 import { setupContainer } from '@interface-adapter/setup-container';
 import { DI_TOKEN } from '@interface-adapter/tokens';
 import { StreamGeocoder } from './stream-geocoder';
+import { DataSourceProvider } from '@interface-adapter/data-source-providers/data-source-provider';
 
 export enum GEOCODE_RESULT {
   SUCCESS = 0,
@@ -69,7 +69,7 @@ export const geocode = async ({
   });
 
   // データソースのインスタンスを取得
-  const ds: DataSource = container.resolve(DI_TOKEN.DATASOURCE);
+  const ds: DataSourceProvider = container.resolve(DI_TOKEN.DATASOURCE);
 
   // Geocodingを行うメイン部分
   const geocoder = await StreamGeocoder.create(ds, fuzzy);

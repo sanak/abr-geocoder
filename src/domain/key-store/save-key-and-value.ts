@@ -21,20 +21,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { DataSource } from 'typeorm';
-import { prepareSqlAndParamKeys } from '@domain/prepare-sql-and-param-keys';
+import { DataSourceProvider } from '@interface-adapter/data-source-providers/data-source-provider';
 
 export const saveKeyAndValue = async ({
   ds,
   key,
   value,
 }: {
-  ds: DataSource;
+  ds: DataSourceProvider;
   key: string;
   value: string;
 }) => {
-  const { preparedSql, paramKeys } = prepareSqlAndParamKeys(
-    ds,
+  const prepared = ds.prepare(
     'insert or replace into metadata values(@key, @value)'
   );
   const params: { [key: string]: string | number } = {
@@ -42,7 +40,7 @@ export const saveKeyAndValue = async ({
     value,
   };
   await ds.query(
-    preparedSql,
-    paramKeys.map(key => params[key])
+    prepared.sql,
+    prepared.paramKeys.map(key => params[key])
   );
 };

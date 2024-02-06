@@ -21,27 +21,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { DataSource, DataSourceOptions } from 'typeorm';
-import { AbrgDataSource, commonOptions } from '../../abrg-data-source';
+import { AbrgDataSource } from '../../abrg-data-source';
+import {
+  DS_Type,
+  DataSourceProvider,
+} from '@interface-adapter/data-source-providers/data-source-provider';
 
 export const provideDataSource = async ({
   sqliteFilePath,
 }: {
   sqliteFilePath: string;
-}): Promise<DataSource> => {
-  if (AbrgDataSource.options.type === 'better-sqlite3') {
-    const options: DataSourceOptions = {
-      ...commonOptions,
-      type: 'better-sqlite3',
+}): Promise<DataSourceProvider> => {
+  if (AbrgDataSource.type === DS_Type.sqlite) {
+    AbrgDataSource.setOptions({
       database: sqliteFilePath,
-      statementCacheSize: 150,
-      prepareDatabase: db => {
-        db.pragma('journal_mode = MEMORY');
-        db.pragma('synchronous = OFF');
-      },
-    };
-    return await new DataSource(options).initialize();
-  } else {
-    return await AbrgDataSource.initialize();
+    });
   }
+  await AbrgDataSource.initialize();
+  return Promise.resolve(AbrgDataSource);
 };

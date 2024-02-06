@@ -1,9 +1,16 @@
 import 'reflect-metadata';
 import { join } from 'path';
-import { DataSource, DataSourceOptions } from 'typeorm';
 import 'dotenv/config';
+import { CommonDataSourceOptions } from '@interface-adapter/data-source-providers/common-data-source-options';
+import {
+  DS_Type,
+  DataSourceProvider,
+} from '@interface-adapter/data-source-providers/data-source-provider';
+import { SqliteProvider } from '@interface-adapter/data-source-providers/sqlite-provider';
+import { PostgresProvider } from '@interface-adapter/data-source-providers/postgres-provider';
+import { MysqlProvider } from '@interface-adapter/data-source-providers/mysql-provider';
 
-export const commonOptions = {
+export const commonOptions: CommonDataSourceOptions = {
   synchronize: false,
   logging: false,
   entities: [join(__dirname, 'entity', '*.{ts,js}')],
@@ -11,36 +18,38 @@ export const commonOptions = {
   migrationsRun: true,
 };
 
-const sqliteOptions: DataSourceOptions = {
-  ...commonOptions,
-  type: 'better-sqlite3',
-  // src/interface-adapter/providers/provide-data-source.ts 内で絶対パスに置換
-  database: 'ba000001.sqlite',
-};
+// .env ファイルが存在しない場合はSQLiteを使用する
+const dsType = process.env.DS_TYPE || DS_Type.sqlite;
+let dataSource: DataSourceProvider;
+switch (dsType) {
+  case DS_Type.sqlite:
+    dataSource = SqliteProvider.create({ commonOptions });
+    break;
 
-let options: DataSourceOptions = sqliteOptions;
-if (process.env.DS_TYPE === 'postgres') {
-  options = {
-    ...commonOptions,
-    type: 'postgres',
-    host: process.env.DS_HOST,
-    port: Number(process.env.DS_PORT),
-    username: process.env.DS_USERNAME,
-    password: process.env.DS_PASSWORD,
-    database: process.env.DS_DATABASE,
-    parseInt8: true,
-  };
-} else if (process.env.DS_TYPE === 'mysql') {
-  options = {
-    ...commonOptions,
-    type: 'mysql',
-    host: process.env.DS_HOST,
-    port: Number(process.env.DS_PORT),
-    username: process.env.DS_USERNAME,
-    password: process.env.DS_PASSWORD,
-    database: process.env.DS_DATABASE,
-    charset: 'utf8mb4',
-  };
+  case DS_Type.postgres:
+    dataSource = PostgresProvider.create({
+      commonOptions,
+      host: process.env.DS_HOST,
+      port: Number(process.env.DS_PORT),
+      username: process.env.DS_USERNAME,
+      password: process.env.DS_PASSWORD,
+      database: process.env.DS_DATABASE,
+    });
+    break;
+
+  case DS_Type.mysql:
+    dataSource = MysqlProvider.create({
+      commonOptions,
+      host: process.env.DS_HOST,
+      port: Number(process.env.DS_PORT),
+      username: process.env.DS_USERNAME,
+      password: process.env.DS_PASSWORD,
+      database: process.env.DS_DATABASE,
+    });
+    break;
+
+  default:
+    throw 'unimplemented database type is specified';
 }
 
-export const AbrgDataSource = new DataSource(options);
+export const AbrgDataSource = dataSource;

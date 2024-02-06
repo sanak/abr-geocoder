@@ -35,7 +35,6 @@ import { RegExpEx } from '@domain/reg-exp-ex';
 import PATCH_PATTERNS from '@settings/patch-patterns';
 import { AddressFinderForStep3and5 } from '@usecase/geocode/address-finder-for-step3and5';
 import { AddressFinderForStep7 } from '@usecase/geocode/address-finder-for-step7';
-import { DataSource } from 'typeorm';
 import { Readable, Transform, Writable } from 'node:stream';
 import { TransformCallback } from 'stream';
 import { GeocodingStep1 } from './step1-transform';
@@ -49,6 +48,7 @@ import { GeocodingStep5 } from './step5-transform';
 import { GeocodingStep6 } from './step6-transform';
 import { GeocodingStep7 } from './step7-transform';
 import { GeocodingStep8 } from './step8-transform';
+import { DataSourceProvider } from '@interface-adapter/data-source-providers/data-source-provider';
 
 export class StreamGeocoder extends Transform {
   private constructor(private stream: Readable) {
@@ -75,7 +75,7 @@ export class StreamGeocoder extends Transform {
   }
 
   static create = async (
-    dataSource: DataSource,
+    dataSource: DataSourceProvider,
     fuzzy?: string
   ): Promise<StreamGeocoder> => {
     /**

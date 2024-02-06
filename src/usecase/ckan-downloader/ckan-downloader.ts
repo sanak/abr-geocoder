@@ -30,7 +30,6 @@ import { getRequest } from '@domain/http/get-request';
 import { headRequest } from '@domain/http/head-request';
 import { getValueWithKey } from '@domain/key-store/get-value-with-key';
 import { saveKeyAndValue } from '@domain/key-store/save-key-and-value';
-import { DataSource } from 'typeorm';
 import { StatusCodes } from 'http-status-codes';
 import EventEmitter from 'node:events';
 import fs from 'node:fs';
@@ -38,11 +37,12 @@ import path from 'node:path';
 import { Writable } from 'node:stream';
 import { Client } from 'undici';
 import { verifyPartialDownloadedFile } from './verify-partial-downloaded-file';
+import { DataSourceProvider } from '@interface-adapter/data-source-providers/data-source-provider';
 
 export interface CkanDownloaderParams {
   userAgent: string;
   datasetUrl: string;
-  ds: DataSource;
+  ds: DataSourceProvider;
   ckanId: string;
   dstDir: string;
 }
@@ -56,7 +56,7 @@ export enum CkanDownloaderEvent {
 export class CkanDownloader extends EventEmitter {
   private readonly userAgent: string;
   private readonly datasetUrl: string;
-  private readonly ds: DataSource;
+  private readonly ds: DataSourceProvider;
   private readonly ckanId: string;
   private readonly dstDir: string;
   private cacheMetadata: DatasetMetadata | null = null;

@@ -21,26 +21,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { DataSource } from 'typeorm';
-import { prepareSqlAndParamKeys } from '@domain/prepare-sql-and-param-keys';
+import { DataSourceProvider } from '@interface-adapter/data-source-providers/data-source-provider';
 
 export const getValueWithKey = async ({
   ds,
   key,
 }: {
-  ds: DataSource;
+  ds: DataSourceProvider;
   key: string;
 }): Promise<string | undefined> => {
-  const { preparedSql, paramKeys } = prepareSqlAndParamKeys(
-    ds,
+  const prepared = ds.prepare(
     'select value from metadata where "key" = @key limit 1'
   );
   const params: { [key: string]: string | number } = {
     key,
   };
   const result = (await ds.query(
-    preparedSql,
-    paramKeys.map(key => params[key])
+    prepared.sql,
+    prepared.paramKeys.map(key => params[key])
   )) as { value: string }[];
   if (!result || result.length === 0) {
     return;

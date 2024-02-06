@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 import { DatasetRow } from "@domain/dataset/dataset-row";
+import { DataSourceProvider } from "@interface-adapter/data-source-providers/data-source-provider";
 import { jest } from '@jest/globals';
-import { DataSource } from "typeorm";
 
 export const expectedResult = new Map<string, DatasetRow>([
   ['mt_city_all.csv', new DatasetRow({
@@ -85,7 +85,7 @@ export const expectedResult = new Map<string, DatasetRow>([
 ]);
 
 export const loadDatasetHistory = jest.fn(async (params: {
-  ds: DataSource,
+  ds: DataSourceProvider,
 }): Promise<Map<string, DatasetRow>> => {
   return Promise.resolve(expectedResult);
 });

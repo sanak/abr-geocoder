@@ -25,7 +25,7 @@
 import { DummyCsvFile } from "@domain/dataset/__mocks__/dummy-csv.skip";
 import { setupContainer } from "@interface-adapter/__mocks__/setup-container";
 import { describe, expect, it, jest } from "@jest/globals";
-import { DataSource as MockedDS } from '@mock/typeorm';
+import { DataSourceProvider as MockedDS } from '@interface-adapter/data-source-providers/__mocks__/data-source-provider';
 import Stream from "node:stream";
 import { DependencyContainer } from "tsyringe";
 import { loadDatasetProcess } from "../load-dataset-process";
@@ -310,10 +310,7 @@ describe('load-dataset-process', () => {
   const container = setupContainer() as DependencyContainer;
 
   it('should return csv file list', async () => { 
-    const ds = new MockedDS({
-      type: 'better-sqlite3',
-      database: 'dummy db',
-    });
+    const ds = new MockedDS();
     const qr = ds.createQueryRunner();
     jest.spyOn(ds, 'createQueryRunner').mockReturnValue(qr);
     await loadDatasetProcess({
@@ -344,7 +341,7 @@ describe('load-dataset-process', () => {
   })
 
   it('should rollback if an error has been occurred during the process', async () => { 
-    const ds = new MockedDS("dummy db");
+    const ds = new MockedDS();
     const qr = ds.createQueryRunner();
     jest.spyOn(ds, 'createQueryRunner').mockReturnValue(qr);
     qr.isTransactionActive = true;

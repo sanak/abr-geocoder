@@ -25,15 +25,19 @@ import { City } from '@domain/city';
 import { Prefecture } from '@domain/prefecture';
 import { PrefectureName } from '@domain/prefecture-name';
 import { describe, expect, it, jest } from '@jest/globals';
-import { DataSource } from 'typeorm';
+import { DataSourceProvider } from '@interface-adapter/data-source-providers/__mocks__/data-source-provider';
 import { getPrefecturesFromDB } from '../get-prefectures-from-db';
 
-jest.mock<DataSource>('typeorm');
-
-const MockedDS = DataSource as unknown as jest.Mock;
+const MockedDS = DataSourceProvider as unknown as jest.Mock;
 
 MockedDS.mockImplementation(() => {
   return {
+    prepare: (sql: string) => {
+      return {
+        sql: sql,
+        paramKeys: [],
+      }
+    },
     query: (sql: string, params: string[]) => {
       return Promise.resolve([
         {
@@ -47,18 +51,12 @@ MockedDS.mockImplementation(() => {
         }
       ]);
     },
-    options: {
-      type: 'better-sqlite3',
-    },
   };
 });
 describe('getPrefecturesFromDB', () => {
 
   it('should return prefectures as Prefecture[]', async () => {
-    const mockedDS = new DataSource({
-      type: 'better-sqlite3',
-      database: ':memory:',
-    });
+    const mockedDS = new DataSourceProvider();
     const prefectures = await getPrefecturesFromDB({
       ds: mockedDS,
     });
