@@ -23,7 +23,6 @@ interface IDataSourceProvider {
     paramsCount: number,
     rowCount: number
   ): string;
-  // migration(): void;
 }
 
 export abstract class DataSourceProvider
@@ -99,8 +98,4 @@ export abstract class DataSourceProvider
     );
     return tempSql;
   }
-
-  // migration(): void {
-  //   // 共通する処理は、あとで書く
-  // }
 }
