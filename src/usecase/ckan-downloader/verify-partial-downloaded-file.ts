@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { DatasetMetadata } from '@domain/dataset-metadata';
+import { IMetadata } from '@domain/metadata/imetadata';
 import { getRequest } from '@domain/http/get-request';
 import { StatusCodes } from 'http-status-codes';
 import fs from 'node:fs';
@@ -31,7 +31,7 @@ export const verifyPartialDownloadedFile = async ({
   targetFile,
   userAgent,
 }: {
-  metadata: DatasetMetadata;
+  metadata: IMetadata;
   targetFile: string;
   userAgent: string;
 }): Promise<boolean> => {

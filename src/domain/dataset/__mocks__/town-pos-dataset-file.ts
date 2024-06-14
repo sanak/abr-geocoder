@@ -16,7 +16,7 @@ export class TownPosDatasetFile implements IDatasetFile {
     return row;
   }
 
-  static readonly create = jest.fn().mockImplementation((params: IDatasetFileMeta, csvFile: IStreamReady) => {
+  static create = jest.fn().mockImplementation((params: IDatasetFileMeta, csvFile: IStreamReady) => {
     return new TownPosDatasetFile(csvFile);
   })
 }

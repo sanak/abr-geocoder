@@ -51,6 +51,7 @@ import { default as MockedBetterSqlite3 } from '@mock/better-sqlite3';
 import { default as BetterSqlite3 } from 'better-sqlite3';
 import { Readable } from 'node:stream';import * as PATCHES from '@settings/patch-patterns';
 import { StreamGeocoder } from '../stream-geocoder';
+import { SearchTarget } from '@domain/search-target';
 
 // getPrefecturesFromDB
 const mockedGetPrefs = getPrefs as jest.Mocked<typeof getPrefs>;
@@ -130,7 +131,8 @@ describe('StreamGeocoder', () => {
 
     it('Fuzzyを指定しない場合、同じ値を返す', async () => {
       const mockedDB = createDB();
-      await StreamGeocoder.create(mockedDB);
+      const target = SearchTarget.ALL;
+      await StreamGeocoder.create(mockedDB, target);
       expect(mockedGetPreRegP).toHaveBeenCalled();
       const args = mockedGetPreRegP.mock.calls[0];
       const wildcardHelper = args[0].wildcardHelper;
@@ -140,12 +142,35 @@ describe('StreamGeocoder', () => {
     it('Fuzzyを指定した場合、正規表現を書き換える', async () => {
       const fuzzy = '●';
       const mockedDB = createDB();
-      await StreamGeocoder.create(mockedDB, fuzzy);
+      const target = SearchTarget.ALL;
+      await StreamGeocoder.create(mockedDB, target, fuzzy);
       expect(mockedGetPreRegP).toHaveBeenCalled();
       const args = mockedGetPreRegP.mock.calls[0];
       const wildcardHelper = args[0].wildcardHelper;
       expect(wildcardHelper('^愛知郡愛荘町'))
         .toEqual(`^(愛|\\${fuzzy})(知|\\${fuzzy})(郡|\\${fuzzy})(愛|\\${fuzzy})(荘|\\${fuzzy})(町|\\${fuzzy})`);
+    });
+
+    it('地番検索でFuzzyを指定しない場合、同じ値を返す', async () => {
+      const mockedDB = createDB();
+      const target = SearchTarget.PARCEL;
+      await StreamGeocoder.create(mockedDB, target);
+      expect(mockedGetPreRegP).toHaveBeenCalled();
+      const args = mockedGetPreRegP.mock.calls[0];
+      const wildcardHelper = args[0].wildcardHelper;
+      expect(wildcardHelper('^松江市末次町23番10号')).toEqual('^松江市末次町23番10号');
+    });
+
+    it('地番検索でFuzzyを指定した場合、正規表現を書き換える', async () => {
+      const fuzzy = '●';
+      const mockedDB = createDB();
+      const target = SearchTarget.PARCEL;
+      await StreamGeocoder.create(mockedDB, target, fuzzy);
+      expect(mockedGetPreRegP).toHaveBeenCalled();
+      const args = mockedGetPreRegP.mock.calls[0];
+      const wildcardHelper = args[0].wildcardHelper;
+      expect(wildcardHelper('^松江市末次町23番10号'))
+        .toEqual(`^(松|\\${fuzzy})(江|\\${fuzzy})(市|\\${fuzzy})(末|\\${fuzzy})(次|\\${fuzzy})(町|\\${fuzzy})23(番|\\${fuzzy})10(号|\\${fuzzy})`);
     });
   })
 });

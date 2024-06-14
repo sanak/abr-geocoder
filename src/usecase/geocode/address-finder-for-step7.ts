@@ -22,11 +22,12 @@
  * SOFTWARE.
  */
 import { DataField } from '@domain/dataset/data-field';
+import { kan2num } from '@domain/kan2num';
 import { MatchLevel } from '@domain/match-level';
 import { PrefectureName } from '@domain/prefecture-name';
 import { Query } from '@domain/query';
 import { RegExpEx } from '@domain/reg-exp-ex';
-import { TrieFinder } from '@domain/trie-finder';
+import { Trie } from '@domain/trie';
 import { zen2HankakuNum } from '@domain/zen2hankaku-num';
 import { DASH, SPACE } from '@settings/constant-values';
 import { Database, Statement } from 'better-sqlite3';
@@ -54,6 +55,11 @@ export type TownBlock = {
   lon: number;
 };
 
+export type TownBlockResult = {
+  townBlock: TownBlock | undefined;
+  tempAddress: string;
+};
+
 // Rsdt は Residential の略っぽい
 export type RsdtAddr = {
   lg_code: string;
@@ -77,45 +83,43 @@ export class AddressFinderForStep7 {
   private readonly getBlockListStatement: Statement;
   private readonly getRsdtListStatement: Statement;
   private readonly getSmallBlockListStatement: Statement;
-  private readonly fuzzy: string | undefined;
 
-  constructor({ fuzzy, db }: { fuzzy: string | undefined; db: Database }) {
-    this.fuzzy = fuzzy;
+  constructor(db: Database) {
     this.getBlockListStatement = db.prepare(`
       /* unit test: getBlockListStatement */
 
       select
         "blk".${DataField.LG_CODE.dbColumn},
-        "blk".${DataField.TOWN_ID.dbColumn},
+        "blk".${DataField.MACHIAZA_ID.dbColumn} as "town_id",
         "blk".${DataField.BLK_ID.dbColumn},
-        city.${DataField.PREF_NAME.dbColumn} as "pref",
+        city.${DataField.PREF.dbColumn} as "pref",
         (
-          city.${DataField.COUNTY_NAME.dbColumn} ||
-          city.${DataField.CITY_NAME.dbColumn} ||
-          city.${DataField.OD_CITY_NAME.dbColumn}
+          city.${DataField.COUNTY.dbColumn} ||
+          city.${DataField.CITY.dbColumn} ||
+          city.${DataField.WARD.dbColumn}
         ) as "city",
         (
-          town.${DataField.OAZA_TOWN_NAME.dbColumn} ||
-          town.${DataField.CHOME_NAME.dbColumn} ||
-          town.${DataField.KOAZA_NAME.dbColumn}
+          town.${DataField.OAZA_CHO.dbColumn} ||
+          town.${DataField.CHOME.dbColumn} ||
+          town.${DataField.KOAZA.dbColumn}
         ) as "town",
         blk.${DataField.BLK_NUM.dbColumn} as "blk",
-        blk.${DataField.REP_PNT_LAT.dbColumn} as "lat",
-        blk.${DataField.REP_PNT_LON.dbColumn} as "lon"
+        blk.${DataField.REP_LAT.dbColumn} as "lat",
+        blk.${DataField.REP_LON.dbColumn} as "lon"
       from
         "city"
         left join "town" on
           town.${DataField.LG_CODE.dbColumn} = city.${DataField.LG_CODE.dbColumn} and
-          (town.${DataField.OAZA_TOWN_NAME.dbColumn} || town.${DataField.CHOME_NAME.dbColumn} = @town)
+          (town.${DataField.OAZA_CHO.dbColumn} || town.${DataField.CHOME.dbColumn} = @town)
         left join "rsdtdsp_blk" "blk" on
           blk.${DataField.LG_CODE.dbColumn} = city.${DataField.LG_CODE.dbColumn} and
-          blk.${DataField.TOWN_ID.dbColumn} = town.${DataField.TOWN_ID.dbColumn}
+          blk.${DataField.MACHIAZA_ID.dbColumn} = town.${DataField.MACHIAZA_ID.dbColumn}
       where
-        city.${DataField.PREF_NAME.dbColumn} = @prefecture AND 
+        city.${DataField.PREF.dbColumn} = @prefecture AND 
         (
-          "city".${DataField.COUNTY_NAME.dbColumn} ||
-          "city".${DataField.CITY_NAME.dbColumn} ||
-          "city".${DataField.OD_CITY_NAME.dbColumn}
+          "city".${DataField.COUNTY.dbColumn} ||
+          "city".${DataField.CITY.dbColumn} ||
+          "city".${DataField.WARD.dbColumn}
         ) = @city and
         blk.${DataField.BLK_NUM.dbColumn} is not null
     `);
@@ -124,17 +128,17 @@ export class AddressFinderForStep7 {
       /* unit test: getRsdtListStatement */
 
       select
-        ${DataField.ADDR_ID.dbColumn} as "addr1_id",
-        ${DataField.ADDR2_ID.dbColumn} as "addr2_id",
+        ${DataField.RSDT_ID.dbColumn} as "addr1_id",
+        ${DataField.RSDT2_ID.dbColumn} as "addr2_id",
         ${DataField.RSDT_NUM.dbColumn} as "addr1",
         ${DataField.RSDT_NUM2.dbColumn} as "addr2",
-        ${DataField.REP_PNT_LAT.dbColumn} as "lat",
-        ${DataField.REP_PNT_LON.dbColumn} as "lon"
+        ${DataField.REP_LAT.dbColumn} as "lat",
+        ${DataField.REP_LON.dbColumn} as "lon"
       from
         "rsdtdsp_rsdt"
       where
         ${DataField.LG_CODE.dbColumn} = @lg_code and
-        ${DataField.TOWN_ID.dbColumn} = @town_id and
+        ${DataField.MACHIAZA_ID.dbColumn} = @town_id and
         ${DataField.BLK_ID.dbColumn} = @block_id
       order by
         ${DataField.RSDT_NUM.dbColumn} desc,
@@ -146,35 +150,35 @@ export class AddressFinderForStep7 {
 
       select
         "town".${DataField.LG_CODE.dbColumn},
-        "town".${DataField.TOWN_ID.dbColumn},
-        city.${DataField.PREF_NAME.dbColumn} as "pref",
+        "town".${DataField.MACHIAZA_ID.dbColumn} as "town_id",
+        city.${DataField.PREF.dbColumn} as "pref",
         (
-          city.${DataField.COUNTY_NAME.dbColumn} ||
-          city.${DataField.CITY_NAME.dbColumn} ||
-          city.${DataField.OD_CITY_NAME.dbColumn}
+          city.${DataField.COUNTY.dbColumn} ||
+          city.${DataField.CITY.dbColumn} ||
+          city.${DataField.WARD.dbColumn}
         ) as "city",
         (
-          town.${DataField.OAZA_TOWN_NAME.dbColumn} ||
-          town.${DataField.CHOME_NAME.dbColumn}
+          town.${DataField.OAZA_CHO.dbColumn} ||
+          town.${DataField.CHOME.dbColumn}
         ) as "town",
-        town.${DataField.KOAZA_NAME.dbColumn},
-        town.${DataField.REP_PNT_LAT.dbColumn} as "lat",
-        town.${DataField.REP_PNT_LON.dbColumn} as "lon"
+        town.${DataField.KOAZA.dbColumn},
+        town.${DataField.REP_LAT.dbColumn} as "lat",
+        town.${DataField.REP_LON.dbColumn} as "lon"
       from
         "city"
         left join "town" on
         "town".${DataField.LG_CODE.dbColumn} = city.${DataField.LG_CODE.dbColumn} and
-          (town.${DataField.OAZA_TOWN_NAME.dbColumn} || town.${DataField.CHOME_NAME.dbColumn} = @town)
+          (town.${DataField.OAZA_CHO.dbColumn} || town.${DataField.CHOME.dbColumn} = @town)
       where
-        city.${DataField.PREF_NAME.dbColumn} = @prefecture AND 
+        city.${DataField.PREF.dbColumn} = @prefecture AND 
         (
-          "city".${DataField.COUNTY_NAME.dbColumn} ||
-          "city".${DataField.CITY_NAME.dbColumn} ||
-          "city".${DataField.OD_CITY_NAME.dbColumn}
+          "city".${DataField.COUNTY.dbColumn} ||
+          "city".${DataField.CITY.dbColumn} ||
+          "city".${DataField.WARD.dbColumn}
         ) = @city AND
-        "town".${DataField.KOAZA_NAME.dbColumn} like @koaza
+        "town".${DataField.KOAZA.dbColumn} like @koaza
       order by
-        town.${DataField.KOAZA_NAME.dbColumn} desc
+        town.${DataField.KOAZA.dbColumn} desc
     `);
   }
 
@@ -267,6 +271,22 @@ export class AddressFinderForStep7 {
     });
   }
 
+  private buildTrieTreeForTownBlock(sqlRows: TownBlock[]): Trie<TownBlock> {
+    const townBlockTree = new Trie<TownBlock>();
+    sqlRows.forEach((townBlock: TownBlock) => {
+      let parent = townBlockTree;
+      const simplifiedTown = kan2num(townBlock.town) + (townBlock.blk || '');
+
+      for (const char of simplifiedTown) {
+        const trie = parent.children.get(char) || new Trie<TownBlock>();
+        parent.children.set(char, trie);
+        parent = trie;
+      }
+      parent.info = townBlock;
+    });
+    return townBlockTree;
+  }
+
   private buildMapForRsdtAddr(sqlRows: RsdtAddr[]): Map<string, RsdtAddr> {
     const result = new Map<string, RsdtAddr>();
     sqlRows.forEach((addr: RsdtAddr) => {
@@ -284,42 +304,95 @@ export class AddressFinderForStep7 {
     return result;
   }
 
+  private traverseBlockTree(
+    parent: Trie<TownBlock>,
+    params: {
+      tempAddress: string;
+      i: number;
+    }
+  ): TownBlockResult | undefined {
+    if (params.i === params.tempAddress.length) {
+      return {
+        townBlock: parent.info,
+        tempAddress: '',
+      };
+    }
+
+    const char = params.tempAddress[params.i];
+    if (char !== DASH) {
+      if (!parent.children.has(char)) {
+        return {
+          townBlock: parent.info,
+          tempAddress: params.tempAddress.substring(params.i),
+        };
+      }
+      return this.traverseBlockTree(parent.children.get(char)!, {
+        tempAddress: params.tempAddress,
+        i: params.i + 1,
+      });
+    }
+
+    // DASHが来た場合、「丁目」「丁」「番地」「番」「号」を全部試す
+    const prefix = params.tempAddress.substring(0, params.i);
+    const suffix = params.tempAddress.substring(params.i + 1);
+    const possibilities = [
+      `${prefix}丁目${suffix}`,
+      `${prefix}丁${suffix}`,
+      `${prefix}番地${suffix}`,
+      `${prefix}番${suffix}`,
+      `${prefix}号${suffix}`,
+    ];
+
+    for (const posibility of possibilities) {
+      const char = posibility[params.i];
+      if (!parent.children.has(char)) {
+        continue;
+      }
+      const result = this.traverseBlockTree(parent.children.get(char)!, {
+        i: params.i + 1,
+        tempAddress: posibility,
+      });
+      if (result) {
+        return result;
+      }
+    }
+    return {
+      townBlock: parent.info,
+      tempAddress: params.tempAddress.substring(params.i),
+    };
+  }
+
   async find(query: Query): Promise<Query> {
     const townBlocks = await this.getBlockList(query);
 
     // console.log(JSON.stringify(townBlocks, null, 2));
-    const townBlockTree = new TrieFinder<TownBlock>({
-      fuzzy: this.fuzzy,
-      rows: townBlocks,
-      preprocessor: (row: TownBlock) => {
-        return row.town + (row.blk || '');
-      },
+    const townBlockTree: Trie<TownBlock> =
+      this.buildTrieTreeForTownBlock(townBlocks);
+
+    const tempAddress = kan2num(query.town + query.tempAddress);
+    const info = this.traverseBlockTree(townBlockTree, {
+      tempAddress,
+      i: 0,
     });
 
-    const findResult = townBlockTree.find({
-      target: query.town + query.tempAddress,
-    });
-
-    if (!findResult?.info) {
+    if (!info?.townBlock) {
       // DBにはマッチする街区データがない
       return query;
     }
-    const info = findResult.info;
 
     // for文を breakしないで最後までループできる場合は、最後まで見つかるケース
     // 例：東京都千代田区紀尾井町1
     const result = query.copy({
-      town: info.town,
-      lat: info.lat,
-      lon: info.lon,
-      lg_code: info.lg_code,
-      block: info.blk,
-      block_id: info.blk_id,
-      town_id: info.town_id,
-      tempAddress: findResult.unmatched,
+      town: info.townBlock.town,
+      lat: info.townBlock.lat,
+      lon: info.townBlock.lon,
+      lg_code: info.townBlock.lg_code,
+      block: info.townBlock.blk,
+      block_id: info.townBlock.blk_id,
+      town_id: info.townBlock.town_id,
+      tempAddress: info.tempAddress,
       match_level: MatchLevel.RESIDENTIAL_BLOCK,
     });
-
     return result;
   }
 
@@ -410,7 +483,12 @@ export class AddressFinderForStep7 {
       town: query.town!,
     })) as TownBlock[];
 
-    return Promise.resolve(results);
+    return Promise.resolve(
+      results.map(town => {
+        town.town = zen2HankakuNum(town.town);
+        return town;
+      })
+    );
   }
 
   private async getRsdtList(query: Query): Promise<RsdtAddr[]> {

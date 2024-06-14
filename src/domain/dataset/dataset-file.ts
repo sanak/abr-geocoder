@@ -82,16 +82,17 @@ export abstract class DataForPosFile
     const parsedRow = this.parseFields(row);
 
     // 座標系の変換
-    const lat = parseFloat(parsedRow[DataField.REP_PNT_LAT.dbColumn] as string);
-    const lon = parseFloat(parsedRow[DataField.REP_PNT_LON.dbColumn] as string);
-    const extra = row[DataField.REP_PNT_SRID.csv];
+    const lat = parseFloat(parsedRow[DataField.REP_LAT.dbColumn] as string);
+    const lon = parseFloat(parsedRow[DataField.REP_LON.dbColumn] as string);
+    // 代表点_座標参照系
+    const extra = row[DataField.REP_SRID.csv];
     const [longitude, latitude] = proj4(
       extra, // from
       'WGS84' // to
     ).forward([lon, lat]);
 
-    parsedRow[DataField.REP_PNT_LON.dbColumn] = longitude;
-    parsedRow[DataField.REP_PNT_LAT.dbColumn] = latitude;
+    parsedRow[DataField.REP_LON.dbColumn] = longitude;
+    parsedRow[DataField.REP_LAT.dbColumn] = latitude;
 
     return parsedRow;
   }

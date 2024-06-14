@@ -51,9 +51,9 @@ describe('PrefDatasetFile', () => {
     expect(instance.type).toBe('pref');
     expect(instance.fields).toEqual([
       DataField.LG_CODE,
-      DataField.PREF_NAME,
-      DataField.PREF_NAME_KANA,
-      DataField.PREF_NAME_ROMA,
+      DataField.PREF,
+      DataField.PREF_KANA,
+      DataField.PREF_ROMA,
       DataField.EFCT_DATE,
       DataField.ABLT_DATE,
       DataField.REMARKS,
@@ -81,9 +81,9 @@ describe('PrefDatasetFile', () => {
     const instance = PrefDatasetFile.create(fileMeta, istreamReady);
     const reuslt = instance.parseFields({
       [DataField.LG_CODE.csv]: '10006',
-      [DataField.PREF_NAME.csv]: '北海道',
-      [DataField.PREF_NAME_KANA.csv]: 'ホッカイドウ',
-      [DataField.PREF_NAME_ROMA.csv]: 'Hokkaido',
+      [DataField.PREF.csv]: '北海道',
+      [DataField.PREF_KANA.csv]: 'ホッカイドウ',
+      [DataField.PREF_ROMA.csv]: 'Hokkaido',
       [DataField.EFCT_DATE.csv]: '1947-04-17',
       [DataField.ABLT_DATE.csv]: '',
       [DataField.REMARKS.csv]: '',
@@ -91,9 +91,9 @@ describe('PrefDatasetFile', () => {
     				
     expect(reuslt).toMatchObject({
       [DataField.LG_CODE.dbColumn]: '10006',
-      [DataField.PREF_NAME.dbColumn]: '北海道',
-      [DataField.PREF_NAME_KANA.dbColumn]: 'ホッカイドウ',
-      [DataField.PREF_NAME_ROMA.dbColumn]: 'Hokkaido',
+      [DataField.PREF.dbColumn]: '北海道',
+      [DataField.PREF_KANA.dbColumn]: 'ホッカイドウ',
+      [DataField.PREF_ROMA.dbColumn]: 'Hokkaido',
       [DataField.EFCT_DATE.dbColumn]: '1947-04-17',
       [DataField.ABLT_DATE.dbColumn]: '',
       [DataField.REMARKS.dbColumn]: '',

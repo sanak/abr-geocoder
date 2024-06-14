@@ -41,7 +41,6 @@ describe('load-dataset-history', () => {
           crc32: 814415613,
           last_modified: 1674556098000,
         },
-  
         {
           key: 'mt_pref_all.csv',
           type: 'pref',
@@ -49,7 +48,6 @@ describe('load-dataset-history', () => {
           crc32: 956018549,
           last_modified: 1641570854000,
         },
-  
         {
           key: 'mt_rsdtdsp_blk_pref01.csv',
           type: 'rsdtdsp_blk',
@@ -57,7 +55,6 @@ describe('load-dataset-history', () => {
           crc32: 1012054291,
           last_modified: 1674556144000,
         },
-  
         {
           key: 'mt_rsdtdsp_rsdt_pref01.csv',
           type: 'rsdtdsp_rsdt',
@@ -65,7 +62,6 @@ describe('load-dataset-history', () => {
           crc32: 3685780372,
           last_modified: 1674556208000,
         },
-  
         {
           key: 'mt_town_all.csv',
           type: 'town',
@@ -73,7 +69,6 @@ describe('load-dataset-history', () => {
           crc32: 3996387812,
           last_modified: 1674556118000,
         },
-  
         {
           key: 'mt_rsdtdsp_blk_pos_pref01.csv',
           type: 'rsdtdsp_blk_pos',
@@ -81,7 +76,6 @@ describe('load-dataset-history', () => {
           crc32: 3050934268,
           last_modified: 1674556152000,
         },
-  
         {
           key: 'mt_rsdtdsp_rsdt_pos_pref01.csv',
           type: 'rsdtdsp_rsdt_pos',
@@ -89,14 +83,27 @@ describe('load-dataset-history', () => {
           crc32: 3025020626,
           last_modified: 1674556268000,
         },
-  
         {
           key: 'mt_town_pos_pref01.csv',
           type: 'town_pos',
           content_length: 2229768,
           crc32: 4236985285,
           last_modified: 1674556138000,
-        }
+        },
+        {
+          key: 'mt_parcel_city011011.csv',
+          type: 'parcel_city',
+          content_length: 2229768,
+          crc32: 4236985285,
+          last_modified: 1674556138000,
+        },
+        {
+          key: 'mt_parcel_pos_city011011.csv',
+          type: 'parcel_pos_city',
+          content_length: 2229768,
+          crc32: 4236985285,
+          last_modified: 1674556138000,
+        },
       ]),
     }));
 

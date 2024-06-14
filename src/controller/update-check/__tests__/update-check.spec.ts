@@ -25,27 +25,163 @@
 import { describe, expect, it, jest } from '@jest/globals';
 import { updateCheck } from '../update-check';
 import { UPDATE_CHECK_RESULT } from '../update-check-result';
+import { DBFormatCheckResult } from '@domain/db-format-check-result';
+import { dbFormatCheck } from '@domain/db-format-check';
+import { getLgCodesFromDB } from '@domain/geocode/get-lg-codes-from-db';
+import { ParcelDownloder } from '@usecase/parcel-downloader/parcel-downloader';
+import { checkPrefCode } from '@domain/check-pref-code';
+import { CliDefaultValues } from '@settings/cli-default-values';
 
 jest.mock('@interface-adapter/setup-container');
 jest.mock('@usecase/ckan-downloader/ckan-downloader');
+jest.mock('@domain/db-format-check');
+jest.mock('@usecase/parcel-downloader/parcel-downloader');
+jest.mock('@domain/geocode/get-lg-codes-from-db');
+jest.mock('@domain/check-pref-code')
 
-describe('onUpdateCheck', () => {
-  it.concurrent('should return "NEW_DATASET_IS_AVAILABLE" if update is available', async () => {
-
+/**
+ * {@link updateCheck} のテストを実施します。
+ */
+describe('updateCheck test', () => {
+  it('should return "NEW_DATASET_IS_AVAILABLE" if db is not defined and CkanId is update.', async () => {
+    // モック定義
+    (checkPrefCode as jest.Mock).mockReturnValue(true);
+    (dbFormatCheck as jest.Mock).mockReturnValue(DBFormatCheckResult.UNDEFINED);
+    // テスト実施
     const result = await updateCheck({
-      ckanId: 'first access',
+      ckanId: 'updateCkanId',
       dataDir: 'somewhere',
+      prefCode: CliDefaultValues.PREF_CODE
     });
-
+    // 結果
     expect(result).toBe(UPDATE_CHECK_RESULT.NEW_DATASET_IS_AVAILABLE);
   });
-  it.concurrent('should return "NO_UPDATE_IS_AVAILABLE" if no update', async () => {
 
-    const result = await updateCheck({
-      ckanId: 'second access',
-      dataDir: 'somewhere',
+  it('should return "NEW_DATASET_IS_AVAILABLE" if db is not defined, CkanId is no update and Parcel is update.', async () => {
+    // モック定義
+    (checkPrefCode as jest.Mock).mockReturnValue(true);
+    (dbFormatCheck as jest.Mock).mockReturnValue(DBFormatCheckResult.UNDEFINED);
+    (getLgCodesFromDB as jest.Mock).mockReturnValue(['updateLgCode']);
+    (ParcelDownloder as unknown as jest.Mock).mockImplementationOnce((_: any) => {
+      return {
+          updateCheckParcelAndPos: () => {
+              return true
+          }
+      }
     });
+    // テスト実施
+    const result = await updateCheck({
+      ckanId: 'noUpdateCkanId',
+      dataDir: 'somewhere',
+      prefCode: CliDefaultValues.PREF_CODE
+    });
+    // 結果
+    expect(result).toBe(UPDATE_CHECK_RESULT.NEW_DATASET_IS_AVAILABLE);
+  });
 
+  it('should return "NO_UPDATE_IS_AVAILABLE" if db is not defined, CkanId is no update and Parcel is no update.', async () => {
+    // モック定義
+    (checkPrefCode as jest.Mock).mockReturnValue(true);
+    (dbFormatCheck as jest.Mock).mockReturnValue(DBFormatCheckResult.UNDEFINED);
+    (ParcelDownloder as unknown as jest.Mock).mockImplementationOnce((_: any) => {
+      return {
+          updateCheckParcelAndPos: () => {
+              return false
+          }
+      }
+    });
+    // テスト実施
+    const result = await updateCheck({
+      ckanId: 'noUpdateCkanId',
+      dataDir: 'somewhere',
+      prefCode: CliDefaultValues.PREF_CODE
+    });
+    // 結果
     expect(result).toBe(UPDATE_CHECK_RESULT.NO_UPDATE_IS_AVAILABLE);
+  });
+
+  it('should return "ERROR_DB_FORMAT_MISMATCHED" if db is not mismatched.', async () => {
+    // モック定義
+    (checkPrefCode as jest.Mock).mockReturnValue(true);
+    (dbFormatCheck as jest.Mock).mockReturnValue(DBFormatCheckResult.MISMATCHED);
+    // テスト実施
+    const result = await updateCheck({
+      ckanId: 'noUpdateCkanId',
+      dataDir: 'somewhere',
+      prefCode: CliDefaultValues.PREF_CODE
+    });
+    // 結果
+    expect(result).toBe(UPDATE_CHECK_RESULT.DB_FORMAT_MISMATCHED);
+  });
+
+  it('should return "NEW_DATASET_IS_AVAILABLE" if db is matched and CkanId is update.', async () => {
+    // モック定義
+    (checkPrefCode as jest.Mock).mockReturnValue(true);
+    (dbFormatCheck as jest.Mock).mockReturnValue(DBFormatCheckResult.MATCHED);
+    // テスト実施
+    const result = await updateCheck({
+      ckanId: 'updateCkanId',
+      dataDir: 'somewhere',
+      prefCode: CliDefaultValues.PREF_CODE
+    });
+    // 結果
+    expect(result).toBe(UPDATE_CHECK_RESULT.NEW_DATASET_IS_AVAILABLE);
+  });
+
+  it('should return "NEW_DATASET_IS_AVAILABLE" if db is matched, CkanId is no update and Parcel is update.', async () => {
+    // モック定義
+    (checkPrefCode as jest.Mock).mockReturnValue(true);
+    (dbFormatCheck as jest.Mock).mockReturnValue(DBFormatCheckResult.MATCHED);
+    (getLgCodesFromDB as jest.Mock).mockReturnValue(['updateLgCode']);
+    (ParcelDownloder as unknown as jest.Mock).mockImplementationOnce((_: any) => {
+      return {
+          updateCheckParcelAndPos: () => {
+              return true
+          }
+      }
+    });
+    // テスト実施
+    const result = await updateCheck({
+      ckanId: 'noUpdateCkanId',
+      dataDir: 'somewhere',
+      prefCode: CliDefaultValues.PREF_CODE
+    });
+    // 結果
+    expect(result).toBe(UPDATE_CHECK_RESULT.NEW_DATASET_IS_AVAILABLE);
+  });
+
+  it('should return "NO_UPDATE_IS_AVAILABLE" if db is not defined, CkanId is no update and Parcel is no update.', async () => {
+    // モック定義
+    (checkPrefCode as jest.Mock).mockReturnValue(true);
+    (dbFormatCheck as jest.Mock).mockReturnValue(DBFormatCheckResult.MATCHED);
+    (getLgCodesFromDB as jest.Mock).mockReturnValue(['noUpdateLgCode']);
+    (ParcelDownloder as unknown as jest.Mock).mockImplementationOnce((_: any) => {
+      return {
+          updateCheckParcelAndPos: () => {
+              return false
+          }
+      }
+    });
+    // テスト実施
+    const result = await updateCheck({
+      ckanId: 'noUpdateCkanId',
+      dataDir: 'somewhere',
+      prefCode: CliDefaultValues.PREF_CODE
+    });
+    // 結果
+    expect(result).toBe(UPDATE_CHECK_RESULT.NO_UPDATE_IS_AVAILABLE);
+  });
+
+  it('should return "PARAMETER_ERROR" if input pref code is invalid.', async () => {
+    // モック定義
+    (checkPrefCode as jest.Mock).mockReturnValue(false);
+    // テスト実施
+    const result = await updateCheck({
+      ckanId: 'no update',
+      dataDir: 'noupdate_somewhere',
+      prefCode: 'InvalidPrefCode'
+    });
+    // 結果
+    expect(result).toBe(UPDATE_CHECK_RESULT.PARAMETER_ERROR);
   });
 })

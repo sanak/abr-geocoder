@@ -83,4 +83,4 @@ export const SINGLE_QUOTATION = "'";
 export const DOUBLE_QUOTATION = '"';
 
 // 出力の空文字
-export const BLANK_CHAR = '';
+export const BLANK_CHAR = null;

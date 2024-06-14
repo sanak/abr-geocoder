@@ -34,12 +34,12 @@ export class RsdtdspRsdtPosFile extends DataForPosFile implements IDatasetFile {
   get fields(): DataField[] {
     return [
       DataField.LG_CODE,
-      DataField.REP_PNT_LAT,
-      DataField.REP_PNT_LON,
-      DataField.TOWN_ID,
+      DataField.REP_LAT,
+      DataField.REP_LON,
+      DataField.MACHIAZA_ID,
       DataField.BLK_ID,
-      DataField.ADDR_ID,
-      DataField.ADDR2_ID,
+      DataField.RSDT_ID,
+      DataField.RSDT2_ID,
     ];
   }
 
@@ -55,14 +55,14 @@ export class RsdtdspRsdtPosFile extends DataForPosFile implements IDatasetFile {
     const sql = `UPDATE
         "rsdtdsp_rsdt"
       SET
-        ${DataField.REP_PNT_LON.dbColumn} = @${DataField.REP_PNT_LON.dbColumn},
-        ${DataField.REP_PNT_LAT.dbColumn} = @${DataField.REP_PNT_LAT.dbColumn}
+        ${DataField.REP_LON.dbColumn} = @${DataField.REP_LON.dbColumn},
+        ${DataField.REP_LAT.dbColumn} = @${DataField.REP_LAT.dbColumn}
       WHERE
         ${DataField.LG_CODE.dbColumn} = @${DataField.LG_CODE.dbColumn} AND
-        ${DataField.TOWN_ID.dbColumn}  = @${DataField.TOWN_ID.dbColumn} AND
+        ${DataField.MACHIAZA_ID.dbColumn}  = @${DataField.MACHIAZA_ID.dbColumn} AND
         ${DataField.BLK_ID.dbColumn}  = @${DataField.BLK_ID.dbColumn} AND
-        ${DataField.ADDR_ID.dbColumn}  = @${DataField.ADDR_ID.dbColumn} AND
-        ${DataField.ADDR2_ID.dbColumn}  = @${DataField.ADDR2_ID.dbColumn}
+        ${DataField.RSDT_ID.dbColumn}  = @${DataField.RSDT_ID.dbColumn} AND
+        ${DataField.RSDT2_ID.dbColumn}  = @${DataField.RSDT2_ID.dbColumn}
       `;
     return new RsdtdspRsdtPosFile({
       ...params,

@@ -22,7 +22,9 @@
  * SOFTWARE.
  */
 import { AddressFinderForStep7 } from '@usecase/geocode/__mocks__/address-finder-for-step7';
+import { ParcelFinderForStep7 } from '@usecase/geocode/__mocks__/parcel-finder-for-step7';
 import { PrefectureName } from '@domain/prefecture-name';
+import { MatchLevel } from '@domain/match-level';
 import { Query } from '@domain/query';
 import { beforeAll, describe, expect, it, jest } from '@jest/globals';
 import Stream from 'node:stream';
@@ -39,6 +41,7 @@ describe('step7-transform', () => {
       prefecture: PrefectureName.TOKYO,
       city: '千代田区',
       town: '紀尾井町',
+      match_level: MatchLevel.MACHIAZA,
       tempAddress: 'どこか'
     }),
 
@@ -46,10 +49,22 @@ describe('step7-transform', () => {
       prefecture: PrefectureName.TOKYO,
       tempAddress: 'どこか'
     }),
+
+    Query.create('島根県松江市末次町どこか').copy({
+      prefecture: PrefectureName.SHIMANE,
+      city: '松江市',
+      town: '末次町',
+      lg_code: '322016',
+      town_id: '0083000',
+      rsdt_addr_flg: '0',
+      match_level: MatchLevel.MACHIAZA,
+      tempAddress: 'どこか'
+    }),
   ];
 
   const finder = new AddressFinderForStep7();
-  const target = new GeocodingStep7(finder);
+  const finder2 = new ParcelFinderForStep7();
+  const target = new GeocodingStep7(finder, finder2, 'all');
 
   beforeAll(async () => {
     await pipeline(
@@ -72,5 +87,11 @@ describe('step7-transform', () => {
     expect(results.length).toBe(source.length);
     expect(results[1]).toEqual(source[1]);
     expect(finder.find).not.toBeCalledWith(source[1]);
+  });
+  it('parcelFinder.find()から正常に返されるケース', async () => {
+    const results = outputWrite.toArray();
+    expect(results.length).toBe(source.length);
+    expect(results[2]).toEqual(source[2]);
+    expect(finder2.find).toBeCalledWith(source[2]);
   });
 });

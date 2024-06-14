@@ -21,7 +21,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
+/**
+ * アップデートチェック結果の列挙を表現します。
+ */
 export enum UPDATE_CHECK_RESULT {
+  /** アップデート必要 */
   NEW_DATASET_IS_AVAILABLE = 0,
+  /** アップデート不要 */
   NO_UPDATE_IS_AVAILABLE = 1,
+  /** DBフォーマット不一致 */
+  DB_FORMAT_MISMATCHED = 3,
+  /** パラメータエラー */
+  PARAMETER_ERROR = 4,
 }

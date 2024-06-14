@@ -51,12 +51,12 @@ describe('RsdtdspRsdtPosFile', () => {
     expect(instance.type).toBe('rsdtdsp_rsdt_pos');
     expect(instance.fields).toEqual([
       DataField.LG_CODE,
-      DataField.REP_PNT_LAT,
-      DataField.REP_PNT_LON,
-      DataField.TOWN_ID,
+      DataField.REP_LAT,
+      DataField.REP_LON,
+      DataField.MACHIAZA_ID,
       DataField.BLK_ID,
-      DataField.ADDR_ID,
-      DataField.ADDR2_ID,
+      DataField.RSDT_ID,
+      DataField.RSDT2_ID,
     ]);
   });
 
@@ -78,23 +78,23 @@ describe('RsdtdspRsdtPosFile', () => {
     }
     const instance = RsdtdspRsdtPosFile.create(fileMeta, istreamReady);
     const reuslt = instance.parseFields({
-      [DataField.LG_CODE.csv] : '52027',
-      [DataField.REP_PNT_LAT.csv] : '40.200984603',
-      [DataField.REP_PNT_LON.csv] : '140.021214247',
-      [DataField.TOWN_ID.csv] : '1000',
-      [DataField.BLK_ID.csv] : '1',
-      [DataField.ADDR_ID.csv] : '1',
-      [DataField.ADDR2_ID.csv] : '',
+      [DataField.LG_CODE.csv]: '52027',
+      [DataField.REP_LAT.csv]: '40.200984603',
+      [DataField.REP_LON.csv]: '140.021214247',
+      [DataField.MACHIAZA_ID.csv]: '1000',
+      [DataField.BLK_ID.csv]: '1',
+      [DataField.RSDT_ID.csv]: '1',
+      [DataField.RSDT2_ID.csv]: '',
     });
-    				
+
     expect(reuslt).toMatchObject({
-      [DataField.LG_CODE.dbColumn] : '52027',
-      [DataField.REP_PNT_LAT.dbColumn] : '40.200984603',
-      [DataField.REP_PNT_LON.dbColumn] : '140.021214247',
-      [DataField.TOWN_ID.dbColumn] : '1000',
-      [DataField.BLK_ID.dbColumn] : '1',
-      [DataField.ADDR_ID.dbColumn] : '1',
-      [DataField.ADDR2_ID.dbColumn] : '',
+      [DataField.LG_CODE.dbColumn]: '52027',
+      [DataField.REP_LAT.dbColumn]: '40.200984603',
+      [DataField.REP_LON.dbColumn]: '140.021214247',
+      [DataField.MACHIAZA_ID.dbColumn]: '1000',
+      [DataField.BLK_ID.dbColumn]: '1',
+      [DataField.RSDT_ID.dbColumn]: '1',
+      [DataField.RSDT2_ID.dbColumn]: '',
     });
   });
 })

@@ -38,6 +38,8 @@ jest.mock("@domain/dataset/rsdtdsp-rsdt-file");
 jest.mock("@domain/dataset/town-pos-dataset-file");
 jest.mock("@domain/dataset/rsdtdsp-blk-pos-file");
 jest.mock("@domain/dataset/rsdtdsp-rsdt-pos-file");
+jest.mock("@domain/dataset/parcel-dataset-file");
+jest.mock("@domain/dataset/parcel-pos-dataset-file");
 jest.mock('@interface-adapter/setup-container');
 jest.mock('better-sqlite3');
 jest.mock('csv-parser');
@@ -304,6 +306,73 @@ const mt_city_all_csv = () => {
     }
   });
 }
+const mt_parcel_city011011_csv = () => {
+  return new DummyCsvFile({
+    name: 'mt_parcel_city011011.csv',
+    crc32: 814415613,
+    contentLength: 4824420,
+    lastModified: 1674556098000,
+
+    getStream(): Promise<NodeJS.ReadableStream> {
+      return Promise.resolve(Stream.Readable.from([
+        {
+          "全国地方公共団体コード": "011002",
+          "都道府県名": "北海道",
+          "都道府県名_カナ": "ホッカイドウ",
+          "都道府県名_英字": "Hokkaido",
+          "郡名": "",
+          "郡名_カナ": "",
+          "郡名_英字": "",
+          "市区町村名": "札幌市",
+          "市区町村名_カナ": "サッポロシ",
+          "市区町村名_英字": "Sapporo-shi",
+          "政令市区名": "",
+          "政令市区名_カナ": "",
+          "政令市区名_英字": "",
+          "効力発生日": "1947-04-17",
+          "廃止日": "",
+          "備考": "",
+        }
+      ]))
+    }
+  });
+}
+
+const mt_parcel_pos_city011011_csv = () => {
+  return new DummyCsvFile({
+    name: 'mt_parcel_pos_city011011.csv',
+    crc32: 814415613,
+    contentLength: 4824420,
+    lastModified: 1674556098000,
+
+    getStream(): Promise<NodeJS.ReadableStream> {
+      return Promise.resolve(Stream.Readable.from([
+        {
+          "lg_code": "011011",
+          "machiaza_id": "0001001",
+          "prc_id": "000010000100001",
+          "rep_lon": "139.966305",
+          "rep_lat": "37.372992",
+          "rep_srid": "EPSG:6668",
+          "rep_scale": "25000",
+          "rep_src_code": "1",
+          "plygn_fname": "BBB07208",
+          "plygn_kcode": "0720280007101014910000000000",
+          "plygn_fmt": "GeoJSON",
+          "plygn_srid": "EPSG:6668",
+          "plygn_scale": "2500",
+          "plygn_src_code": "1",
+          "moj_map_city_code": "",
+          "moj_map_oaza_code": "",
+          "moj_map_chome_code": "",
+          "moj_map_koaza_code": "",
+          "moj_map_spare_code": "",
+          "moj_map_brushid": "",
+        }
+      ]))
+    }
+  });
+}
 
 
 describe('load-dataset-process', () => {
@@ -323,6 +392,8 @@ describe('load-dataset-process', () => {
         mt_rsdtdsp_rsdt_pos_pref01_csv(),
         mt_town_all_csv(),
         mt_town_pos_pref01_csv(),
+        mt_parcel_city011011_csv(),
+        mt_parcel_pos_city011011_csv(),
       ],
     });
     expect(db.exec).toBeCalledWith("BEGIN");
@@ -334,6 +405,8 @@ describe('load-dataset-process', () => {
     expect(db.prepare).toBeCalledWith("RsdtdspRsdtPosFile sql");
     expect(db.prepare).toBeCalledWith("TownDatasetFile sql");
     expect(db.prepare).toBeCalledWith("TownPosDatasetFile sql");
+    expect(db.prepare).toBeCalledWith("ParcelDatasetFile sql");
+    expect(db.prepare).toBeCalledWith("ParcelPosDatasetFile sql");
     expect(db.exec).toBeCalledWith("COMMIT");
   })
 

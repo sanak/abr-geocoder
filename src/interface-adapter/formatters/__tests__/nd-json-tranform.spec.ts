@@ -24,12 +24,237 @@
 import { describe, expect, it } from '@jest/globals';
 import { Stream } from 'node:stream';
 import { NdJsonTransform } from '../nd-json-transform';
-import { expectResults } from './data/expect-results';
-import { testValues } from './data/test-values';
+import { dummyData } from './dummy-data';
+import { MatchLevel } from '@domain/match-level';
+import { BLANK_CHAR } from '@settings/constant-values';
 
 describe('NdJsonTransform', () => {
   it('should output rows with expected JSON format()', async () => {
     const transform = NdJsonTransform.create();
+
+    const expectJson: string[] = [];
+    expectJson.push(JSON.stringify({
+      "query": {
+        "input": "東京都千代田区紀尾井町1-3　東京ガーデンテラス紀尾井町 19階、20階"
+      },
+      "result": {
+        "output": "東京都千代田区紀尾井町1-3 東京ガーデンテラス紀尾井町 19階、20階",
+        "matching_level": MatchLevel.RESIDENTIAL_DETAIL,
+        "lg_code": "131016",
+        "pref": "東京都",
+        "city": "千代田区",
+        "machiaza": "紀尾井町",
+        "machiaza_id": "0056000",
+        "blk_num": "1",
+        "blk_id": "001",
+        "rsdt_num": "3",
+        "rsdt_id": "003",
+        "rsdt_num2": BLANK_CHAR,
+        "rsdt2_id": BLANK_CHAR,
+        "prc_num1": BLANK_CHAR,
+        "prc_num2": BLANK_CHAR,
+        "prc_num3": BLANK_CHAR,
+        "prc_id": BLANK_CHAR,
+        "other": " 東京ガーデンテラス紀尾井町 19階、20階",
+        "lat": 35.681411,
+        "lon": 139.73495
+      }
+    }));
+    expectJson.push(JSON.stringify({
+      "query": {
+        "input": "東京都千代田区紀尾井町1"
+      },
+      "result": {
+        "output": "東京都千代田区紀尾井町1",
+        "matching_level": MatchLevel.RESIDENTIAL_BLOCK,
+        "lg_code": "131016",
+        "pref": "東京都",
+        "city": "千代田区",
+        "machiaza": "紀尾井町",
+        "machiaza_id": "0056000",
+        "blk_num": "1",
+        "blk_id": "001",
+        "rsdt_num": BLANK_CHAR,
+        "rsdt_id": BLANK_CHAR,
+        "rsdt_num2": BLANK_CHAR,
+        "rsdt2_id": BLANK_CHAR,
+        "prc_num1": BLANK_CHAR,
+        "prc_num2": BLANK_CHAR,
+        "prc_num3": BLANK_CHAR,
+        "prc_id": BLANK_CHAR,
+        "other": BLANK_CHAR,
+        "lat": 35.681411,
+        "lon": 139.73495,
+      }
+    }));
+
+    expectJson.push(JSON.stringify({
+      "query": {
+        "input": "山形県山形市旅篭町二丁目3番25号"
+      },
+      "result": {
+        "output": "山形県山形市旅篭町二丁目3-25",
+        "matching_level": MatchLevel.RESIDENTIAL_DETAIL,
+        "lg_code": "062014",
+        "pref": "山形県",
+        "city": "山形市",
+        "machiaza": "旅篭町二丁目",
+        "machiaza_id": "0247002",
+        "blk_num": "3",
+        "blk_id": "003",
+        "rsdt_num": "25",
+        "rsdt_id": "025",
+        "rsdt_num2": BLANK_CHAR,
+        "rsdt2_id": BLANK_CHAR,
+        "prc_num1": BLANK_CHAR,
+        "prc_num2": BLANK_CHAR,
+        "prc_num3": BLANK_CHAR,
+        "prc_id": BLANK_CHAR,
+        "other": BLANK_CHAR,
+        "lat": 38.255437,
+        "lon": 140.339126
+      }
+    }));
+
+    expectJson.push(JSON.stringify({
+      "query": {
+        "input": "山形市旅篭町二丁目3番25号"
+      },
+      "result": {
+        "output": "山形県山形市旅篭町二丁目3-25",
+        "matching_level": MatchLevel.RESIDENTIAL_DETAIL,
+        "lg_code": "062014",
+        "pref": "山形県",
+        "city": "山形市",
+        "machiaza": "旅篭町二丁目",
+        "machiaza_id": "0247002",
+        "blk_num": "3",
+        "blk_id": "003",
+        "rsdt_num": "25",
+        "rsdt_id": "025",
+        "rsdt_num2": BLANK_CHAR,
+        "rsdt2_id": BLANK_CHAR,
+        "prc_num1": BLANK_CHAR,
+        "prc_num2": BLANK_CHAR,
+        "prc_num3": BLANK_CHAR,
+        "prc_id": BLANK_CHAR,
+        "other": BLANK_CHAR,
+        "lat": 38.255437,
+        "lon": 140.339126
+      }
+    }));
+
+    expectJson.push(JSON.stringify({
+      "query": {
+        "input": "東京都町田市森野2-2-22"
+      },
+      "result": {
+        "output": "東京都町田市森野二丁目2-22",
+        "matching_level": MatchLevel.RESIDENTIAL_DETAIL,
+        "lg_code": "132098",
+        "pref": "東京都",
+        "city": "町田市",
+        "machiaza": "森野二丁目",
+        "machiaza_id": "0006002",
+        "blk_num": "2",
+        "blk_id": "002",
+        "rsdt_num": "22",
+        "rsdt_id": "022",
+        "rsdt_num2": BLANK_CHAR,
+        "rsdt2_id": BLANK_CHAR,
+        "prc_num1": BLANK_CHAR,
+        "prc_num2": BLANK_CHAR,
+        "prc_num3": BLANK_CHAR,
+        "prc_id": BLANK_CHAR,
+        "other": BLANK_CHAR,
+        "lat": 35.548247,
+        "lon": 139.440264
+      }
+    }));
+
+    expectJson.push(JSON.stringify({
+      "query": {
+        "input": "島根県松江市末次町23-10"
+      },
+      "result": {
+        "output": "島根県松江市末次町23-10",
+        "matching_level": MatchLevel.PARCEL,
+        "lg_code": "322016",
+        "pref": "島根県",
+        "city": "松江市",
+        "machiaza": "末次町",
+        "machiaza_id": "0083000",
+        "blk_num": BLANK_CHAR,
+        "blk_id": BLANK_CHAR,
+        "rsdt_num": BLANK_CHAR,
+        "rsdt_id": BLANK_CHAR,
+        "rsdt_num2": BLANK_CHAR,
+        "rsdt2_id": BLANK_CHAR,
+        "prc_num1": "23",
+        "prc_num2": "10",
+        "prc_num3": BLANK_CHAR,
+        "prc_id": "000230001000000",
+        "other": BLANK_CHAR,
+        "lat": 35.467467,
+        "lon": 133.049814
+      }
+    }));
+
+    expectJson.push(JSON.stringify({
+      "query": {
+        "input": "島根県松江市末次町23番10号"
+      },
+      "result": {
+        "output": "島根県松江市末次町23-10",
+        "matching_level": MatchLevel.PARCEL,
+        "lg_code": "322016",
+        "pref": "島根県",
+        "city": "松江市",
+        "machiaza": "末次町",
+        "machiaza_id": "0083000",
+        "blk_num": BLANK_CHAR,
+        "blk_id": BLANK_CHAR,
+        "rsdt_num": BLANK_CHAR,
+        "rsdt_id": BLANK_CHAR,
+        "rsdt_num2": BLANK_CHAR,
+        "rsdt2_id": BLANK_CHAR,
+        "prc_num1": "23",
+        "prc_num2": "10",
+        "prc_num3": BLANK_CHAR,
+        "prc_id": "000230001000000",
+        "other": BLANK_CHAR,
+        "lat": 35.467467,
+        "lon": 133.049814
+      }
+    }));
+
+    expectJson.push(JSON.stringify({
+      "query": {
+        "input": "無効な値"
+      },
+      "result": {
+        "output": "無効な値",
+        "matching_level": MatchLevel.UNKNOWN,
+        "lg_code": BLANK_CHAR,
+        "pref": BLANK_CHAR,
+        "city": BLANK_CHAR,
+        "machiaza": BLANK_CHAR,
+        "machiaza_id": BLANK_CHAR,
+        "blk_num": BLANK_CHAR,
+        "blk_id": BLANK_CHAR,
+        "rsdt_num": BLANK_CHAR,
+        "rsdt_id": BLANK_CHAR,
+        "rsdt_num2": BLANK_CHAR,
+        "rsdt2_id": BLANK_CHAR,
+        "prc_num1": BLANK_CHAR,
+        "prc_num2": BLANK_CHAR,
+        "prc_num3": BLANK_CHAR,
+        "prc_id": BLANK_CHAR,
+        "other": "無効な値",
+        "lat": null,
+        "lon": null
+      }
+    }));
 
     const buffer: string[] = [];
     const writable = new Stream.Writable({
@@ -39,7 +264,7 @@ describe('NdJsonTransform', () => {
         callback();
       },
     })
-    const readStream = Stream.Readable.from(testValues);
+    const readStream = Stream.Readable.from(dummyData);
 
     await Stream.promises.pipeline(
       readStream,
@@ -47,13 +272,10 @@ describe('NdJsonTransform', () => {
       writable,
     )
 
-    const results = buffer.join('').trim().split('\n').map(line => JSON.parse(line));
+    const result = buffer.join('');
+    const expects = expectJson.map(line => JSON.parse(line));
+    const results = result.trim().split('\n').map(line => JSON.parse(line));
 
-    expect(results.length).toBe(expectResults.length);
-
-    // 1オブジェクト単位で比較
-    for (let i = 0; i < results.length; i++) {
-      expect(results[i]).toEqual(expectResults[i]);
-    }
+    expect(results).toEqual(expects);
   });
 });

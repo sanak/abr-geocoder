@@ -1,0 +1,273 @@
+openapi: 3.0.0
+info:
+  title: ABRジオコーダーAPI
+  version: v2-beta
+  description: |
+    このドキュメントでは、デジタル庁が提供するABRジオコーダーAPI（アドレス・ベース・レジストリ ジオコーダー API） について説明しています。
+    ABRジオコーダーAPIは、アドレス・ベース・レジストリを利用し、住所のジオコーディングを行うことが可能です。
+servers:
+  - url: http://localhost:3000/
+# security:
+#   - apiKey: []
+paths:
+  "/{query}.{format}":
+    get:
+      summary: ジオコーディング
+      description:  |
+        住所文字列をジオコーディングします。
+      parameters:
+        - $ref: "#/components/parameters/queryParam"
+        - $ref: "#/components/parameters/formatParam"
+        - name: fuzzy
+          in: query
+          description: ワイルドカードとして使う任意の1文字を指定します。
+          schema:
+            type: string
+        - name: target
+          in: query
+          description: |
+            検索対象を指定します。
+
+            target | description
+            --- | ---
+            all | 住居表示実施地域では街区符号・住居番号を、未実施地域では地番を対象に検索を行います。
+            parcel | 地番を対象に検索を行います。
+          schema:
+            type: string
+            default: "all"
+      responses:
+        "200":
+          $ref: "#/components/responses/ok"
+        "400":
+          $ref: "#/components/responses/badRequest"
+        # "403":
+        #  $ref: "#/components/responses/forbidden"
+        "404":
+          $ref: "#/components/responses/notFound"
+        "500":
+          $ref: "#/components/responses/internalServerError"
+components:
+  parameters:
+    queryParam:
+      name: query
+      in: path
+      description: |
+        住所文字列。
+
+        UTF-8でパーセントエンコーディングしてください。
+      required: true
+      schema:
+        type: string
+        example: "東京都千代田区紀尾井町1-3　東京ガーデンテラス紀尾井町 19階、20階"
+    formatParam:
+      name: format
+      in: path
+      description: |
+        出力書式を指定します。
+
+        format | description
+        --- | ---
+        csv | CSV形式で結果を出力します
+        json | JSON形式で結果を出力します
+        ndjson | NDJSON形式で結果を出力します
+        geojson | GeoJSON形式で結果を出力します
+        ndgeojson | NDGeoJSON形式で結果を出力します
+      required: true
+      schema:
+        type: string
+        default: "json"
+        # example: "json"
+  responses:
+    ok:
+      description: ジオコーディング結果（JSON）
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/geocodedModel"
+    badRequest:
+      description: リクエストに問題あり（query の文字コードやパラメータの値が不正）
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - message
+            properties:
+              message:
+                type: string
+                description: Bad Request
+    # forbidden:
+    #   description: アクセスが拒否された（API キーの不正）
+    #   content:
+    #     application/json:
+    #       schema:
+    #         type: object
+    #         required:
+    #           - message
+    #         properties:
+    #           message:
+    #             type: string
+    #             description: Forbidden
+    notFound:
+      description: リソースが存在しない
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - message
+            properties:
+              message:
+                type: string
+                description: Not Found
+    internalServerError:
+      description: サーバでの処理中にエラーが発生
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - message
+            properties:
+              message:
+                type: string
+                description: Internal Server Error
+  schemas:
+    geocodedModel:
+      type: array
+      items:
+        type: object
+        required:
+        - query
+        - result
+        properties:
+          query:
+            type: object
+            required:
+            - input
+            properties:
+              input:
+                type: string
+                description: 入力住所文字列
+                example: "東京都千代田区紀尾井町1番3号 19階、20階"
+          result:
+            type: object
+            required:
+            - output
+            - matching_level
+            - lg_code
+            - pref
+            - city
+            - machiaza
+            - machiaza_id
+            - blk_num
+            - blk_id
+            - rsdt_num
+            - rsdt_id
+            - rsdt_num2
+            - rsdt2_id
+            - prc_num1
+            - prc_num2
+            - prc_num3
+            - prc_id
+            - other
+            - lat
+            - lon
+            properties:
+              output:
+                type: string
+                description: ジオコーディング結果
+                example: "東京都千代田区紀尾井町1-3 19階、20階"
+              matching_level:
+                type: number
+                description: |
+                  マッチングレベル
+
+                  level | description
+                  --- | ---
+                  0 | 全く判定できなかった
+                  1 | 都道府県まで判別できた
+                  2 | 市区町村まで判別できた
+                  3 | 大字・町名まで判別できた
+                  4 | 丁目・小字まで判別できた
+                  7 | 住居表示の街区までの判別ができた
+                  8 | 住居表示の街区符号・住居番号までの判別ができた
+                  10 | 地番まで判別ができた
+                example: 8
+              lg_code:
+                type: string
+                description: 全国地方公共団体コード
+                example: "131016"
+              pref:
+                type: string
+                description: 都道府県
+                example: "東京都"
+              city:
+                type: string
+                description: 市区町村
+                example: "千代田区"
+              machiaza:
+                type: string
+                description: 町字
+                example: "紀尾井町"
+              machiaza_id:
+                type: string
+                description: 町字ID
+                example: "0056000"
+              blk_num:
+                type: string
+                description: 街区符号
+                example: "1"
+              blk_id:
+                type: string
+                description: 街区ID
+                example: "001"
+              rsdt_num:
+                type: string
+                description: 住居番号
+                example: "3"
+              rsdt_id:
+                type: string
+                description: 住居ID
+                example: "003"
+              rsdt_num2:
+                type: string
+                description: 住居番号2
+                example: null
+              rsdt2_id:
+                type: string
+                description: 住居2ID
+                example: null
+              prc_num1:
+                type: string
+                description: 地番1
+                example: null
+              prc_num2:
+                type: string
+                description: 地番2
+                example: null
+              prc_num3:
+                type: string
+                description: 地番3
+                example: null
+              prc_id:
+                type: string
+                description: 地番ID
+                example: null
+              other:
+                type: string
+                description: マッチングできなかった文字列
+                example: 19階、20階
+              lat:
+                type: number
+                description: 緯度
+                example: 35.679107172
+              lon:
+                type: number
+                description: 経度
+                example: 139.736394597
+  # securitySchemes:
+  #   apiKey:
+  #     type: apiKey
+  #     in: header
+  #     name: x-api-key

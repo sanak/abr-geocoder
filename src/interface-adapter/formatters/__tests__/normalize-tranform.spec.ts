@@ -22,57 +22,82 @@
  * SOFTWARE.
  */
 import { describe, expect, it } from '@jest/globals';
-import byline from 'byline';
-import { stringify } from 'csv-stringify/sync';
+import csvtojson from 'csvtojson';
 import { Stream } from 'node:stream';
 import { NormalizeTransform } from '../normalize-transform';
-import { expectResults } from './data/expect-results';
-import { testValues } from './data/test-values';
+import { dummyData } from './dummy-data';
+import { MatchLevel } from '@domain/match-level';
 
 describe('NormalizeTransform', () => {
   it('should output rows with expected CSV format()', async () => {
     const transform = NormalizeTransform.create(NormalizeTransform.DEFAULT_COLUMNS);
 
-    // 共通する期待値データ（expectResults）から必要なフィールドだけを拾って、
-    // stringifyでCSVに変換。1行毎に区切る。
-    const expectCsvLines = stringify([
-      NormalizeTransform.DEFAULT_COLUMNS,
-      ...expectResults.map(expVal => {
-        return [
-          expVal.query.input,
-          expVal.result.output,
-          expVal.result.match_level,
-        ]
-      })
-    ]).split("\n");
+    const expectCsv = await csvtojson({
+      output: 'csv',
+    }).fromString([
+      NormalizeTransform.DEFAULT_COLUMNS.join(','),
+      [
+        '"東京都千代田区紀尾井町1-3　東京ガーデンテラス紀尾井町 19階、20階"',
+        '"東京都千代田区紀尾井町1-3 東京ガーデンテラス紀尾井町 19階、20階"',
+        MatchLevel.RESIDENTIAL_DETAIL
+      ],
+      [
+        '"東京都千代田区紀尾井町1"',
+        '"東京都千代田区紀尾井町1"',
+        MatchLevel.RESIDENTIAL_BLOCK
+      ],
+      [
+        '"山形県山形市旅篭町二丁目3番25号"',
+        '"山形県山形市旅篭町二丁目3-25"',
+        MatchLevel.RESIDENTIAL_DETAIL
+      ],
+      [
+        '"山形市旅篭町二丁目3番25号"',
+        '"山形県山形市旅篭町二丁目3-25"',
+        MatchLevel.RESIDENTIAL_DETAIL
+      ],
+      [
+        '"東京都町田市森野2-2-22"',
+        '"東京都町田市森野二丁目2-22"',
+        MatchLevel.RESIDENTIAL_DETAIL
+      ],
+      [
+        '"島根県松江市末次町23-10"',
+        '"島根県松江市末次町23-10"',
+        MatchLevel.PARCEL
+      ],
+      [
+        '"島根県松江市末次町23番10号"',
+        '"島根県松江市末次町23-10"',
+        MatchLevel.PARCEL
+      ],
+      [
+        '"無効な値"',
+        '"無効な値"',
+        MatchLevel.UNKNOWN
+      ]
+    ].join("\n").trim());
 
-    // stringifyが最後に空行を追加するので、排除する
-    expect(expectCsvLines.at(-1)).toEqual('');
-    expectCsvLines.pop();
-
-    // 1行単位で results に溜めていく
-    const results: string[] = [];
+    const buffer: string[] = [];
     const writable = new Stream.Writable({
       objectMode: true,
       write(chunk, encoding, callback) {
-        results.push(chunk.toString());
+        buffer.push(chunk.toString());
         callback();
       },
     })
-    const readStream = Stream.Readable.from(testValues);
+    const readStream = Stream.Readable.from(dummyData);
 
     await Stream.promises.pipeline(
       readStream,
       transform,
-      byline,
       writable,
     )
 
-    expect(results.length).toBe(expectCsvLines.length);
+    const resultCSV = await csvtojson({
+      output: 'csv',
+    }).fromString(buffer.join('').trim());
 
-    // 全体を比較すると検証しにくいので、１行単位で比較していく
-    for (let i = 0; i < expectCsvLines.length; i++) {
-      expect(results[i]).toBe(expectCsvLines[i]);
-    }
+    expect(resultCSV).toEqual(expectCsv);
   });
 });

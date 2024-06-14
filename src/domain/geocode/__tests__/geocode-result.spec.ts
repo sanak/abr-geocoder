@@ -62,6 +62,10 @@ describe('GeocodeResult', () => {
       addr1_id: undefined,
       addr2: undefined,
       addr2_id: undefined,
+      prc_num1: undefined,
+      prc_num2: undefined,
+      prc_num3: undefined,
+      prc_id: undefined,
     })
   });
 

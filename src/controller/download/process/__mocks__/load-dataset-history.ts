@@ -82,6 +82,20 @@ export const expectedResult = new Map<string, DatasetRow>([
     crc32: 4236985285,
     lastModified: 1674556138000,
   })],
+  ['mt_parcel_city011011.csv', new DatasetRow({
+    key: 'mt_parcel_city011011.csv',
+    type: 'parcel_city',
+    contentLength: 2229768,
+    crc32: 4236985285,
+    lastModified: 1674556138000,
+  })],
+  ['mt_parcel_pos_city011011.csv', new DatasetRow({
+    key: 'mt_parcel_pos_city011011.csv',
+    type: 'parcel_pos_city',
+    contentLength: 2229768,
+    crc32: 4236985285,
+    lastModified: 1674556138000,
+  })],
 ]);
 
 export const loadDatasetHistory = jest.fn(async (params: {

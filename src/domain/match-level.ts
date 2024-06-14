@@ -31,12 +31,18 @@ export enum MatchLevel {
   // 市区町村まで判別できた
   ADMINISTRATIVE_AREA = 2,
 
-  // 町字まで判別できた
+  // 大字・町名まで判別できた
   TOWN_LOCAL = 3,
+
+  // 町字まで判別できた
+  MACHIAZA = 4,
 
   // 住居表示の街区までの判別ができた
   RESIDENTIAL_BLOCK = 7,
 
   // 住居表示の街区符号・住居番号までの判別ができた
   RESIDENTIAL_DETAIL = 8,
+
+  // 地番まで判別ができた
+  PARCEL = 10,
 }

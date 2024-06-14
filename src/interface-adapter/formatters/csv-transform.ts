@@ -21,9 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { escapeCsvValue } from '@domain/escape-csv-value';
 import { GeocodeResult, GeocodeResultFields } from '@domain/geocode-result';
-import { BLANK_CHAR } from '@settings/constant-values';
 import { Stream } from 'node:stream';
 import { TransformCallback } from 'stream';
 
@@ -45,12 +43,10 @@ export class CsvTransform extends Stream.Transform {
       // Because we output string as Buffer.
       readableObjectMode: false,
     });
-    if (!this.options.skipHeader) {
-      const header = this.options.columns
-        .map(column => column.toString())
-        .join(',');
-      this.rows.push(header);
+    if (this.options.skipHeader) {
+      return;
     }
+    this.rows.push(options.columns.map(column => column.toString()).join(','));
   }
 
   _transform(
@@ -62,35 +58,73 @@ export class CsvTransform extends Stream.Transform {
       .map(column => {
         switch (column) {
           case GeocodeResultFields.INPUT:
+            return `"${result.input}"`;
+
           case GeocodeResultFields.OUTPUT:
-          case GeocodeResultFields.LG_CODE:
-          case GeocodeResultFields.PREFECTURE:
-          case GeocodeResultFields.CITY:
-          case GeocodeResultFields.TOWN:
-          case GeocodeResultFields.TOWN_ID:
-          case GeocodeResultFields.BLOCK:
-          case GeocodeResultFields.BLOCK_ID:
-          case GeocodeResultFields.ADDR1:
-          case GeocodeResultFields.ADDR1_ID:
-          case GeocodeResultFields.ADDR2:
-          case GeocodeResultFields.ADDR2_ID:
-          case GeocodeResultFields.OTHER: {
-            const value = result[column];
-            if (value === undefined || value === null) {
-              return BLANK_CHAR;
-            }
-            return escapeCsvValue(value);
-          }
+            return `"${result.output || ''}"`;
 
           case GeocodeResultFields.MATCH_LEVEL:
+            return result.match_level.toString();
+
           case GeocodeResultFields.LATITUDE:
-          case GeocodeResultFields.LONGITUDE: {
-            const value = result[column];
-            if (value === undefined || value === null) {
-              return BLANK_CHAR;
+            return result.lat?.toString() || '';
+
+          case GeocodeResultFields.LONGITUDE:
+            return result.lon?.toString() || '';
+
+          case GeocodeResultFields.PREFECTURE:
+            return result.prefecture || '';
+
+          case GeocodeResultFields.CITY:
+            return result.city || '';
+
+          case GeocodeResultFields.LG_CODE:
+            return result.lg_code || '';
+
+          case GeocodeResultFields.TOWN:
+            return result.town || '';
+
+          case GeocodeResultFields.TOWN_ID:
+            return result.town_id || '';
+
+          case GeocodeResultFields.OTHER:
+            if (result.other.length === 0) {
+              return '';
             }
-            return value;
-          }
+            return `"${result.other}"`;
+
+          case GeocodeResultFields.BLOCK:
+            return result.block || '';
+
+          case GeocodeResultFields.BLOCK_ID:
+            return result.block_id || '';
+
+          case GeocodeResultFields.ADDR1:
+            return result.addr1?.toString() || '';
+
+          case GeocodeResultFields.ADDR1_ID:
+            return result.addr1_id?.toString() || '';
+
+          case GeocodeResultFields.ADDR2:
+            return result.addr2?.toString() || '';
+
+          case GeocodeResultFields.ADDR2_ID:
+            return result.addr2_id?.toString() || '';
+
+          case GeocodeResultFields.PRC_NUM1:
+            return result.prc_num1?.toString() || '';
+
+          case GeocodeResultFields.PRC_NUM2:
+            return result.prc_num2?.toString() || '';
+
+          case GeocodeResultFields.PRC_NUM3:
+            return result.prc_num3?.toString() || '';
+
+          case GeocodeResultFields.PRC_ID:
+            return result.prc_id?.toString() || '';
+
+          default:
+            throw new Error(`Unimplemented field : ${column}`);
         }
       })
       .join(',');
@@ -124,12 +158,16 @@ export class CsvTransform extends Stream.Transform {
     GeocodeResultFields.ADDR1_ID,
     GeocodeResultFields.ADDR2,
     GeocodeResultFields.ADDR2_ID,
+    GeocodeResultFields.PRC_NUM1,
+    GeocodeResultFields.PRC_NUM2,
+    GeocodeResultFields.PRC_NUM3,
+    GeocodeResultFields.PRC_ID,
     GeocodeResultFields.OTHER,
     GeocodeResultFields.LATITUDE,
     GeocodeResultFields.LONGITUDE,
   ];
 
-  static readonly create = (
+  static create = (
     columns: GeocodeResultFields[] = this.DEFAULT_COLUMNS
   ): CsvTransform => {
     return new CsvTransform({

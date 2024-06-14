@@ -21,22 +21,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+import { AddressFinderForStep3and5 } from '@usecase/geocode/address-finder-for-step3and5';
+import { TownFinderForStep5 } from '@usecase/geocode/town-finder-for-step5';
 import { kan2num } from '@domain/kan2num';
 import { MatchLevel } from '@domain/match-level';
 import { Query } from '@domain/query';
 import { RegExpEx } from '@domain/reg-exp-ex';
-import { number2kanji } from '@geolonia/japanese-numeral';
 import {
   DASH,
   J_DASH,
   NUMRIC_AND_KANJI_SYMBOLS,
   SPACE,
 } from '@settings/constant-values';
-import { AddressFinderForStep3and5 } from '@usecase/geocode/address-finder-for-step3and5';
 import { Transform, TransformCallback } from 'node:stream';
 
 export class GeocodingStep5 extends Transform {
-  constructor(private readonly addressFinder: AddressFinderForStep3and5) {
+  constructor(
+    private readonly addressFinder: AddressFinderForStep3and5,
+    private readonly townFinder: TownFinderForStep5
+  ) {
     super({
       objectMode: true,
     });
@@ -72,17 +75,17 @@ export class GeocodingStep5 extends Transform {
     }
 
     // townが取得できた場合にのみ、addrに対する各種の変換処理を行う
-    let tempAddress = query.tempAddress;
+    let tempAddress = kan2num(query.tempAddress);
     tempAddress = tempAddress.replace(RegExpEx.create(`^${DASH}`), '');
 
-    tempAddress = tempAddress.replace(
-      RegExpEx.create('([0-9]+)(丁目)', 'g'),
-      match => {
-        return match.replace(RegExpEx.create('([0-9]+)', 'g'), num => {
-          return number2kanji(Number(num));
-        });
-      }
-    );
+    // tempAddress = tempAddress.replace(
+    //   RegExpEx.create('([0-9]+)(丁目)', 'g'),
+    //   match => {
+    //     return match.replace(RegExpEx.create('([0-9]+)', 'g'), num => {
+    //       return number2kanji(Number(num));
+    //     });
+    //   }
+    // );
 
     tempAddress = tempAddress.replace(
       RegExpEx.create(
@@ -167,7 +170,32 @@ export class GeocodingStep5 extends Transform {
     });
 
     if (!normalized) {
-      return query;
+      const normalized = await this.townFinder.find({
+        address: query.tempAddress,
+        prefecture: query.prefecture!,
+        city: query.city!,
+      });
+
+      if (!normalized) {
+        return query;
+      }
+
+      return query.copy({
+        // 大字・町名の情報
+        town_id: normalized.town_id,
+        town: normalized.name,
+
+        tempAddress: normalized.tempAddress,
+
+        // 大字・町名レベルでの緯度経度
+        lat: normalized.lat,
+        lon: normalized.lon,
+
+        lg_code: normalized.lg_code,
+
+        // 大字・町名まで判別できた
+        match_level: MatchLevel.TOWN_LOCAL,
+      });
     }
 
     return query.copy({
@@ -181,10 +209,12 @@ export class GeocodingStep5 extends Transform {
       lat: normalized.lat,
       lon: normalized.lon,
 
+      rsdt_addr_flg: normalized.rsdt_addr_flg,
+
       lg_code: normalized.lg_code,
 
       // 町字まで判別できた
-      match_level: MatchLevel.TOWN_LOCAL,
+      match_level: MatchLevel.MACHIAZA,
     });
   }
 }

@@ -16,7 +16,7 @@ export class RsdtdspBlkPosFile implements IDatasetFile {
     return row;
   }
 
-  static readonly create = jest.fn().mockImplementation((params: IDatasetFileMeta, csvFile: IStreamReady) => {
+  static create = jest.fn().mockImplementation((params: IDatasetFileMeta, csvFile: IStreamReady) => {
     return new RsdtdspBlkPosFile(csvFile);
   })
 }

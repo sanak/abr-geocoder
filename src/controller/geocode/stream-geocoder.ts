@@ -22,6 +22,10 @@
  * SOFTWARE.
  */
 import { GeocodeResult } from '@domain/geocode-result';
+import { AddressFinderForStep3and5 } from '@usecase/geocode/address-finder-for-step3and5';
+import { TownFinderForStep5 } from '@usecase/geocode/town-finder-for-step5';
+import { AddressFinderForStep7 } from '@usecase/geocode/address-finder-for-step7';
+import { ParcelFinderForStep7 } from '@usecase/geocode/parcel-finder-for-step7';
 import { getCityPatternsForEachPrefecture } from '@domain/geocode/get-city-patterns-for-each-prefecture';
 import { getPrefectureRegexPatterns } from '@domain/geocode/get-prefecture-regex-patterns';
 import { getPrefecturesFromDB } from '@domain/geocode/get-prefectures-from-db';
@@ -33,8 +37,6 @@ import { PrefectureName } from '@domain/prefecture-name';
 import { Query } from '@domain/query';
 import { RegExpEx } from '@domain/reg-exp-ex';
 import PATCH_PATTERNS from '@settings/patch-patterns';
-import { AddressFinderForStep3and5 } from '@usecase/geocode/address-finder-for-step3and5';
-import { AddressFinderForStep7 } from '@usecase/geocode/address-finder-for-step7';
 import { Database } from 'better-sqlite3';
 import { Readable, Transform, Writable } from 'node:stream';
 import { TransformCallback } from 'stream';
@@ -51,9 +53,6 @@ import { GeocodingStep7 } from './step7-transform';
 import { GeocodingStep8 } from './step8-transform';
 
 export class StreamGeocoder extends Transform {
-  // 現在のキャレットの位置が、コメントアウトされているかどうか
-  private isCuretInComment: boolean = false;
-
   private constructor(private stream: Readable) {
     super({
       objectMode: true,
@@ -73,53 +72,13 @@ export class StreamGeocoder extends Transform {
       return;
     }
 
-    // /* ... */ の間をコメントとして無視する。複数行にも対応
-    // "//" より後ろは、コメントとして無視する
-    const buffer: string[] = [];
-    let i = 0;
-    const N = input.length;
-    while (i < N) {
-      if (this.isCuretInComment) {
-        if (i + 1 >= N || input.substring(i, i + 2) !== '*/') {
-          i += 1;
-          continue;
-        }
-
-        this.isCuretInComment = false;
-        i += 2;
-        continue;
-      }
-
-      if (i + 1 >= N) {
-        buffer.push(input[i]);
-        i += 1;
-        continue;
-      }
-      const doubleChars = input.substring(i, i + 2);
-      if (doubleChars === '//') {
-        break;
-      }
-      if (doubleChars !== '/*') {
-        buffer.push(input[i]);
-        i += 1;
-        continue;
-      }
-
-      this.isCuretInComment = true;
-      i += 2;
-    }
-    if (buffer.length === 0) {
-      callback();
-      return;
-    }
-    const filteredInput = buffer.join('');
-
     // 入力値を最後までキープするため、Queryクラスでラップする
-    this.stream.push(Query.create(filteredInput, callback));
+    this.stream.push(Query.create(input, callback));
   }
 
-  static readonly create = async (
+  static create = async (
     database: Database,
+    target: string,
     fuzzy?: string
   ): Promise<StreamGeocoder> => {
     /**
@@ -301,7 +260,14 @@ export class StreamGeocoder extends Transform {
     //   addr2_id: undefined
     // }
     /* eslint-enable no-irregular-whitespace */
-    const step5 = new GeocodingStep5(addressFinderForStep3and5);
+    const townFinderForStep5 = new TownFinderForStep5({
+      db: database,
+      wildcardHelper,
+    });
+    const step5 = new GeocodingStep5(
+      addressFinderForStep3and5,
+      townFinderForStep5
+    );
 
     // TypeScript が prefecture の string型 を PrefectureName に変換できないので、
     // ここで変換する
@@ -345,11 +311,13 @@ export class StreamGeocoder extends Transform {
     // }
     //
     /* eslint-enable no-irregular-whitespace */
-    const addressFinderForStep7 = new AddressFinderForStep7({
-      db: database,
-      fuzzy,
-    });
-    const step7 = new GeocodingStep7(addressFinderForStep7);
+    const addressFinderForStep7 = new AddressFinderForStep7(database);
+    const parcelFinderForStep7 = new ParcelFinderForStep7(database);
+    const step7 = new GeocodingStep7(
+      addressFinderForStep7,
+      parcelFinderForStep7,
+      target
+    );
 
     // {SPACE} と {DASH} をもとに戻す
     const step8 = new GeocodingStep8();
@@ -395,6 +363,10 @@ export class StreamGeocoder extends Transform {
                 addr1_id: query.addr1_id,
                 addr2: query.addr2,
                 addr2_id: query.addr2_id,
+                prc_num1: query.prc_num1,
+                prc_num2: query.prc_num2,
+                prc_num3: query.prc_num3,
+                prc_id: query.prc_id,
               })
             );
           },

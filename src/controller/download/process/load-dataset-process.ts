@@ -32,6 +32,8 @@ import { RsdtdspRsdtPosFile } from '@domain/dataset/rsdtdsp-rsdt-pos-file';
 import { TownDatasetFile } from '@domain/dataset/town-dataset-file';
 import { TownPosDatasetFile } from '@domain/dataset/town-pos-dataset-file';
 import { IStreamReady } from '@domain/istream-ready';
+import { ParcelDatasetFile } from '@domain/dataset/parcel-dataset-file';
+import { ParcelPosDatasetFile } from '@domain/dataset/parcel-pos-dataset-file';
 import { DI_TOKEN } from '@interface-adapter/tokens';
 import { Database } from 'better-sqlite3';
 import { MultiBar } from 'cli-progress';
@@ -127,6 +129,12 @@ export const loadDatasetProcess = async ({
         case 'rsdtdsp_rsdt_pos':
           callback(null, RsdtdspRsdtPosFile.create(fileMeta, chunk));
           break;
+        case 'parcel':
+          callback(null, ParcelDatasetFile.create(fileMeta, chunk));
+          break;
+        case 'parcel_pos':
+          callback(null, ParcelPosDatasetFile.create(fileMeta, chunk));
+          break;
         default:
           logger?.error(`[error]--->${chunk.name}`);
           throw new Error(`unknown type: ${fileMeta.type}`);
@@ -144,7 +152,6 @@ export const loadDatasetProcess = async ({
 
       // CSVファイルの読み込み
       const statement = db.prepare(datasetFile.sql);
-
       const errorHandler = (error: unknown) => {
         if (db.inTransaction) {
           db.exec('ROLLBACK');

@@ -25,6 +25,11 @@ import type BetterSqlite3 from 'better-sqlite3';
 import Database from 'better-sqlite3';
 import fs from 'node:fs';
 
+/**
+ * アドレスデータDBを提供します。
+ * @param アドレスデータDB情報
+ * @returns アドレスデータDB
+ */
 export const provideDatabase = async ({
   sqliteFilePath,
   schemaFilePath,
@@ -33,6 +38,9 @@ export const provideDatabase = async ({
   schemaFilePath: string;
 }): Promise<BetterSqlite3.Database> => {
   const schemaSQL = await fs.promises.readFile(schemaFilePath, 'utf8');
+
+  const isExistSqliteFile = fs.existsSync(sqliteFilePath);
+
   const db = new Database(sqliteFilePath);
 
   // We use these dangerous settings to improve performance, because if data is corrupted,
@@ -40,6 +48,8 @@ export const provideDatabase = async ({
   // ref: https://qastack.jp/programming/1711631/improve-insert-per-second-performance-of-sqlite
   db.pragma('journal_mode = MEMORY');
   db.pragma('synchronous = OFF');
-  db.exec(schemaSQL);
+  if (!isExistSqliteFile) {
+    db.exec(schemaSQL);
+  }
   return db;
 };

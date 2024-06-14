@@ -34,17 +34,17 @@ export const getPrefecturesFromDB = async ({
 }): Promise<IPrefecture[]> => {
   const statement: Statement = db.prepare(`
     SELECT
-      pref_name AS "name",
+      ${DataField.PREF.dbColumn} AS "name",
       json_group_array(json_object(
         'name', (
-          "${DataField.COUNTY_NAME.dbColumn}" || 
-          "${DataField.CITY_NAME.dbColumn}" || 
-          "${DataField.OD_CITY_NAME.dbColumn}"
+          "${DataField.COUNTY.dbColumn}" || 
+          "${DataField.CITY.dbColumn}" || 
+          "${DataField.WARD.dbColumn}"
         ),
         '${DataField.LG_CODE.dbColumn}', "${DataField.LG_CODE.dbColumn}"
       )) AS "cities"
     FROM city
-    GROUP BY pref_name
+    GROUP BY ${DataField.PREF.dbColumn}
   `);
 
   const prefectures = statement.all() as {

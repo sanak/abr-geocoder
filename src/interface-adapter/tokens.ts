@@ -34,5 +34,6 @@ export enum DI_TOKEN {
   NDGEOJSON_FORMATTER = 'ndgeojson-formatter',
   JSON_FORMATTER = 'json-formatter',
   NDJSON_FORMATTER = 'ndjson-formatter',
+  DATASET_PACKAGE_SHOW_URL = 'dataset_package_show_url',
   NORMALIZE_FORMATTER = 'normalize-formatter',
 }

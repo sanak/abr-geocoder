@@ -25,7 +25,7 @@
 import 'reflect-metadata';
 
 import { AbrgMessage } from '@abrg-message/abrg-message';
-import { saveKeyAndValue } from '@domain/key-store/save-key-and-value';
+import { saveMetadata } from '@domain/metadata/save-metadata';
 import { setupContainer } from '@interface-adapter/setup-container';
 import { DI_TOKEN } from '@interface-adapter/tokens';
 import { Database } from 'better-sqlite3';
@@ -37,13 +37,26 @@ import { downloadProcess } from './process/download-process';
 import { extractDatasetProcess } from './process/extract-dataset-process';
 import { loadDatasetHistory } from './process/load-dataset-history';
 import { loadDatasetProcess } from './process/load-dataset-process';
+import { DBFormatCheckResult } from '@domain/db-format-check-result';
+import { dbFormatCheck } from '@domain/db-format-check';
+import { getLgCodesFromDB } from '@domain/geocode/get-lg-codes-from-db';
+import { downloadParcelProcess } from './process/download-parcel-process';
+import { checkPrefCode } from '@domain/check-pref-code';
 
+/**
+ * ダウンロードデータセットの構築を行います。
+ */
 export const downloadDataset = async ({
   ckanId,
   dataDir,
+  prefCode,
 }: {
+  /** CkanID */
   ckanId: string;
+  /** ダウンロードディレクトリ */
   dataDir: string;
+  /** 都道府県コード */
+  prefCode: string;
 }): Promise<DOWNLOAD_DATASET_RESULT> => {
   const container = await setupContainer({
     dataDir,
@@ -51,6 +64,24 @@ export const downloadDataset = async ({
   });
 
   const logger = container.resolve<Logger | undefined>(DI_TOKEN.LOGGER);
+
+  if (!checkPrefCode({ prefCode })) {
+    logger?.info(AbrgMessage.toString(AbrgMessage.INPUT_PREF_CODE_ERROR));
+    return DOWNLOAD_DATASET_RESULT.PARAMETER_ERROR;
+  }
+
+  const db = container.resolve<Database>(DI_TOKEN.DATABASE);
+  switch (await dbFormatCheck(db, ckanId)) {
+    case DBFormatCheckResult.UNDEFINED:
+      break;
+    case DBFormatCheckResult.MISMATCHED:
+      logger?.info(
+        AbrgMessage.toString(AbrgMessage.ERROR_DB_FORMAT_MISMATCHED)
+      );
+      return DOWNLOAD_DATASET_RESULT.DB_FORMAT_MISMATCHED;
+    case DBFormatCheckResult.MATCHED:
+      break;
+  }
 
   const downloadDir = path.join(dataDir, 'download', ckanId);
   const exists = fs.existsSync(downloadDir);
@@ -70,7 +101,6 @@ export const downloadDataset = async ({
     return DOWNLOAD_DATASET_RESULT.CAN_NOT_ACCESS_TO_DATASET_ERROR;
   }
 
-  const db = container.resolve<Database>(DI_TOKEN.DATABASE);
   const datasetHistory = await loadDatasetHistory({
     db,
   });
@@ -83,7 +113,7 @@ export const downloadDataset = async ({
   const extractDir = await fs.promises.mkdtemp(path.join(dataDir, 'dataset'));
   const csvFiles = await extractDatasetProcess({
     container,
-    srcFile: downloadInfo.downloadFilePath,
+    srcPath: downloadInfo.downloadFilePath,
     dstDir: extractDir,
     datasetHistory,
   });
@@ -92,32 +122,73 @@ export const downloadDataset = async ({
     logger?.info(
       AbrgMessage.toString(AbrgMessage.ERROR_NO_UPDATE_IS_AVAILABLE)
     );
-    db.close();
+  } else {
+    // 各データセットのzipファイルを展開して、Databaseに登録する
+    logger?.info(AbrgMessage.toString(AbrgMessage.LOADING_INTO_DATABASE));
 
-    // 展開したzipファイルのディレクトリを削除
-    await fs.promises.rm(extractDir, { recursive: true });
-    return DOWNLOAD_DATASET_RESULT.NO_UPDATE_IS_AVAILABLE;
+    await loadDatasetProcess({
+      db,
+      csvFiles,
+      container,
+    });
+  }
+  await fs.promises.rm(extractDir, { recursive: true });
+
+  // 地番データ処理
+  logger?.info(AbrgMessage.toString(AbrgMessage.EXTRACTING_THE_PARCEL_DATA));
+  const lgCodes = await getLgCodesFromDB({
+    db,
+    prefCode,
+  });
+  if (lgCodes.length > 0) {
+    const downloadDir = path.join(dataDir, 'download', 'parcel');
+    if (!fs.existsSync(downloadDir)) {
+      await fs.promises.mkdir(downloadDir, {
+        recursive: true,
+      });
+    }
+    for (const lgCode of lgCodes) {
+      await downloadParcelProcess({
+        container,
+        lgCode,
+        downloadDir,
+      });
+    }
+
+    const parcelTmpDir = await fs.promises.mkdtemp(
+      path.join(dataDir, 'dataset_parcel')
+    );
+    const parcelCsvFiles = await extractDatasetProcess({
+      container,
+      srcPath: downloadDir,
+      dstDir: parcelTmpDir,
+      datasetHistory,
+    });
+    if (parcelCsvFiles.length === 0) {
+      logger?.info(
+        AbrgMessage.toString(AbrgMessage.ERROR_NO_UPDATE_IS_AVAILABLE)
+      );
+      if (csvFiles.length === 0) {
+        await fs.promises.rm(parcelTmpDir, { recursive: true });
+        return DOWNLOAD_DATASET_RESULT.NO_UPDATE_IS_AVAILABLE;
+      }
+    } else {
+      logger?.info(AbrgMessage.toString(AbrgMessage.LOADING_INTO_DATABASE));
+      await loadDatasetProcess({
+        db,
+        csvFiles: parcelCsvFiles,
+        container,
+      });
+    }
+    await fs.promises.rm(parcelTmpDir, { recursive: true });
   }
 
-  // 各データセットのzipファイルを展開して、Databaseに登録する
-  logger?.info(AbrgMessage.toString(AbrgMessage.LOADING_INTO_DATABASE));
-
-  await loadDatasetProcess({
+  saveMetadata({
     db,
-    csvFiles,
-    container,
-  });
-
-  saveKeyAndValue({
-    db,
-    key: ckanId,
-    value: downloadInfo.metadata.toString(),
+    metadata: downloadInfo.metadata,
   });
 
   db.close();
-
-  // 展開したzipファイルのディレクトリを削除
-  await fs.promises.rm(extractDir, { recursive: true });
 
   return DOWNLOAD_DATASET_RESULT.SUCCESS;
 };

@@ -33,21 +33,18 @@ import { geocode } from '@controller/geocode/geocode';
 import { updateCheck } from '@controller/update-check/update-check';
 import { UPDATE_CHECK_RESULT } from '@controller/update-check/update-check-result';
 import { OutputFormat } from '@domain/output-format';
-import { packageJsonMeta } from '@domain/package-json-meta';
-import { parsePackageJson } from '@domain/parse-package-json';
-import { upwardFileSearch } from '@domain/upward-file-search';
+import { SearchTarget } from '@domain/search-target';
 import {
   DEFAULT_FUZZY_CHAR,
   SINGLE_DASH_ALTERNATIVE,
 } from '@settings/constant-values';
 import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
 import { exit } from 'node:process';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
+import { getPackageInfo } from '@domain/get-package-info';
+import { CliDefaultValues } from '@settings/cli-default-values';
 
-const DEFAULT_DATA_DIR = path.join(os.homedir(), '.abr-geocoder');
 const terminalWidth = Math.min(yargs.terminalWidth(), 120);
 
 // yargs が '-' を解析できないので、別の文字に置き換える
@@ -105,20 +102,6 @@ export const parseHelper = (processArgv: string[]): string[] => {
   return result;
 };
 
-export const getPackageInfo = async (): Promise<packageJsonMeta> => {
-  const packageJsonFilePath = await upwardFileSearch(__dirname, 'package.json');
-  if (!packageJsonFilePath) {
-    throw new AbrgError({
-      messageId: AbrgMessage.CANNOT_FIND_PACKAGE_JSON_FILE,
-      level: AbrgErrorLevel.ERROR,
-    });
-  }
-
-  return parsePackageJson({
-    filePath: packageJsonFilePath,
-  });
-};
-
 export const main = async (
   nodeEnv: string | undefined,
   ...processArgv: string[]
@@ -146,7 +129,7 @@ export const main = async (
           .option('dataDir', {
             alias: 'd',
             type: 'string',
-            default: DEFAULT_DATA_DIR,
+            default: CliDefaultValues.DATA_DIR,
             describe: AbrgMessage.toString(
               AbrgMessage.CLI_COMMON_DATADIR_OPTION
             ),
@@ -154,9 +137,17 @@ export const main = async (
           .option('resource', {
             alias: 'r',
             type: 'string',
-            default: 'ba000001',
+            default: CliDefaultValues.CKAN_ID,
             describe: AbrgMessage.toString(
               AbrgMessage.CLI_COMMON_RESOURCE_OPTION
+            ),
+          })
+          .option('pref', {
+            alias: 'p',
+            type: 'string',
+            default: CliDefaultValues.PREF_CODE,
+            describe: AbrgMessage.toString(
+              AbrgMessage.CLI_UPDATE_CHECK_PREF_OPTION
             ),
           });
       },
@@ -164,6 +155,7 @@ export const main = async (
         const result = await updateCheck({
           ckanId: argv.resource,
           dataDir: argv.dataDir,
+          prefCode: argv.pref,
         });
         if (result === UPDATE_CHECK_RESULT.NO_UPDATE_IS_AVAILABLE) {
           exit(1);
@@ -183,7 +175,7 @@ export const main = async (
           .option('dataDir', {
             alias: 'd',
             type: 'string',
-            default: DEFAULT_DATA_DIR,
+            default: CliDefaultValues.DATA_DIR,
             describe: AbrgMessage.toString(
               AbrgMessage.CLI_COMMON_DATADIR_OPTION
             ),
@@ -191,9 +183,17 @@ export const main = async (
           .option('resource', {
             alias: 'r',
             type: 'string',
-            default: 'ba000001',
+            default: CliDefaultValues.CKAN_ID,
             describe: AbrgMessage.toString(
               AbrgMessage.CLI_COMMON_RESOURCE_OPTION
+            ),
+          })
+          .option('pref', {
+            alias: 'p',
+            type: 'string',
+            default: CliDefaultValues.PREF_CODE,
+            describe: AbrgMessage.toString(
+              AbrgMessage.CLI_DOWNLOAD_PREF_OPTION
             ),
           });
       },
@@ -201,6 +201,7 @@ export const main = async (
         await downloadDataset({
           ckanId: argv.resource,
           dataDir: argv.dataDir,
+          prefCode: argv.pref,
         });
       }
     )
@@ -214,6 +215,14 @@ export const main = async (
       AbrgMessage.toString(AbrgMessage.CLI_GEOCODE_DESC),
       (yargs: yargs.Argv) => {
         return yargs
+          .option('target', {
+            type: 'string',
+            default: SearchTarget.ALL,
+            describe: AbrgMessage.toString(
+              AbrgMessage.CLI_GEOCODE_TARGET_OPTION
+            ),
+            choices: [SearchTarget.ALL, SearchTarget.PARCEL],
+          })
           .option('fuzzy', {
             type: 'string',
             describe: AbrgMessage.toString(
@@ -232,7 +241,7 @@ export const main = async (
           .option('dataDir', {
             alias: 'd',
             type: 'string',
-            default: DEFAULT_DATA_DIR,
+            default: CliDefaultValues.DATA_DIR,
             describe: AbrgMessage.toString(
               AbrgMessage.CLI_COMMON_DATADIR_OPTION
             ),
@@ -240,7 +249,7 @@ export const main = async (
           .option('resource', {
             alias: 'r',
             type: 'string',
-            default: 'ba000001',
+            default: CliDefaultValues.CKAN_ID,
             describe: AbrgMessage.toString(
               AbrgMessage.CLI_COMMON_RESOURCE_OPTION
             ),
@@ -297,6 +306,7 @@ export const main = async (
           source: argv['inputFile'] as string,
           destination: argv['outputFile'] as string | undefined,
           format: argv.format as OutputFormat,
+          target: argv.target,
           fuzzy: argv.fuzzy,
           dataDir: argv.dataDir,
           ckanId: argv.resource,

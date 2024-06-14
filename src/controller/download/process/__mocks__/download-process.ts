@@ -21,23 +21,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { DatasetMetadata } from '@domain/dataset-metadata';
+import { Metadata } from '@domain/metadata/metadata';
 import { jest } from '@jest/globals';
 import { DependencyContainer } from 'tsyringe';
 
+/**
+ * downloadProcessのモック定義
+ */
 export const downloadProcess = jest.fn(async (params: {
   ckanId: string;
   dstDir: string;
   container: DependencyContainer;
 }): Promise<{
-  metadata: DatasetMetadata;
+  metadata: Metadata;
   downloadFilePath: string | null;
 }> => {
   return Promise.resolve({
     downloadFilePath: `${params.dstDir}/download`,
 
     // curl -I https://catalog.registries.digital.go.jp/rsc/address/address_all.csv.zip
-    metadata: new DatasetMetadata({
+    metadata: new Metadata({
+      ckanId: 'ba000001',
+      formatVersion: '1.0.0',
       lastModified: 'Thu, 29 Jun 2023 20:03:24 GMT',
       contentLength: 503120257,
       etag: '"85a3b4aefbe07aad6ef6da7a17d87dd4-60"',

@@ -23,16 +23,24 @@
  */
 import { AbrgMessage } from '../abrg-message';
 
+/**
+ * abr-geocoderメッセージ(英語)定義
+ */
 const messages: Record<AbrgMessage, string> = {
   [AbrgMessage.CLI_COMMON_DATADIR_OPTION]:
     'The data directory where the dataset is stored. Default is under the (home)/.abr-geocoder/',
   [AbrgMessage.CLI_COMMON_RESOURCE_OPTION]:
     'The dataset ID of Address Base Repository. The default is `ba000001` which includes all dataset for overall Japan',
+  [AbrgMessage.CLI_DOWNLOAD_PREF_OPTION]:
+    'Obtains parcel data based on the specified prefecture code. Default is all the parcel data are retrieved.',
+  [AbrgMessage.CLI_UPDATE_CHECK_PREF_OPTION]:
+    'Checks for updating of parcel data based on the specified prefecture code. If not specified, checks for updating of all pref data.',
   [AbrgMessage.CLI_DOWNLOAD_DESC]: 'Downloads the latest dataset from origin',
   [AbrgMessage.CLI_DOWNLOAD_FORCE_DESC]:
     'Downloads the latest dataset from origin mandatory',
   [AbrgMessage.CLI_GEOCODE_DESC]:
     'Geocoding for the Japan addresses in the given file',
+  [AbrgMessage.CLI_GEOCODE_TARGET_OPTION]: "Search target. Default is 'all'.",
   [AbrgMessage.CLI_GEOCODE_FUZZY_OPTION]:
     'Treats a given character as wildcard matching',
   [AbrgMessage.CLI_GEOCODE_FUZZY_CHAR_ERROR]:
@@ -50,6 +58,7 @@ const messages: Record<AbrgMessage, string> = {
   [AbrgMessage.START_DOWNLOADING_NEW_DATASET]:
     'Start downloading the new dataset',
   [AbrgMessage.EXTRACTING_THE_DATA]: 'Extracting the data...',
+  [AbrgMessage.EXTRACTING_THE_PARCEL_DATA]: 'Extracting the parcel data...',
   [AbrgMessage.LOADING_INTO_DATABASE]: 'Loading into the database...',
   [AbrgMessage.NEW_DATASET_IS_AVAILABLE]:
     'New dataset has been found. Please update the local dataset using `abrg download`.',
@@ -71,5 +80,8 @@ const messages: Record<AbrgMessage, string> = {
   [AbrgMessage.PROMPT_CONTINUE_TO_DOWNLOAD]: 'Continue to download?',
   [AbrgMessage.DOWNLOAD_ERROR]: 'Download error',
   [AbrgMessage.FINDING_THE_DATASET_FILES]: 'Finding dataset files...',
+  [AbrgMessage.ERROR_DB_FORMAT_MISMATCHED]:
+    'DB definition is invalid. DB needs to be recreated.',
+  [AbrgMessage.INPUT_PREF_CODE_ERROR]: 'Input pref code is invalid.',
 };
 export default messages;

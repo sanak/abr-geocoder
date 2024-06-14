@@ -51,9 +51,9 @@ describe('RsdtdspBlkPosFile', () => {
     expect(instance.type).toBe('rsdtdsp_blk_pos');
     expect(instance.fields).toEqual([
       DataField.LG_CODE,
-      DataField.REP_PNT_LON,
-      DataField.REP_PNT_LAT,
-      DataField.TOWN_ID,
+      DataField.REP_LON,
+      DataField.REP_LAT,
+      DataField.MACHIAZA_ID,
       DataField.BLK_ID,
     ]);
   });
@@ -76,19 +76,19 @@ describe('RsdtdspBlkPosFile', () => {
     }
     const instance = RsdtdspBlkPosFile.create(fileMeta, istreamReady);
     const reuslt = instance.parseFields({
-      [DataField.LG_CODE.csv] : '11011',
-      [DataField.REP_PNT_LON.csv] : '141.319906',
-      [DataField.REP_PNT_LAT.csv] : '43.04383',
-      [DataField.TOWN_ID.csv] : '1001',
-      [DataField.BLK_ID.csv] : '1',
+      [DataField.LG_CODE.csv]: '11011',
+      [DataField.REP_LON.csv]: '141.319906',
+      [DataField.REP_LAT.csv]: '43.04383',
+      [DataField.MACHIAZA_ID.csv]: '1001',
+      [DataField.BLK_ID.csv]: '1',
     });
-    				
+
     expect(reuslt).toMatchObject({
-      [DataField.LG_CODE.dbColumn] : '11011',
-      [DataField.REP_PNT_LON.dbColumn] : '141.319906',
-      [DataField.REP_PNT_LAT.dbColumn] : '43.04383',
-      [DataField.TOWN_ID.dbColumn] : '1001',
-      [DataField.BLK_ID.dbColumn] : '1',
+      [DataField.LG_CODE.dbColumn]: '11011',
+      [DataField.REP_LON.dbColumn]: '141.319906',
+      [DataField.REP_LAT.dbColumn]: '43.04383',
+      [DataField.MACHIAZA_ID.dbColumn]: '1001',
+      [DataField.BLK_ID.dbColumn]: '1',
     });
   });
 })

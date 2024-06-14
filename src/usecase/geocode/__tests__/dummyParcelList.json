@@ -1,0 +1,252 @@
+[
+  {
+    "lg_code": "322016",
+    "town_id": "0002000",
+    "prc_id": "001010000100001",
+    "prc_num1": "101",
+    "prc_num2": "1",
+    "prc_num3": "1",
+    "lat": 35.123456,
+    "lon": 133.123456
+  },
+  {
+    "lg_code": "322016",
+    "town_id": "0002000",
+    "prc_id": "001020000100000",
+    "prc_num1": "102",
+    "prc_num2": "1",
+    "prc_num3": "",
+    "lat": null,
+    "lon": null
+  },
+  {
+    "lg_code": "322016",
+    "town_id": "0002000",
+    "prc_id": "001020000200000",
+    "prc_num1": "102",
+    "prc_num2": "2",
+    "prc_num3": "",
+    "lat": null,
+    "lon": null
+  },
+  {
+    "lg_code": "322016",
+    "town_id": "0002000",
+    "prc_id": "001020000300000",
+    "prc_num1": "102",
+    "prc_num2": "3",
+    "prc_num3": "",
+    "lat": null,
+    "lon": null
+  },
+  {
+    "lg_code": "322016",
+    "town_id": "0002000",
+    "prc_id": "001030000000000",
+    "prc_num1": "103",
+    "prc_num2": "",
+    "prc_num3": "",
+    "lat": null,
+    "lon": null
+  },
+  {
+    "lg_code": "322016",
+    "town_id": "0002000",
+    "prc_id": "001040000000000",
+    "prc_num1": "104",
+    "prc_num2": "",
+    "prc_num3": "",
+    "lat": null,
+    "lon": null
+  },
+  {
+    "lg_code": "322016",
+    "town_id": "0002000",
+    "prc_id": "001050000000000",
+    "prc_num1": "105",
+    "prc_num2": "",
+    "prc_num3": "",
+    "lat": null,
+    "lon": null
+  },
+  {
+    "lg_code": "322016",
+    "town_id": "0002000",
+    "prc_id": "001060000000000",
+    "prc_num1": "106",
+    "prc_num2": "",
+    "prc_num3": "",
+    "lat": null,
+    "lon": null
+  },
+  {
+    "lg_code": "322016",
+    "town_id": "0002000",
+    "prc_id": "001070000000000",
+    "prc_num1": "107",
+    "prc_num2": "",
+    "prc_num3": "",
+    "lat": null,
+    "lon": null
+  },
+  {
+    "lg_code": "322016",
+    "town_id": "0002000",
+    "prc_id": "001080000000000",
+    "prc_num1": "108",
+    "prc_num2": "",
+    "prc_num3": "",
+    "lat": null,
+    "lon": null
+  },
+  {
+    "lg_code": "322016",
+    "town_id": "0002000",
+    "prc_id": "001100000000000",
+    "prc_num1": "110",
+    "prc_num2": "",
+    "prc_num3": "",
+    "lat": null,
+    "lon": null
+  },
+  {
+    "lg_code": "322016",
+    "town_id": "0002000",
+    "prc_id": "001110000000000",
+    "prc_num1": "111",
+    "prc_num2": "",
+    "prc_num3": "",
+    "lat": null,
+    "lon": null
+  },
+  {
+    "lg_code": "322016",
+    "town_id": "0002000",
+    "prc_id": "001120000100000",
+    "prc_num1": "112",
+    "prc_num2": "1",
+    "prc_num3": "",
+    "lat": null,
+    "lon": null
+  },
+  {
+    "lg_code": "322016",
+    "town_id": "0002000",
+    "prc_id": "001120000200000",
+    "prc_num1": "112",
+    "prc_num2": "2",
+    "prc_num3": "",
+    "lat": null,
+    "lon": null
+  },
+  {
+    "lg_code": "322016",
+    "town_id": "0002000",
+    "prc_id": "001130000100000",
+    "prc_num1": "113",
+    "prc_num2": "1",
+    "prc_num3": "",
+    "lat": null,
+    "lon": null
+  },
+  {
+    "lg_code": "322016",
+    "town_id": "0002000",
+    "prc_id": "001130000200000",
+    "prc_num1": "113",
+    "prc_num2": "2",
+    "prc_num3": "",
+    "lat": null,
+    "lon": null
+  },
+  {
+    "lg_code": "322016",
+    "town_id": "0002000",
+    "prc_id": "001140000000000",
+    "prc_num1": "114",
+    "prc_num2": "",
+    "prc_num3": "",
+    "lat": null,
+    "lon": null
+  },
+  {
+    "lg_code": "322016",
+    "town_id": "0002000",
+    "prc_id": "001150000000000",
+    "prc_num1": "115",
+    "prc_num2": "",
+    "prc_num3": "",
+    "lat": null,
+    "lon": null
+  },
+  {
+    "lg_code": "322016",
+    "town_id": "0002000",
+    "prc_id": "001160000000000",
+    "prc_num1": "116",
+    "prc_num2": "",
+    "prc_num3": "",
+    "lat": null,
+    "lon": null
+  },
+  {
+    "lg_code": "322016",
+    "town_id": "0002000",
+    "prc_id": "001170000000000",
+    "prc_num1": "117",
+    "prc_num2": "",
+    "prc_num3": "",
+    "lat": null,
+    "lon": null
+  },
+  {
+    "lg_code": "322016",
+    "town_id": "0002000",
+    "prc_id": "001180000000000",
+    "prc_num1": "118",
+    "prc_num2": "",
+    "prc_num3": "",
+    "lat": null,
+    "lon": null
+  },
+  {
+    "lg_code": "322016",
+    "town_id": "0002000",
+    "prc_id": "001190000000000",
+    "prc_num1": "119",
+    "prc_num2": "",
+    "prc_num3": "",
+    "lat": null,
+    "lon": null
+  },
+  {
+    "lg_code": "322016",
+    "town_id": "0002000",
+    "prc_id": "001200000000000",
+    "prc_num1": "120",
+    "prc_num2": "",
+    "prc_num3": "",
+    "lat": null,
+    "lon": null
+  },
+  {
+    "lg_code": "322016",
+    "town_id": "0002000",
+    "prc_id": "001210000100000",
+    "prc_num1": "121",
+    "prc_num2": "1",
+    "prc_num3": "",
+    "lat": null,
+    "lon": null
+  },
+  {
+    "lg_code": "322016",
+    "town_id": "0002000",
+    "prc_id": "001210000200000",
+    "prc_num1": "121",
+    "prc_num2": "2",
+    "prc_num3": "",
+    "lat": 35.44712148,
+    "lon": 133.105246137
+  }
+]

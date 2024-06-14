@@ -44,6 +44,7 @@ import { provideMultiProgressBar } from './providers/provide-multi-progress-bar'
 import { provideProgressBar } from './providers/provide-progress-bar';
 import { upwardFileSearch } from '@domain/upward-file-search';
 import { NormalizeTransform } from './formatters/normalize-transform';
+import { ENV_DATASET_URL } from '@settings/env-values';
 
 export interface setupContainerParams {
   dataDir: string;
@@ -60,9 +61,11 @@ export const setupContainer = async ({
     useValue: 'curl/7.81.0',
   });
   myContainer.register(DI_TOKEN.DATASET_URL, {
-    useValue: `https://catalog.registries.digital.go.jp/rc/api/3/action/package_show?id=${ckanId}`,
+    useValue: `${ENV_DATASET_URL}${ckanId}`,
   });
-
+  myContainer.register(DI_TOKEN.DATASET_PACKAGE_SHOW_URL, {
+    useValue: `${ENV_DATASET_URL}`,
+  });
   const existDataDir = fs.existsSync(dataDir);
   if (!existDataDir) {
     await fs.promises.mkdir(dataDir);

@@ -24,7 +24,6 @@
 import { TransformCallback } from 'node:stream';
 import { MatchLevel } from './match-level';
 import { PrefectureName } from './prefecture-name';
-import { SINGLE_QUOTATION, DOUBLE_QUOTATION } from '@settings/constant-values';
 
 export interface IQuery {
   // ファイルから入力された住所（最後まで変更しない）
@@ -47,6 +46,8 @@ export interface IQuery {
 
   lon: number | null;
 
+  rsdt_addr_flg?: string;
+
   block?: string;
 
   block_id?: string;
@@ -58,6 +59,14 @@ export interface IQuery {
   addr2?: string;
 
   addr2_id?: string;
+
+  prc_num1?: string;
+
+  prc_num2?: string;
+
+  prc_num3?: string;
+
+  prc_id?: string;
 
   match_level: MatchLevel;
 
@@ -87,6 +96,8 @@ export type QueryJson = {
 
   lon: number | null;
 
+  rsdt_addr_flg?: string;
+
   block?: string;
 
   block_id?: string;
@@ -98,6 +109,14 @@ export type QueryJson = {
   addr2?: string;
 
   addr2_id?: string;
+
+  prc_num1?: string;
+
+  prc_num2?: string;
+
+  prc_num3?: string;
+
+  prc_id?: string;
 
   match_level: number;
 };
@@ -112,12 +131,17 @@ export class Query implements IQuery {
   public readonly lg_code?: string;
   public readonly lat: number | null;
   public readonly lon: number | null;
+  public readonly rsdt_addr_flg?: string;
   public readonly block?: string;
   public readonly block_id?: string;
   public readonly addr1?: string;
   public readonly addr1_id?: string;
   public readonly addr2?: string;
   public readonly addr2_id?: string;
+  public readonly prc_num1?: string;
+  public readonly prc_num2?: string;
+  public readonly prc_num3?: string;
+  public readonly prc_id?: string;
   public readonly match_level: MatchLevel;
   public readonly next?: TransformCallback;
 
@@ -131,12 +155,17 @@ export class Query implements IQuery {
     this.lg_code = params.lg_code;
     this.lat = params.lat;
     this.lon = params.lon;
+    this.rsdt_addr_flg = params.rsdt_addr_flg;
     this.block = params.block;
     this.block_id = params.block_id;
     this.addr1 = params.addr1;
     this.addr1_id = params.addr1_id;
     this.addr2 = params.addr2;
     this.addr2_id = params.addr2_id;
+    this.prc_num1 = params.prc_num1;
+    this.prc_num2 = params.prc_num2;
+    this.prc_num3 = params.prc_num3;
+    this.prc_id = params.prc_id;
     this.match_level = params.match_level;
     this.next = params.next;
     Object.freeze(this);
@@ -155,12 +184,17 @@ export class Query implements IQuery {
           tempAddress: this.tempAddress,
           lat: this.lat,
           lon: this.lon,
+          rsdt_addr_flg: this.rsdt_addr_flg,
           block: this.block,
           block_id: this.block_id,
           addr1: this.addr1,
           addr1_id: this.addr1_id,
           addr2: this.addr2,
           addr2_id: this.addr2_id,
+          prc_num1: this.prc_num1,
+          prc_num2: this.prc_num2,
+          prc_num3: this.prc_num3,
+          prc_id: this.prc_id,
           match_level: this.match_level,
         },
         newValues,
@@ -172,22 +206,8 @@ export class Query implements IQuery {
     );
   }
 
-  static readonly create = (
-    address: string,
-    next?: TransformCallback
-  ): Query => {
+  static create = (address: string, next?: TransformCallback): Query => {
     address = address.trim();
-
-    // 先頭1文字と末尾1文字が同じクォーテーションマークなら、取り除く
-    const firstChar = address[0];
-    const lastChar = address[address.length - 1];
-    if (
-      firstChar === lastChar &&
-      (firstChar === SINGLE_QUOTATION || firstChar === DOUBLE_QUOTATION)
-    ) {
-      address = address.substring(1, address.length - 1);
-    }
-
     return new Query({
       input: address,
       tempAddress: address,

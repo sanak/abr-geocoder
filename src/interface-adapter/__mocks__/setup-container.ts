@@ -22,7 +22,8 @@
  * SOFTWARE.
  */
 import { jest } from '@jest/globals';
-import { DI_TOKEN } from '../tokens';
+import { DI_TOKEN } from '@interface-adapter/tokens';
+import { Logger } from 'winston';
 import { PassThrough } from 'node:stream';
 import { default as Database } from 'better-sqlite3';
 
@@ -75,6 +76,9 @@ export const setupContainer = jest.fn().mockImplementation(() => {
         case DI_TOKEN.PROGRESS_BAR:
           return undefined;
 
+        case DI_TOKEN.DATASET_PACKAGE_SHOW_URL:
+          return 'https://dataset/package_show?='
+          
         default:
           throw(`Not implemented : ${target}`)
       }

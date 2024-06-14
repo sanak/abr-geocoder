@@ -25,11 +25,11 @@ import { AbrgError, AbrgErrorLevel } from '@abrg-error/abrg-error';
 import { AbrgMessage } from '@abrg-message/abrg-message';
 import { CKANPackageShow } from '@domain/ckan-package-show';
 import { CKANResponse } from '@domain/ckan-response';
-import { DatasetMetadata } from '@domain/dataset-metadata';
+import { Metadata } from '@domain/metadata/metadata';
 import { getRequest } from '@domain/http/get-request';
 import { headRequest } from '@domain/http/head-request';
-import { getValueWithKey } from '@domain/key-store/get-value-with-key';
-import { saveKeyAndValue } from '@domain/key-store/save-key-and-value';
+import { getMetadata } from '@domain/metadata/get-metadata';
+import { saveMetadata } from '@domain/metadata/save-metadata';
 import { Database } from 'better-sqlite3';
 import { StatusCodes } from 'http-status-codes';
 import EventEmitter from 'node:events';
@@ -38,7 +38,11 @@ import path from 'node:path';
 import { Writable } from 'node:stream';
 import { Client } from 'undici';
 import { verifyPartialDownloadedFile } from './verify-partial-downloaded-file';
+import { getPackageInfo } from '@domain/get-package-info';
 
+/**
+ * CKANダウンローダーパラメータインターフェース
+ */
 export interface CkanDownloaderParams {
   userAgent: string;
   datasetUrl: string;
@@ -47,20 +51,33 @@ export interface CkanDownloaderParams {
   dstDir: string;
 }
 
+/**
+ * CKANダウンロードイベントの列挙を表現します。
+ */
 export enum CkanDownloaderEvent {
+  /** 開始 */
   START = 'start',
+  /** データ */
   DATA = 'data',
+  /** 終了 */
   END = 'end',
 }
 
+/**
+ * CKANダウンロード機能を提供します。
+ */
 export class CkanDownloader extends EventEmitter {
   private readonly userAgent: string;
   private readonly datasetUrl: string;
   private readonly db: Database;
   private readonly ckanId: string;
   private readonly dstDir: string;
-  private cacheMetadata: DatasetMetadata | null = null;
+  private cacheMetadata: Metadata | null = null;
 
+  /**
+   * CkanDownloader クラスのインスタンスを生成します。
+   * @param param0 CKANダウンロード情報
+   */
   constructor({
     userAgent,
     datasetUrl,
@@ -76,7 +93,11 @@ export class CkanDownloader extends EventEmitter {
     this.dstDir = dstDir;
   }
 
-  async getDatasetMetadata(): Promise<DatasetMetadata> {
+  /**
+   * メタデータ情報を取得します。
+   * @returns メタデータ情報
+   */
+  async getMetadata(): Promise<Metadata> {
     if (this.cacheMetadata) {
       return this.cacheMetadata;
     }
@@ -119,14 +140,14 @@ export class CkanDownloader extends EventEmitter {
     }
 
     const csvMeta = (() => {
-      const csvMetaStr = getValueWithKey({
+      const csvMetaStr = getMetadata({
         db: this.db,
-        key: this.ckanId,
+        ckanId: this.ckanId,
       });
       if (!csvMetaStr) {
         return null;
       }
-      return DatasetMetadata.from(csvMetaStr);
+      return csvMetaStr;
     })();
 
     // APIレスポンスには etag や ファイルサイズが含まれていないので、
@@ -141,7 +162,10 @@ export class CkanDownloader extends EventEmitter {
 
     switch (csvResponse.statusCode) {
       case StatusCodes.OK: {
-        const newCsvMeta = new DatasetMetadata({
+        const varsion = (await getPackageInfo()).version;
+        const newCsvMeta = new Metadata({
+          ckanId: this.ckanId,
+          formatVersion: varsion,
           contentLength: parseInt(
             csvResponse.headers['content-length'] as string
           ),
@@ -166,33 +190,39 @@ export class CkanDownloader extends EventEmitter {
     }
   }
 
+  /**
+   * アップデートの有無を確認します。
+   */
   async updateCheck(): Promise<boolean> {
-    const csvMetaStr = getValueWithKey({
+    const localCsvMeta = getMetadata({
       db: this.db,
-      key: this.ckanId,
+      ckanId: this.ckanId,
     });
-    if (!csvMetaStr) {
+    if (!localCsvMeta) {
       return true;
     }
-    const localCsvMeta = DatasetMetadata.from(csvMetaStr);
 
-    const apiCsvMeta = await this.getDatasetMetadata();
+    const apiCsvMeta = await this.getMetadata();
 
     return !localCsvMeta.equal(apiCsvMeta);
   }
 
+  /**
+   * ダウンロードパスを取得します。
+   * @returns ダウンロードパス
+   */
   private getDownloadFilePath(): string {
     return path.join(this.dstDir, `${this.ckanId}.zip`);
   }
 
   /**
-   *
-   * @param param download parameters
-   * @returns The file hash of downloaded file.
+   * ダウンロードを実行します。
+   * @param param ダウンロードパラメータ
+   * @returns ダウンロードパス
    */
   async download(): Promise<string | null> {
     const downloadFilePath = this.getDownloadFilePath();
-    const metadata = await this.getDatasetMetadata();
+    const metadata = await this.getMetadata();
     const requestUrl = new URL(metadata.fileUrl);
     const client = new Client(requestUrl.origin);
     const [startAt, fd] = await (async (dst: string) => {
@@ -213,6 +243,7 @@ export class CkanDownloader extends EventEmitter {
     })(downloadFilePath);
 
     if (startAt === metadata?.contentLength) {
+      await fd.close();
       client.close();
       return downloadFilePath;
     }
@@ -248,16 +279,17 @@ export class CkanDownloader extends EventEmitter {
           switch (statusCode) {
             case StatusCodes.OK: {
               fsPointer = 0;
-              const newCsvMeta = new DatasetMetadata({
+              const newCsvMeta = new Metadata({
+                ckanId: metadata.ckanId,
+                formatVersion: metadata.formatVersion,
                 fileUrl: metadata.fileUrl,
                 etag: headers['etag'] as string,
                 contentLength: parseInt(headers['content-length'] as string),
                 lastModified: headers['last-modified'] as string,
               });
-              saveKeyAndValue({
+              saveMetadata({
                 db: this.db,
-                key: this.ckanId,
-                value: newCsvMeta.toString(),
+                metadata: newCsvMeta,
               });
 
               downloaderEmit(CkanDownloaderEvent.START, {
@@ -273,17 +305,18 @@ export class CkanDownloader extends EventEmitter {
                 (headers['content-range'] as string).split('/')[1]
               );
 
-              const newCsvMeta = new DatasetMetadata({
+              const newCsvMeta = new Metadata({
+                ckanId: metadata.ckanId,
+                formatVersion: metadata.formatVersion,
                 fileUrl: metadata.fileUrl,
                 etag: headers['etag'] as string,
                 contentLength,
                 lastModified: headers['last-modified'] as string,
               });
 
-              saveKeyAndValue({
+              saveMetadata({
                 db: this.db,
-                key: this.ckanId,
-                value: newCsvMeta.toString(),
+                metadata: newCsvMeta,
               });
 
               downloaderEmit(CkanDownloaderEvent.START, {

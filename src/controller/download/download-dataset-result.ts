@@ -21,8 +21,19 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
+/**
+ * ダウンロードデータセット結果の列挙を表現します。
+ */
 export enum DOWNLOAD_DATASET_RESULT {
+  /** 成功 */
   SUCCESS = 0,
+  /** アップデートなし */
   NO_UPDATE_IS_AVAILABLE = 1,
+  /** データセットアクセスエラー */
   CAN_NOT_ACCESS_TO_DATASET_ERROR = 2,
+  /** DBフォーマット不一致 */
+  DB_FORMAT_MISMATCHED = 3,
+  /** パラメータエラー */
+  PARAMETER_ERROR = 4,
 }

@@ -31,164 +31,183 @@ export class DataField {
     Object.freeze(this);
   }
 
-  static readonly ABLT_DATE = new DataField('ablt_date', 'ablt_date');
-  static readonly ADDR_ID = new DataField('rsdt_id', 'addr_id');
-  static readonly ADDR2_ID = new DataField('rsdt2_id', 'addr2_id');
-  static readonly BASIC_RSDT_DIV = new DataField(
-    'basic_rsdt_div',
-    'basic_rsdt_div'
-  );
-  static readonly BLK_ID = new DataField('blk_id', 'blk_id');
-  static readonly BLK_NUM = new DataField('blk_num', 'blk_num');
-  static readonly CHOME_NAME = new DataField('chome', 'chome_name');
-  static readonly CHOME_NAME_KANA = new DataField(
-    'chome_kana',
-    'chome_name_kana'
-  );
-  static readonly CHOME_NAME_NUMBER = new DataField(
-    'chome_number',
-    'chome_name_number'
-  );
-  static readonly CITY_NAME = new DataField('city', 'city_name');
-  static readonly CITY_NAME_KANA = new DataField('city_kana', 'city_name_kana');
-  static readonly CITY_NAME_ROMA = new DataField('city_roma', 'city_name_roma');
-
-  static readonly COUNTY_NAME = new DataField('county', 'county_name');
-  static readonly COUNTY_NAME_KANA = new DataField(
-    'county_kana',
-    'county_name_kana'
-  );
-  static readonly COUNTY_NAME_ROMA = new DataField(
-    'county_roma',
-    'county_name_roma'
-  );
-  static readonly EFCT_DATE = new DataField('efct_date', 'efct_date');
-  static readonly KOAZA_ALT_NAME_FLG = new DataField(
-    'koaza_cho_aka_flg',
-    'koaza_alt_name_flg'
-  );
-  static readonly KOAZA_FRN_LTRS_FLG = new DataField(
-    'koaza_gsi_uncmn',
-    'koaza_frn_ltrs_flg'
-  );
-  static readonly KOAZA_NAME = new DataField('koaza', 'koaza_name');
-  static readonly KOAZA_NAME_KANA = new DataField(
-    'koaza_kana',
-    'koaza_name_kana'
-  );
-  static readonly KOAZA_NAME_ROMA = new DataField(
-    'koaza_roma',
-    'koaza_name_roma'
-  );
-
+  // 共通
+  /** @readonly 全国地方公共団体コード */
   static readonly LG_CODE = new DataField('lg_code', 'lg_code');
-
-  static readonly OAZA_FRN_LTRS_FLG = new DataField(
-    'oaza_cho_gsi_uncmn',
-    'oaza_frn_ltrs_flg'
-  );
-  static readonly OAZA_TOWN_ALT_NAME_FLG = new DataField(
-    'oaza_cho_aka_flg',
-    'oaza_town_alt_name_flg'
-  );
-  static readonly OAZA_TOWN_NAME = new DataField('oaza_cho', 'oaza_town_name');
-  static readonly OAZA_TOWN_NAME_KANA = new DataField(
-    'oaza_cho_kana',
-    'oaza_town_name_kana'
-  );
-  static readonly OAZA_TOWN_NAME_ROMA = new DataField(
-    'oaza_cho_roma',
-    'oaza_town_name_roma'
-  );
-  static readonly OD_CITY_NAME = new DataField('ward', 'od_city_name');
-  static readonly OD_CITY_NAME_KANA = new DataField(
-    'ward_kana',
-    'od_city_name_kana'
-  );
-  static readonly OD_CITY_NAME_ROMA = new DataField(
-    'ward_roma',
-    'od_city_name_roma'
-  );
-  static readonly POST_CODE = new DataField('post_code', 'post_code');
-  static readonly PREF_NAME = new DataField('pref', 'pref_name');
-  static readonly PREF_NAME_KANA = new DataField('pref_kana', 'pref_name_kana');
-  static readonly PREF_NAME_ROMA = new DataField('pref_roma', 'pref_name_roma');
+  /** @readonly 効力発生日 */
+  static readonly EFCT_DATE = new DataField('efct_date', 'efct_date');
+  /** @readonly 廃止日 */
+  static readonly ABLT_DATE = new DataField('ablt_date', 'ablt_date');
+  /** @readonly 備考 */
   static readonly REMARKS = new DataField('remarks', 'remarks');
-  static readonly REP_PNT_LAT = new DataField('rep_lat', 'rep_pnt_lat');
-  static readonly REP_PNT_LON = new DataField('rep_lon', 'rep_pnt_lon');
+
+  // 都道府県 (pref)
+  /** @readonly 都道府県名 */
+  static readonly PREF = new DataField('pref', 'pref');
+  /** @readonly 都道府県名_カナ */
+  static readonly PREF_KANA = new DataField('pref_kana', 'pref_kana');
+  /** @readonly 都道府県_英字 */
+  static readonly PREF_ROMA = new DataField('pref_roma', 'pref_roma');
+
+  // 市区町村 (city)
+  /** @readonly 郡名 */
+  static readonly COUNTY = new DataField('county', 'county');
+  /** @readonly 郡名_カナ */
+  static readonly COUNTY_KANA = new DataField('county_kana', 'county_kana');
+  /** @readonly 郡名_英字 */
+  static readonly COUNTY_ROMA = new DataField('county_roma', 'county_roma');
+  /** @readonly 市区町村名 */
+  static readonly CITY = new DataField('city', 'city');
+  /** @readonly 市区町村名_カナ */
+  static readonly CITY_KANA = new DataField('city_kana', 'city_kana');
+  /** @readonly 市区町村名_英字 */
+  static readonly CITY_ROMA = new DataField('city_roma', 'city_roma');
+  /** @readonly 政令市区名 */
+  static readonly WARD = new DataField('ward', 'ward');
+  /** @readonly 政令市区名_カナ */
+  static readonly WARD_KANA = new DataField('ward_kana', 'ward_kana');
+  /** @readonly 政令市区名_英字 */
+  static readonly WARD_ROMA = new DataField('ward_roma', 'ward_roma');
+
+  // 町字 (town)
+  /** @readonly 町字ID */
+  static readonly MACHIAZA_ID = new DataField('machiaza_id', 'machiaza_id');
+  /** @readonly 町字区分コード */
+  static readonly MACHIAZA_TYPE = new DataField(
+    'machiaza_type',
+    'machiaza_type'
+  );
+  /** @readonly 大字・町名 */
+  static readonly OAZA_CHO = new DataField('oaza_cho', 'oaza_cho');
+  /** @readonly 大字・町名_カナ */
+  static readonly OAZA_CHO_KANA = new DataField(
+    'oaza_cho_kana',
+    'oaza_cho_kana'
+  );
+  /** @readonly 大字・町名_英字 */
+  static readonly OAZA_CHO_ROMA = new DataField(
+    'oaza_cho_roma',
+    'oaza_cho_roma'
+  );
+  /** @readonly 丁目名 */
+  static readonly CHOME = new DataField('chome', 'chome');
+  /** @readonly 丁目名_カナ */
+  static readonly CHOME_KANA = new DataField('chome_kana', 'chome_kana');
+  /** 丁目名_数字 */
+  static readonly CHOME_NUMBER = new DataField('chome_number', 'chome_number');
+  /** 小字名 */
+  static readonly KOAZA = new DataField('koaza', 'koaza');
+  /** 小字名_カナ */
+  static readonly KOAZA_KANA = new DataField('koaza_kana', 'koaza_kana');
+  /** 小字名_英字 */
+  static readonly KOAZA_ROMA = new DataField('koaza_roma', 'koaza_roma');
+  /** @readonly 同一町字識別情報 */
+  static readonly MACHIAZA_DIST = new DataField(
+    'machiaza_dist',
+    'machiaza_dist'
+  );
+  /** @readonly 住居表示フラグ */
   static readonly RSDT_ADDR_FLG = new DataField(
     'rsdt_addr_flg',
     'rsdt_addr_flg'
   );
+  /** @readonly 住居表示方式コード */
   static readonly RSDT_ADDR_MTD_CODE = new DataField(
     'rsdt_addr_mtd_code',
     'rsdt_addr_mtd_code'
   );
-  static readonly RSDT_NUM = new DataField('rsdt_num', 'rsdt_num');
-  static readonly RSDT_NUM2 = new DataField('rsdt_num2', 'rsdt_num2');
-  static readonly SRC_CODE = new DataField('src_code', 'src_code');
+  /** @readonly 大字・町名_通称フラグ */
+  static readonly OAZA_CHO_AKA_FLG = new DataField(
+    'oaza_cho_aka_flg',
+    'oaza_cho_aka_flg'
+  );
+  /** @readonly 小字名_通称コード */
+  static readonly KOAZA_AKA_CODE = new DataField(
+    'koaza_aka_code',
+    'koaza_aka_code'
+  );
+  /** @readonly 大字・町名_電子国土基本図外字 */
+  static readonly OAZA_CHO_GSI_UNCMN = new DataField(
+    'oaza_cho_gsi_uncmn',
+    'oaza_cho_gsi_uncmn'
+  );
+  /** @readonly 小字名_電子国土基本図外字 */
+  static readonly KOAZA_GSI_UNCMN = new DataField(
+    'koaza_gsi_uncmn',
+    'koaza_gsi_uncmn'
+  );
+  /** @readonly 状態フラグ */
   static readonly STATUS_FLG = new DataField('status_flg', 'status_flg');
-  static readonly TOWN_CODE = new DataField('machiaza_type', 'town_code');
-  static readonly TOWN_ID = new DataField('machiaza_id', 'town_id');
+  /** @readonly 起番フラグ */
   static readonly WAKE_NUM_FLG = new DataField('wake_num_flg', 'wake_num_flg');
-  static readonly REP_PNT_SRID = new DataField('rep_srid', 'rep_pnt_srid');
+  /** @readonly 原典資料コード */
+  static readonly SRC_CODE = new DataField('src_code', 'src_code');
+  /** @readonly 郵便番号 */
+  static readonly POST_CODE = new DataField('post_code', 'post_code');
 
-  // static toDataField(csvFieldName: string): DataField {
-  //   const jpnToEn: Record<string, DataField> = {
-  //     廃止日: DataField.ABLT_DATE,
-  //     住居ID: DataField.ADDR_ID,
-  //     住居2ID: DataField.ADDR2_ID,
-  //     '基礎番号・住居番号区分': DataField.BASIC_RSDT_DIV,
-  //     街区ID: DataField.BLK_ID,
-  //     街区符号: DataField.BLK_NUM,
-  //     丁目名: DataField.CHOME_NAME,
-  //     丁目名_カナ: DataField.CHOME_NAME_KANA,
-  //     丁目名_数字: DataField.CHOME_NAME_NUMBER,
-  //     市区町村名: DataField.CITY_NAME,
-  //     市区町村名_カナ: DataField.CITY_NAME_KANA,
-  //     市区町村名_英字: DataField.CITY_NAME_ROMA,
-  //     郡名: DataField.COUNTY_NAME,
-  //     郡名_カナ: DataField.COUNTY_NAME_KANA,
-  //     郡名_英字: DataField.COUNTY_NAME_ROMA,
-  //     効力発生日: DataField.EFCT_DATE,
-  //     小字名_通称フラグ: DataField.KOAZA_ALT_NAME_FLG,
-  //     小字名_電子国土基本図外字: DataField.KOAZA_FRN_LTRS_FLG,
-  //     小字名: DataField.KOAZA_NAME,
-  //     小字名_カナ: DataField.KOAZA_NAME_KANA,
-  //     小字名_英字: DataField.KOAZA_NAME_ROMA,
-  //     全国地方公共団体コード: DataField.LG_CODE,
-  //     '大字・町名_電子国土基本図外字': DataField.OAZA_FRN_LTRS_FLG,
-  //     '大字・町名_通称フラグ': DataField.OAZA_TOWN_ALT_NAME_FLG,
-  //     '大字・町名': DataField.OAZA_TOWN_NAME,
-  //     '大字・町名_カナ': DataField.OAZA_TOWN_NAME_KANA,
-  //     '大字・町名_英字': DataField.OAZA_TOWN_NAME_ROMA,
-  //     政令市区名: DataField.OD_CITY_NAME,
-  //     政令市区名_カナ: DataField.OD_CITY_NAME_KANA,
-  //     政令市区名_英字: DataField.OD_CITY_NAME_ROMA,
-  //     郵便番号: DataField.POST_CODE,
-  //     都道府県名: DataField.PREF_NAME,
-  //     都道府県名_カナ: DataField.PREF_NAME_KANA,
-  //     都道府県名_英字: DataField.PREF_NAME_ROMA,
-  //     備考: DataField.REMARKS,
-  //     代表点_緯度: DataField.REP_PNT_LAT,
-  //     代表点_経度: DataField.REP_PNT_LON,
-  //     住居表示フラグ: DataField.RSDT_ADDR_FLG,
-  //     住居表示方式コード: DataField.RSDT_ADDR_MTD_CODE,
-  //     住居番号: DataField.RSDT_NUM,
-  //     住居番号2: DataField.RSDT_NUM2,
-  //     原典資料コード: DataField.SRC_CODE,
-  //     状態フラグ: DataField.STATUS_FLG,
-  //     町字区分コード: DataField.TOWN_CODE,
-  //     町字ID: DataField.TOWN_ID,
-  //     起番フラグ: DataField.WAKE_NUM_FLG,
-  //     代表点_座標参照系: DataField.REP_PNT_SRID,
-  //     代表点_地図情報レベル: DataField.REP_PNT_SRID,
-  //   };
+  // 地番
+  /** @readonly 地番ID */
+  static readonly PRC_ID = new DataField('prc_id', 'prc_id');
+  /** @readonly 地番1 */
+  static readonly PRC_NUM1 = new DataField('prc_num1', 'prc_num1');
+  /** @readonly 地番2 */
+  static readonly PRC_NUM2 = new DataField('prc_num2', 'prc_num2');
+  /** @readonly 地番3 */
+  static readonly PRC_NUM3 = new DataField('prc_num3', 'prc_num3');
+  /** @readonly 地番レコード区分フラグ */
+  static readonly PRC_REC_FLG = new DataField('prc_rec_flg', 'prc_rec_flg');
+  /** @readonly 地番区域コード */
+  static readonly PRC_AREA_CODE = new DataField(
+    'prc_area_code',
+    'prc_area_code'
+  );
+  /** @readonly 不動産番号 */
+  static readonly REAL_PROP_NUM = new DataField(
+    'real_prop_num',
+    'real_prop_num'
+  );
 
-  //   csvFieldName = csvFieldName.toLowerCase();
-  //   if (!(csvFieldName in jpnToEn)) {
-  //     throw new Error(`'${csvFieldName}' is unknown field name.`);
-  //   }
-  //   return jpnToEn[csvFieldName];
-  // }
+  // 住居表示-街区
+  /** @readonly 街区ID */
+  static readonly BLK_ID = new DataField('blk_id', 'blk_id');
+  /** @readonly 街区符号 */
+  static readonly BLK_NUM = new DataField('blk_num', 'blk_num');
+
+  // 住居表示-住居
+  /** @readonly 住居ID */
+  static readonly RSDT_ID = new DataField('rsdt_id', 'rsdt_id');
+  /** @readonly 住居2ID */
+  static readonly RSDT2_ID = new DataField('rsdt2_id', 'rsdt2_id');
+  /** @readonly 住居番号 */
+  static readonly RSDT_NUM = new DataField('rsdt_num', 'rsdt_num');
+  /** @readonly 住居番号2 */
+  static readonly RSDT_NUM2 = new DataField('rsdt_num2', 'rsdt_num2');
+  /** @readonly 基礎番号・住居番号区分 */
+  static readonly BASIC_RSDT_DIV = new DataField(
+    'basic_rsdt_div',
+    'basic_rsdt_div'
+  );
+
+  // 位置参照
+  /** @readonly 代表点_経度 */
+  static readonly REP_LON = new DataField('rep_lon', 'rep_lon');
+  /** @readonly 代表点_緯度 */
+  static readonly REP_LAT = new DataField('rep_lat', 'rep_lat');
+  /** @readonly 代表点_座標参照系 */
+  static readonly REP_SRID = new DataField('rep_srid', 'rep_srid');
+
+  // データセットメタデータ (dataset_metadata)
+  /** @readonly データセット管理ID */
+  static readonly DATASET_ID = new DataField('dataset_id', 'dataset_id');
+  /** @readonly エンティティタグ */
+  static readonly ETAG = new DataField('etag', 'etag');
+  /** @readonly データサイズ */
+  static readonly CONTENT_LENGTH = new DataField(
+    'content_length',
+    'content_length'
+  );
+  /** 最終更新日時 */
+  static readonly LAST_MODIFY = new DataField('last_modified', 'last_modified');
+  /** ファイルURL */
+  static readonly FILE_URL = new DataField('file_url', 'file_url');
 }

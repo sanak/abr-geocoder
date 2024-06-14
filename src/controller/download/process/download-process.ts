@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { DatasetMetadata } from '@domain/dataset-metadata';
+import { Metadata } from '@domain/metadata/metadata';
 import { DI_TOKEN } from '@interface-adapter/tokens';
 import {
   CkanDownloader,
@@ -31,16 +31,28 @@ import { Database } from 'better-sqlite3';
 import { SingleBar } from 'cli-progress';
 import { DependencyContainer } from 'tsyringe';
 
+/**
+ * 全アドレスデータのダウンロード処理を実行します。
+ * @param param.container DBコンテナ
+ * @param param.ckanId CkanID
+ * @param param.dstDir ダウンロードディレクトリ
+ * @returns メタデータ・ダウンロードパス
+ */
 export const downloadProcess = async ({
   container,
   ckanId,
   dstDir,
 }: {
+  /** CkanID */
   ckanId: string;
+  /** ダウンロードディレクトリ */
   dstDir: string;
+  /** DBコンテナ */
   container: DependencyContainer;
 }): Promise<{
-  metadata: DatasetMetadata;
+  /** メタデータ */
+  metadata: Metadata;
+  /** ダウンロードファイルパス */
   downloadFilePath: string | null;
 }> => {
   const db = container.resolve<Database>(DI_TOKEN.DATABASE);
@@ -57,7 +69,7 @@ export const downloadProcess = async ({
     ckanId,
     dstDir,
   });
-  const metadata = await downloader.getDatasetMetadata();
+  const metadata = await downloader.getMetadata();
 
   // --------------------------------------
   // 最新データセットをダウンロードする

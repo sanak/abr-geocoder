@@ -1,6 +1,6 @@
 {
   "name": "@digital-go-jp/abr-geocoder",
-  "version": "1.4.0",
+  "version": "v2-beta",
   "description": "デジタル庁：アドレス・ベース・レジストリを用いたジオコーダー",
   "author": "Japan Digital Agency (デジタル庁)",
   "repository": {
@@ -13,13 +13,14 @@
   "homepage": "https://github.com/digital-go-jp/abr-geocoder",
   "license": "MIT",
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "bin": {
     "abrg": "build/cli/cli.js"
   },
   "scripts": {
-    "start": "ts-node src/cli/cli.ts",
+    "start": "ts-node src/cli/cli.ts" ,
+    "server": "ts-node src/api/index.ts",
     "build": "tspc -p tsconfig.build.json",
     "test": "jest --maxWorker=25%",
     "test:ci": "jest --runInBand",
@@ -34,6 +35,7 @@
     "@types/better-sqlite3": "^7.6.5",
     "@types/byline": "^4.2.34",
     "@types/cli-progress": "^3.11.3",
+    "@types/express": "^4.17.21",
     "@types/i18n": "^0.13.7",
     "@types/jest": "^29.5.5",
     "@types/json-diff": "^1.0.0",
@@ -42,7 +44,7 @@
     "@types/yargs": "^17.0.28",
     "@typescript-eslint/eslint-plugin": "^6.8.0",
     "@typescript-eslint/parser": "^6.8.0",
-    "csv-stringify": "^6.4.5",
+    "csvtojson": "^2.0.10",
     "eslint": "^8.51.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-node": "^11.1.0",
@@ -69,6 +71,7 @@
     "cli-infinity-progress": "^0.6.7",
     "cli-progress": "^3.12.0",
     "csv-parser": "^3.0.0",
+    "express": "^4.16.3",
     "http-status-codes": "^2.3.0",
     "i18next": "^23.5.1",
     "lru-cache": "^10.1.0",

@@ -28,6 +28,7 @@ export interface ITown {
   koaza: string;
   lat: number;
   lon: number;
+  rsdt_addr_flg: string;
   originalName?: string;
   tempAddress?: string;
 }
@@ -39,6 +40,7 @@ export class Town implements ITown {
   public readonly koaza: string;
   public readonly lat: number;
   public readonly lon: number;
+  public readonly rsdt_addr_flg: string;
 
   constructor(params: ITown) {
     this.name = params.name;
@@ -47,6 +49,7 @@ export class Town implements ITown {
     this.koaza = params.koaza;
     this.lat = params.lat;
     this.lon = params.lon;
+    this.rsdt_addr_flg = params.rsdt_addr_flg;
     Object.freeze(this);
   }
 }

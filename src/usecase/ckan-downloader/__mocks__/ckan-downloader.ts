@@ -24,11 +24,16 @@
 import { jest } from '@jest/globals';
 import { CkanDownloaderParams } from '../ckan-downloader';
 
+/**
+ * CkanDownloader のモック定義
+ * @param params {@link CkanDownloaderParams}
+ * @returns アップデート確認結果
+ */
 export const CkanDownloader = function (params: CkanDownloaderParams) {
   const original = jest.requireActual<typeof import('../ckan-downloader')>('../ckan-downloader');
   return {
     updateCheck: jest.fn().mockImplementation(() => {
-      if (params.ckanId === 'first access') {
+      if (params.ckanId === 'updateCkanId') {
         return true; // アップデートあり
       } else {
         return false; // アップデートなし

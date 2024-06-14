@@ -29,21 +29,25 @@ import { zen2HankakuNum } from './zen2hankaku-num';
 export enum GeocodeResultFields {
   INPUT = 'input',
   OUTPUT = 'output',
-  MATCH_LEVEL = 'match_level',
+  MATCH_LEVEL = 'matching_level',
   LATITUDE = 'lat',
   LONGITUDE = 'lon',
   OTHER = 'other',
-  PREFECTURE = 'prefecture',
+  PREFECTURE = 'pref',
   CITY = 'city',
-  TOWN = 'town',
-  TOWN_ID = 'town_id',
+  TOWN = 'machiaza',
+  TOWN_ID = 'machiaza_id',
   LG_CODE = 'lg_code',
-  BLOCK = 'block',
-  BLOCK_ID = 'block_id',
-  ADDR1 = 'addr1',
-  ADDR1_ID = 'addr1_id',
-  ADDR2 = 'addr2',
-  ADDR2_ID = 'addr2_id',
+  BLOCK = 'blk_num',
+  BLOCK_ID = 'blk_id',
+  ADDR1 = 'rsdt_num',
+  ADDR1_ID = 'rsdt_id',
+  ADDR2 = 'rsdt_num2',
+  ADDR2_ID = 'rsdt2_id',
+  PRC_NUM1 = 'prc_num1',
+  PRC_NUM2 = 'prc_num2',
+  PRC_NUM3 = 'prc_num3',
+  PRC_ID = 'prc_id',
 }
 
 export interface IGeocodeResult {
@@ -64,6 +68,10 @@ export interface IGeocodeResult {
   addr1_id?: string;
   addr2?: string;
   addr2_id?: string;
+  prc_num1?: string;
+  prc_num2?: string;
+  prc_num3?: string;
+  prc_id?: string;
 }
 
 export class GeocodeResult implements IGeocodeResult {
@@ -84,7 +92,11 @@ export class GeocodeResult implements IGeocodeResult {
     public readonly addr1?: string,
     public readonly addr1_id?: string,
     public readonly addr2?: string,
-    public readonly addr2_id?: string
+    public readonly addr2_id?: string,
+    public readonly prc_num1?: string,
+    public readonly prc_num2?: string,
+    public readonly prc_num3?: string,
+    public readonly prc_id?: string
   ) {
     Object.freeze(this);
   }
@@ -108,6 +120,10 @@ export class GeocodeResult implements IGeocodeResult {
       addr1_id: this.addr1_id,
       addr2: this.addr2,
       addr2_id: this.addr2_id,
+      prc_num1: this.prc_num1,
+      prc_num2: this.prc_num2,
+      prc_num3: this.prc_num3,
+      prc_id: this.prc_id,
     };
   }
 
@@ -128,6 +144,10 @@ export class GeocodeResult implements IGeocodeResult {
     addr1_id?: string;
     addr2?: string;
     addr2_id?: string;
+    prc_num1?: string;
+    prc_num2?: string;
+    prc_num3?: string;
+    prc_id?: string;
   }): GeocodeResult => {
     //
     // outputを生成する
@@ -152,6 +172,19 @@ export class GeocodeResult implements IGeocodeResult {
         if (params.addr2) {
           output.push('-');
           output.push(params.addr2);
+        }
+      }
+    }
+    if (params.prc_num1) {
+      output.push(params.prc_num1);
+
+      if (params.prc_num2) {
+        output.push('-');
+        output.push(params.prc_num2);
+
+        if (params.prc_num3) {
+          output.push('-');
+          output.push(params.prc_num3);
         }
       }
     }
@@ -190,7 +223,11 @@ export class GeocodeResult implements IGeocodeResult {
       params.addr1,
       params.addr1_id,
       params.addr2,
-      params.addr2_id
+      params.addr2_id,
+      params.prc_num1,
+      params.prc_num2,
+      params.prc_num3,
+      params.prc_id
     );
   };
 }

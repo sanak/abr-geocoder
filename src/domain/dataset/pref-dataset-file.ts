@@ -33,9 +33,9 @@ export class PrefDatasetFile
   get fields(): DataField[] {
     return [
       DataField.LG_CODE,
-      DataField.PREF_NAME,
-      DataField.PREF_NAME_KANA,
-      DataField.PREF_NAME_ROMA,
+      DataField.PREF,
+      DataField.PREF_KANA,
+      DataField.PREF_ROMA,
       DataField.EFCT_DATE,
       DataField.ABLT_DATE,
       DataField.REMARKS,
@@ -49,9 +49,9 @@ export class PrefDatasetFile
     const sql = `INSERT OR REPLACE INTO "pref"
       (
         ${DataField.LG_CODE.dbColumn},
-        ${DataField.PREF_NAME.dbColumn},
-        ${DataField.PREF_NAME_KANA.dbColumn},
-        ${DataField.PREF_NAME_ROMA.dbColumn},
+        ${DataField.PREF.dbColumn},
+        ${DataField.PREF_KANA.dbColumn},
+        ${DataField.PREF_ROMA.dbColumn},
         ${DataField.EFCT_DATE.dbColumn},
         ${DataField.ABLT_DATE.dbColumn},
         ${DataField.REMARKS.dbColumn}
@@ -59,9 +59,9 @@ export class PrefDatasetFile
       VALUES
       (
         @${DataField.LG_CODE.dbColumn},
-        @${DataField.PREF_NAME.dbColumn},
-        @${DataField.PREF_NAME_KANA.dbColumn},
-        @${DataField.PREF_NAME_ROMA.dbColumn},
+        @${DataField.PREF.dbColumn},
+        @${DataField.PREF_KANA.dbColumn},
+        @${DataField.PREF_ROMA.dbColumn},
         @${DataField.EFCT_DATE.dbColumn},
         @${DataField.ABLT_DATE.dbColumn},
         @${DataField.REMARKS.dbColumn}

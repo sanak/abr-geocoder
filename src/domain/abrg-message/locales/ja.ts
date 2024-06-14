@@ -23,16 +23,25 @@
  */
 import { AbrgMessage } from '../abrg-message';
 
+/**
+ * abr-geocoderメッセージ(日本語)定義
+ */
 const messages: Record<AbrgMessage, string> = {
   [AbrgMessage.CLI_COMMON_DATADIR_OPTION]:
     'アドレス・ベース・レジストリのデータを格納するディレクトリを指定する。指定されていない場合はデフォルトのディレクトリを参照します。',
   [AbrgMessage.CLI_COMMON_RESOURCE_OPTION]:
     'アドレス・ベース・レジストリのデータソースID。全国データは `ba000001` をお使いください。',
+  [AbrgMessage.CLI_DOWNLOAD_PREF_OPTION]:
+    '指定された都道府県コードを元に地番データの取得します。指定されていない場合はすべての地番データを取得します。',
+  [AbrgMessage.CLI_UPDATE_CHECK_PREF_OPTION]:
+    '指定された都道府県コードを元に地番データの更新を確認します。指定されていない場合はすべての地番データの更新を確認します。',
   [AbrgMessage.CLI_DOWNLOAD_DESC]:
     'アドレス・ベース・レジストリの最新データをCKANからダウンロードする',
   [AbrgMessage.CLI_DOWNLOAD_FORCE_DESC]: 'アップデートを強制的に行います',
   [AbrgMessage.CLI_GEOCODE_DESC]:
     '指定されたファイルに含まれる日本の住所を緯度経度に変換します',
+  [AbrgMessage.CLI_GEOCODE_TARGET_OPTION]:
+    "検索ターゲットを指定します。デフォルトは'all'",
   [AbrgMessage.CLI_GEOCODE_FUZZY_OPTION]:
     '指定した1文字をワイルドカードとして処理します',
   [AbrgMessage.CLI_GEOCODE_FUZZY_CHAR_ERROR]:
@@ -51,6 +60,7 @@ const messages: Record<AbrgMessage, string> = {
   [AbrgMessage.CHECKING_UPDATE]: 'アップデートの確認中...',
   [AbrgMessage.START_DOWNLOADING_NEW_DATASET]: 'ダウンロード開始',
   [AbrgMessage.EXTRACTING_THE_DATA]: 'ファイルを展開中...',
+  [AbrgMessage.EXTRACTING_THE_PARCEL_DATA]: '地番ファイルを展開中...',
   [AbrgMessage.LOADING_INTO_DATABASE]: 'データベースに登録中...',
   [AbrgMessage.NEW_DATASET_IS_AVAILABLE]:
     'ローカルのデータが更新できます。 abrg download で更新してください',
@@ -74,5 +84,8 @@ const messages: Record<AbrgMessage, string> = {
   [AbrgMessage.DOWNLOAD_ERROR]: 'ダウンロードエラー',
   [AbrgMessage.FINDING_THE_DATASET_FILES]:
     'データセットファイルを探しています...',
+  [AbrgMessage.ERROR_DB_FORMAT_MISMATCHED]:
+    'DB定義が不正です。DBの再作成が必要です。',
+  [AbrgMessage.INPUT_PREF_CODE_ERROR]: '入力された都道府県コードが不正です。',
 };
 export default messages;

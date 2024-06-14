@@ -30,14 +30,15 @@ import { DI_TOKEN } from '@interface-adapter/tokens';
 import CLIInfinityProgress from 'cli-infinity-progress';
 import path from 'node:path';
 import { DependencyContainer } from 'tsyringe';
+import fs from 'node:fs';
 
 export const extractDatasetProcess = async ({
   container,
-  srcFile,
+  srcPath,
   dstDir,
   datasetHistory,
 }: {
-  srcFile: string;
+  srcPath: string;
   dstDir: string;
   container: DependencyContainer;
   datasetHistory: Map<string, DatasetRow>;
@@ -50,7 +51,9 @@ export const extractDatasetProcess = async ({
   );
   fileLoadingProgress?.start();
   const csvFiles = await findTargetFilesInZipFiles({
-    srcDir: path.dirname(srcFile),
+    srcDir: fs.lstatSync(srcPath).isDirectory()
+      ? srcPath
+      : path.dirname(srcPath),
     dstDir,
     targetExtention: '.csv',
     fileLoadingProgress,

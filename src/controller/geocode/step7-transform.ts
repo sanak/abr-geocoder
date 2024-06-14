@@ -21,13 +21,19 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+import { AddressFinderForStep7 } from '@usecase/geocode/address-finder-for-step7';
+import { ParcelFinderForStep7 } from '@usecase/geocode/parcel-finder-for-step7';
 import { MatchLevel } from '@domain/match-level';
 import { Query } from '@domain/query';
-import { AddressFinderForStep7 } from '@usecase/geocode/address-finder-for-step7';
 import { Transform, TransformCallback } from 'node:stream';
+import { SearchTarget } from '@domain/search-target';
 
 export class GeocodingStep7 extends Transform {
-  constructor(private readonly addressFinder: AddressFinderForStep7) {
+  constructor(
+    private readonly addressFinder: AddressFinderForStep7,
+    private readonly parcelFinder: ParcelFinderForStep7,
+    private readonly target: string
+  ) {
     super({
       objectMode: true,
     });
@@ -39,51 +45,63 @@ export class GeocodingStep7 extends Transform {
     callback: TransformCallback
   ): void {
     //
-    // 住居表示住所リストを使い番地号までの正規化を行う
+    // 住居表示住所リストを使い番地号までの正規化、または地番リストを使い地番1,2,3までの正規化を行う
     //
     // オリジナルコード
     // https://github.com/digital-go-jp/abr-geocoder/blob/a42a079c2e2b9535e5cdd30d009454cddbbca90c/src/engine/normalize.ts#L467-L478
     //
-    if (!query.town) {
+    if (query.match_level !== MatchLevel.MACHIAZA) {
       return callback(null, query);
     }
 
-    this.addressFinder.find(query).then(async (result: Query) => {
-      switch (result.match_level) {
-        case MatchLevel.RESIDENTIAL_BLOCK:
-          return callback(null, await this.addressFinder.findDetail(result));
+    if (
+      this.target === SearchTarget.PARCEL ||
+      (this.target === SearchTarget.ALL && query.rsdt_addr_flg === '0')
+    ) {
+      this.parcelFinder.find(query).then((updatedQuery: Query) => {
+        callback(null, updatedQuery);
+      });
+    } else {
+      this.addressFinder.find(query).then(async (result: Query) => {
+        switch (result.match_level) {
+          case MatchLevel.RESIDENTIAL_BLOCK:
+            return callback(null, await this.addressFinder.findDetail(result));
 
-        case MatchLevel.TOWN_LOCAL:
-          return callback(null, await this.addressFinder.findForKoaza(result));
+          case MatchLevel.TOWN_LOCAL:
+            return callback(
+              null,
+              await this.addressFinder.findForKoaza(result)
+            );
 
-        default:
-          return callback(null, query);
-      }
+          default:
+            return callback(null, query);
+        }
 
-      // // RESIDENTIAL_BLOCK(7) or RESIDENTIAL_DETAIL(8) の場合は、
-      // // 既に細かい住所まで判定できているので、これ以上のチェックは必要ない
-      // //
-      // // tempAddress に何も残っていないなら、調べようがないので、
-      // // このステップを終了する
-      // if (
-      //   updatedQuery.match_level !== MatchLevel.TOWN_LOCAL ||
-      //   updatedQuery.tempAddress === ''
-      // ) {
-      //   callback(null, updatedQuery);
-      //   return;
-      // }
+        // // RESIDENTIAL_BLOCK(7) or RESIDENTIAL_DETAIL(8) の場合は、
+        // // 既に細かい住所まで判定できているので、これ以上のチェックは必要ない
+        // //
+        // // tempAddress に何も残っていないなら、調べようがないので、
+        // // このステップを終了する
+        // if (
+        //   updatedQuery.match_level !== MatchLevel.TOWN_LOCAL ||
+        //   updatedQuery.tempAddress === ''
+        // ) {
+        //   callback(null, updatedQuery);
+        //   return;
+        // }
 
-      // // tempAddress に残っている場合、「小字」の可能性がある
-      // //
-      // // 例：福島県いわき市山玉町脇川
-      // //   pref = "福島県"
-      // //   city = "いわき市"
-      // //   town = "山玉町"
-      // //   tempAddress = "脇川"  <-- 小字
-      // this.addressFinder.findForKoaza(query).then((result: Query) => {
-      //   callback(null, result);
-      //   return;
-      // });
-    });
+        // // tempAddress に残っている場合、「小字」の可能性がある
+        // //
+        // // 例：福島県いわき市山玉町脇川
+        // //   pref = "福島県"
+        // //   city = "いわき市"
+        // //   town = "山玉町"
+        // //   tempAddress = "脇川"  <-- 小字
+        // this.addressFinder.findForKoaza(query).then((result: Query) => {
+        //   callback(null, result);
+        //   return;
+        // });
+      });
+    }
   }
 }

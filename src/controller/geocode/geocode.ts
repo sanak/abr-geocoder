@@ -43,16 +43,28 @@ import { NormalizeTransform } from '@interface-adapter/formatters/normalize-tran
 import { setupContainer } from '@interface-adapter/setup-container';
 import { DI_TOKEN } from '@interface-adapter/tokens';
 import { StreamGeocoder } from './stream-geocoder';
+import { dbFormatCheck } from '@domain/db-format-check';
+import { DBFormatCheckResult } from '@domain/db-format-check-result';
 
+/**
+ * ジオコーダー結果の列挙を表現します。
+ */
 export enum GEOCODE_RESULT {
+  /** 成功 */
   SUCCESS = 0,
 }
 
+/**
+ * ジオコーダーを実施します。
+ * @param param0 ジオコーダー情報
+ * @returns ジオコーダー実行結果
+ */
 export const geocode = async ({
   ckanId,
   dataDir,
   destination,
   format,
+  target,
   fuzzy,
   source,
 }: {
@@ -60,6 +72,7 @@ export const geocode = async ({
   dataDir: string;
   destination?: string;
   format: OutputFormat;
+  target: string;
   fuzzy?: string;
   source: string;
 }) => {
@@ -71,8 +84,23 @@ export const geocode = async ({
   // データベースのインスタンスを取得
   const db: Database = container.resolve(DI_TOKEN.DATABASE);
 
+  switch (await dbFormatCheck(db, ckanId)) {
+    case DBFormatCheckResult.UNDEFINED:
+      throw new AbrgError({
+        messageId: AbrgMessage.CANNOT_FIND_INPUT_FILE,
+        level: AbrgErrorLevel.ERROR,
+      });
+    case DBFormatCheckResult.MISMATCHED:
+      throw new AbrgError({
+        messageId: AbrgMessage.ERROR_DB_FORMAT_MISMATCHED,
+        level: AbrgErrorLevel.ERROR,
+      });
+    case DBFormatCheckResult.MATCHED:
+      break;
+  }
+
   // Geocodingを行うメイン部分
-  const geocoder = await StreamGeocoder.create(db, fuzzy);
+  const geocoder = await StreamGeocoder.create(db, target, fuzzy);
 
   // Streamを1行単位にしてくれる TransformStream
   const lineStream = byline.createStream();

@@ -61,21 +61,25 @@ export class JsonTransform extends Stream.Transform {
       },
       result: {
         output: result.output,
-        prefecture: result.prefecture?.toString(),
-        match_level: result.match_level,
-        city: result.city ?? BLANK_CHAR,
-        town: result.town ?? BLANK_CHAR,
-        town_id: result.town_id ?? BLANK_CHAR,
-        lg_code: result.lg_code ?? BLANK_CHAR,
-        other: result.other ?? BLANK_CHAR,
-        lat: result.lat ?? BLANK_CHAR,
-        lon: result.lon ?? BLANK_CHAR,
-        block: result.block ?? BLANK_CHAR,
-        block_id: result.block_id ?? BLANK_CHAR,
-        addr1: result.addr1 ?? BLANK_CHAR,
-        addr1_id: result.addr1_id ?? BLANK_CHAR,
-        addr2: result.addr2 ?? BLANK_CHAR,
-        addr2_id: result.addr2_id ?? BLANK_CHAR,
+        matching_level: result.match_level,
+        lg_code: result.lg_code ? result.lg_code : BLANK_CHAR,
+        pref: result.prefecture?.toString() || BLANK_CHAR,
+        city: result.city || BLANK_CHAR,
+        machiaza: result.town || BLANK_CHAR,
+        machiaza_id: result.town_id || BLANK_CHAR,
+        blk_num: result.block || BLANK_CHAR,
+        blk_id: result.block_id || BLANK_CHAR,
+        rsdt_num: result.addr1 || BLANK_CHAR,
+        rsdt_id: result.addr1_id || BLANK_CHAR,
+        rsdt_num2: result.addr2 || BLANK_CHAR,
+        rsdt2_id: result.addr2_id || BLANK_CHAR,
+        prc_num1: result.prc_num1 || BLANK_CHAR,
+        prc_num2: result.prc_num2 || BLANK_CHAR,
+        prc_num3: result.prc_num3 || BLANK_CHAR,
+        prc_id: result.prc_id || BLANK_CHAR,
+        other: result.other || BLANK_CHAR,
+        lat: result.lat,
+        lon: result.lon,
       },
     });
     callback(null, out);
@@ -88,7 +92,7 @@ export class JsonTransform extends Stream.Transform {
     callback();
   }
 
-  static readonly create = (): JsonTransform => {
+  static create = (): JsonTransform => {
     return new JsonTransform();
   };
 }

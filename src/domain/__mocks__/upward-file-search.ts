@@ -21,4 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-export const upwardFileSearch = jest.fn().mockResolvedValue('somewhere');
+
+import { jest } from "@jest/globals";
+
+/**
+ * upwardFileSearchのモック定義
+ */
+export const upwardFileSearch = jest.fn<() => Promise<string>>().mockResolvedValue('somewhere');

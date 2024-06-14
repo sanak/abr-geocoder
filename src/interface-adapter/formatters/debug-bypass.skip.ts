@@ -63,6 +63,10 @@ export class DebugBypass extends Stream.Transform {
       ${result.addr1_id ? "'" + result.addr1_id + "'" : undefined},
       ${result.addr2 ? "'" + result.addr2 + "'" : undefined},
       ${result.addr2_id ? "'" + result.addr2_id + "'" : undefined},
+      ${result.prc_num1 ? "'" + result.prc_num1 + "'" : undefined},
+      ${result.prc_num2 ? "'" + result.prc_num2 + "'" : undefined},
+      ${result.prc_num3 ? "'" + result.prc_num3 + "'" : undefined},
+      ${result.prc_id ? "'" + result.prc_id + "'" : undefined},
     ),
 \n`
     );
@@ -73,7 +77,7 @@ export class DebugBypass extends Stream.Transform {
     callback();
   }
 
-  static readonly create = (): DebugBypass => {
+  static create = (): DebugBypass => {
     return new DebugBypass();
   };
 }

@@ -38,6 +38,7 @@ const tokyoTowns: TownRow[] = [
     koaza: '',
     lat: 35.670488,
     lon: 139.45922,
+    rsdt_addr_flg: '1',
   },
   {
     lg_code: '132063',
@@ -46,6 +47,7 @@ const tokyoTowns: TownRow[] = [
     koaza: '',
     lat: 35.672654,
     lon: 139.46089,
+    rsdt_addr_flg: '1',
   },
   {
     lg_code: '132063',
@@ -54,6 +56,7 @@ const tokyoTowns: TownRow[] = [
     koaza: '',
     lat: 35.675603,
     lon: 139.463026,
+    rsdt_addr_flg: '1',
   },
   {
     lg_code: '132098',
@@ -62,6 +65,7 @@ const tokyoTowns: TownRow[] = [
     koaza: '',
     lat: 35.545071,
     lon: 139.442744,
+    rsdt_addr_flg: '1',
   },
   {
     lg_code: '132098',
@@ -70,6 +74,7 @@ const tokyoTowns: TownRow[] = [
     koaza: '',
     lat: 35.548247,
     lon: 139.440264,
+    rsdt_addr_flg: '1',
   },
   {
     lg_code: '132098',
@@ -78,6 +83,7 @@ const tokyoTowns: TownRow[] = [
     koaza: '',
     lat: 35.552803,
     lon: 139.436791,
+    rsdt_addr_flg: '1',
   },
   {
     lg_code: '132098',
@@ -86,6 +92,7 @@ const tokyoTowns: TownRow[] = [
     koaza: '',
     lat: 35.554528,
     lon: 139.43203,
+    rsdt_addr_flg: '1',
   },
   {
     lg_code: '132098',
@@ -94,6 +101,7 @@ const tokyoTowns: TownRow[] = [
     koaza: '',
     lat: 35.549288,
     lon: 139.434905,
+    rsdt_addr_flg: '1',
   },
   {
     lg_code: '132098',
@@ -102,6 +110,16 @@ const tokyoTowns: TownRow[] = [
     koaza: '',
     lat: 35.552002,
     lon: 139.43072,
+    rsdt_addr_flg: '1',
+  },
+  {
+    lg_code: '131016',
+    town_id: '0053001',
+    name: '麹町一丁目',
+    koaza: '',
+    lat: 35.684447,
+    lon: 139.742919,
+    rsdt_addr_flg: '0',
   },
 ];
 
@@ -113,6 +131,7 @@ const kyotoTowns: TownRow[] = [
     koaza: '',
     lat: 35.016866,
     lon: 135.764047,
+    rsdt_addr_flg: '1',
   },
   {
     lg_code: '261041',
@@ -121,6 +140,7 @@ const kyotoTowns: TownRow[] = [
     koaza: '',
     lat: 35.015582,
     lon: 135.763968,
+    rsdt_addr_flg: '1',
   },
   {
     lg_code: '261041',
@@ -129,6 +149,7 @@ const kyotoTowns: TownRow[] = [
     koaza: '',
     lat: 35.014288,
     lon: 135.763985,
+    rsdt_addr_flg: '1',
   },
 ];
 
@@ -184,8 +205,28 @@ describe('AddressFinderForStep3and5', () => {
       koaza: '',
       lat: 35.672654,
       lon: 139.46089,
+      rsdt_addr_flg: '1',
       originalName: '',
       tempAddress: '22番地の22',
+    });
+  });
+
+  it.concurrent('住所が住居表示非実施のケース', async () => {
+    const result = await instance.find({
+      address: '麹町1丁目',
+      prefecture: PrefectureName.TOKYO,
+      city: '千代田区',
+    });
+    expect(result).toEqual({
+      lg_code: '131016',
+      town_id: '0053001',
+      name: '麹町一丁目',
+      koaza: '',
+      lat: 35.684447,
+      lon: 139.742919,
+      rsdt_addr_flg: '0',
+      originalName: '',
+      tempAddress: '',
     });
   });
 
@@ -199,6 +240,7 @@ describe('AddressFinderForStep3and5', () => {
       lg_code: '261041',
       lat: 35.015582,
       lon: 135.763968,
+      rsdt_addr_flg: '1',
       originalName: '',
       town_id: '0000005',
       koaza: '',
@@ -231,6 +273,7 @@ describe('AddressFinderForStep3and5', () => {
       koaza: '',
       lat: 35.548247,
       lon: 139.440264,
+      rsdt_addr_flg: '1',
       originalName: '',
       tempAddress: `2${DASH}22`,
     });

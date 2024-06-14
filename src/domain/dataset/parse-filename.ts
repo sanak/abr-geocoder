@@ -46,7 +46,7 @@ export const parseFilename = ({
   const filename = path.basename(filepath);
 
   const fileMatch = filename.match(
-    /^mt_(city|pref|(?:town|rsdtdsp_(?:rsdt|blk))(?:_pos)?)_(all|pref\d{2})/
+    /^mt_(city|pref|(?:town|parcel|rsdtdsp_(?:rsdt|blk))(?:_pos)?)_(all|pref\d{2}|city\d{6})/
   );
   if (!fileMatch) {
     return null;

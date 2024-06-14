@@ -44,6 +44,7 @@ export type TownRow = {
   koaza: string;
   lat: number;
   lon: number;
+  rsdt_addr_flg: string;
 };
 
 export type TownPattern = {
@@ -79,22 +80,23 @@ export class AddressFinderForStep3and5 {
     this.getTownStatement = db.prepare(`
       select
         "town".${DataField.LG_CODE.dbColumn},
-        "town"."${DataField.TOWN_ID.dbColumn}",
-        "${DataField.OAZA_TOWN_NAME.dbColumn}" || "${DataField.CHOME_NAME.dbColumn}" as "name",
-        "${DataField.KOAZA_NAME.dbColumn}" as "koaza",
-        "${DataField.REP_PNT_LAT.dbColumn}" as "lat",
-        "${DataField.REP_PNT_LON.dbColumn}" as "lon"
+        "town".${DataField.MACHIAZA_ID.dbColumn} as "town_id",
+        "${DataField.OAZA_CHO.dbColumn}" || "${DataField.CHOME.dbColumn}" as "name",
+        "${DataField.KOAZA.dbColumn}" as "koaza",
+        "${DataField.REP_LAT.dbColumn}" as "lat",
+        "${DataField.REP_LON.dbColumn}" as "lon",
+        "${DataField.RSDT_ADDR_FLG.dbColumn}" as "rsdt_addr_flg"
       from
         "city"
         left join "town" on town.${DataField.LG_CODE.dbColumn} = city.${DataField.LG_CODE.dbColumn}
       where
-        "city"."${DataField.PREF_NAME.dbColumn}" = @prefecture AND
+        "city"."${DataField.PREF.dbColumn}" = @prefecture AND
         (
-          "city"."${DataField.COUNTY_NAME.dbColumn}" ||
-          "city"."${DataField.CITY_NAME.dbColumn}" ||
-          "city"."${DataField.OD_CITY_NAME.dbColumn}"
+          "city"."${DataField.COUNTY.dbColumn}" ||
+          "city"."${DataField.CITY.dbColumn}" ||
+          "city"."${DataField.WARD.dbColumn}"
         ) = @city AND
-        "${DataField.TOWN_CODE.dbColumn}" <> 3
+        "${DataField.MACHIAZA_TYPE.dbColumn}" <> 3
         order by length("name") desc;
     `);
   }
@@ -180,6 +182,7 @@ export class AddressFinderForStep3and5 {
           lg_code: town.lg_code,
           lat: town.lat,
           lon: town.lon,
+          rsdt_addr_flg: town.rsdt_addr_flg,
           originalName: town.originalName,
           town_id: town.town_id,
           koaza: town.koaza,
@@ -259,6 +262,7 @@ export class AddressFinderForStep3and5 {
         koaza: town.koaza,
         lat: town.lat,
         lon: town.lon,
+        rsdt_addr_flg: town.rsdt_addr_flg,
       });
     });
 
